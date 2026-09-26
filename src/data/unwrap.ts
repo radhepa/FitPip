@@ -5,7 +5,8 @@ export class DataError extends Error {
 
   constructor(error: Pick<PostgrestError, 'message' | 'code'>) {
     super(error.message)
-    this.name = 'DataError'
+    // Not "DataError": IndexedDB has an error of that name, and Dexie converts those (dropping our code).
+    this.name = 'AppDataError'
     this.code = error.code
   }
 }

@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { DEFAULT_SETTINGS } from '../data/guest'
-import { getSettings, saveDistanceUnit, saveGoalWeight, saveWeightUnit } from '../data/settings'
+import { DEFAULT_SETTINGS, getSettings, saveDistanceUnit, saveGoalWeight, saveWeightUnit } from '../data/settings'
 import type { DistanceUnit, UserSettings, WeightUnit } from '../types/db'
 import { useAuth } from './useAuth'
+import { useDataVersion } from './useSyncStatus'
 
 interface SettingsValue {
   unit: WeightUnit
@@ -27,6 +27,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
   const userId = session?.user.id
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS)
+  const dataVersion = useDataVersion()
 
   useEffect(() => {
     if (!userId) return
@@ -37,16 +38,16 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false
     }
-  }, [userId])
+  }, [userId, dataVersion])
 
   /** Shows the change at once and puts it back if it could not be saved. */
   const change = useCallback(
-    async (patch: Partial<UserSettings>, save: (userId: string) => Promise<void>) => {
+    async (patch: Partial<UserSettings>, save: () => Promise<void>) => {
       if (!userId) return
       const previous = settings
       setSettings({ ...settings, ...patch })
       try {
-        await save(userId)
+        await save()
       } catch (e) {
         setSettings(previous)
         throw e
@@ -59,10 +60,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     unit: settings.weight_unit,
     distanceUnit: settings.distance_unit,
     goal: settings.goal_weight !== null && settings.goal_weight_unit ? { weight: settings.goal_weight, unit: settings.goal_weight_unit } : null,
-    setUnit: (unit) => change({ weight_unit: unit }, (id) => saveWeightUnit(id, unit)),
-    setDistanceUnit: (unit) => change({ distance_unit: unit }, (id) => saveDistanceUnit(id, unit)),
+    setUnit: (unit) => change({ weight_unit: unit }, () => saveWeightUnit(unit)),
+    setDistanceUnit: (unit) => change({ distance_unit: unit }, () => saveDistanceUnit(unit)),
     setGoal: (goal) =>
-      change({ goal_weight: goal?.weight ?? null, goal_weight_unit: goal?.unit ?? null }, (id) => saveGoalWeight(id, goal)),
+      change({ goal_weight: goal?.weight ?? null, goal_weight_unit: goal?.unit ?? null }, () => saveGoalWeight(goal)),
   }
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>

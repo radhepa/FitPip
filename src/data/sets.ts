@@ -1,8 +1,6 @@
-import { supabase } from '../lib/supabase'
 import type { ExerciseSetRow } from '../lib/sessionStats'
 import type { SetRow } from '../types/db'
-import { assertOk, unwrap } from './unwrap'
-import { GUEST_USER_ID, isGuestMode, readGuestData, writeGuestData } from './guest'
+import { invalidError, newId, nowIso, ownerId, putRow, removeRow, rowsOf, writeTx } from './local/store'
 
 export interface NewSet {
   sessionId: string
@@ -18,93 +16,79 @@ export interface NewSet {
 /** The fields of a set that can be edited after it was logged. */
 export type SetPatch = Pick<SetRow, 'reps' | 'weight' | 'rpe' | 'duration_seconds' | 'distance_m'>
 
-export async function listSetsForSession(sessionId: string): Promise<SetRow[]> {
-  if (isGuestMode()) return readGuestData().sets.filter((set) => set.session_id === sessionId).sort((a, b) => a.set_order - b.set_order)
-  return unwrap<SetRow[]>(
-    await supabase
-      .from('sets')
-      .select('*')
-      .eq('session_id', sessionId)
-      .order('set_order')
-      .order('created_at'),
-  )
+const round2 = (n: number) => Math.round(n * 100) / 100
+
+/** The server's column limits, checked here so a bad value fails now rather than later at sync time. */
+function checked(values: SetPatch): SetPatch {
+  const { reps, weight, rpe, duration_seconds: duration, distance_m: distance } = values
+  if (!Number.isInteger(reps) || reps < 0 || reps > 1_000_000) throw invalidError('Reps must be a whole number, 0 or more.')
+  if (!(weight >= 0 && weight <= 99_999)) throw invalidError('Weight must be between 0 and 99,999.')
+  if (rpe !== null && !(rpe >= 1 && rpe <= 10 && rpe * 2 === Math.round(rpe * 2))) throw invalidError('RPE must be 1 to 10, in half steps.')
+  if (duration !== null && !(Number.isInteger(duration) && duration >= 1 && duration <= 86_400)) throw invalidError('Time must be between 1 second and 24 hours.')
+  if (distance !== null && !(distance > 0 && distance <= 1_000_000)) throw invalidError('Distance must be more than 0.')
+  return { reps, weight: round2(weight), rpe, duration_seconds: duration, distance_m: distance === null ? null : round2(distance) }
 }
 
-const SESSIONS_PER_QUERY = 10
+const bySetOrder = (a: SetRow, b: SetRow) => a.set_order - b.set_order || a.created_at.localeCompare(b.created_at)
+
+export async function listSetsForSession(sessionId: string): Promise<SetRow[]> {
+  return (await rowsOf('sets').where('session_id').equals(sessionId).toArray()).sort(bySetOrder)
+}
 
 /** Sets for many sessions at once (history summaries, the muscle heatmap). */
 export async function listSetsForSessions(sessionIds: string[]): Promise<SetRow[]> {
   if (sessionIds.length === 0) return []
-  if (isGuestMode()) return readGuestData().sets.filter((set) => sessionIds.includes(set.session_id))
-  // Small batches: Supabase caps one response at 1000 rows, which a busy month can exceed.
-  const batches: string[][] = []
-  for (let i = 0; i < sessionIds.length; i += SESSIONS_PER_QUERY) batches.push(sessionIds.slice(i, i + SESSIONS_PER_QUERY))
-  const results = await Promise.all(batches.map((ids) => supabase.from('sets').select('*').in('session_id', ids)))
-  return results.flatMap((result) => unwrap<SetRow[]>(result))
+  return rowsOf('sets').where('session_id').anyOf(sessionIds).toArray()
 }
 
 export async function logSet(input: NewSet): Promise<SetRow> {
-  const row = {
-    id: crypto.randomUUID(),
-    session_id: input.sessionId,
-    exercise_id: input.exerciseId,
-    set_order: input.setOrder,
+  const values = checked({
     reps: input.reps,
     weight: input.weight,
     rpe: input.rpe,
     duration_seconds: input.durationSeconds ?? null,
     distance_m: input.distanceM ?? null,
-  }
-  if (isGuestMode()) {
-    const data = readGuestData()
-    const now = new Date().toISOString()
-    const set: SetRow = { ...row, user_id: GUEST_USER_ID, created_at: now, updated_at: now }
-    data.sets.push(set)
-    writeGuestData(data)
-    return set
-  }
-  return unwrap<SetRow>(await supabase.from('sets').insert(row).select().single())
+  })
+  if (!Number.isInteger(input.setOrder) || input.setOrder < 0) throw invalidError('That set is out of order.')
+  const now = nowIso()
+  const set: SetRow = { id: newId(), user_id: ownerId(), session_id: input.sessionId, exercise_id: input.exerciseId, set_order: input.setOrder, ...values, created_at: now, updated_at: now }
+  await writeTx(() => putRow('sets', set, { isNew: true }))
+  return set
 }
 
 export async function updateSet(id: string, patch: Partial<SetPatch>): Promise<SetRow> {
-  if (isGuestMode()) {
-    const data = readGuestData()
-    const index = data.sets.findIndex((set) => set.id === id)
-    if (index < 0) throw new Error('Set not found.')
-    data.sets[index] = { ...data.sets[index], ...patch, updated_at: new Date().toISOString() }
-    writeGuestData(data)
-    return data.sets[index]
-  }
-  return unwrap<SetRow>(await supabase.from('sets').update(patch).eq('id', id).select().single())
+  return writeTx(async () => {
+    const existing = await rowsOf('sets').get(id)
+    if (!existing) throw new Error('Set not found.')
+    const values = checked({
+      reps: existing.reps,
+      weight: existing.weight,
+      rpe: existing.rpe,
+      duration_seconds: existing.duration_seconds,
+      distance_m: existing.distance_m,
+      ...patch,
+    })
+    const updated: SetRow = { ...existing, ...values, updated_at: nowIso() }
+    await putRow('sets', updated, { isNew: false })
+    return updated
+  })
 }
 
 export async function deleteSet(id: string): Promise<void> {
-  if (isGuestMode()) {
-    const data = readGuestData()
-    data.sets = data.sets.filter((set) => set.id !== id)
-    writeGuestData(data)
-    return
-  }
-  assertOk(await supabase.from('sets').delete().eq('id', id))
+  await writeTx(() => removeRow('sets', id))
 }
 
-/** Every logged set of one exercise, with its session date. Supabase returns at most 1000 rows. */
+/** Every logged set of one exercise, newest first, with its session's date. */
 export async function listSetsForExercise(exerciseId: string): Promise<ExerciseSetRow[]> {
-  if (isGuestMode()) {
-    const data = readGuestData()
-    return data.sets
-      .filter((set) => set.exercise_id === exerciseId)
-      .map((set) => ({ ...set, session: { id: set.session_id, started_at: data.sessions.find((session) => session.id === set.session_id)?.started_at ?? set.created_at } }))
-      .sort((a, b) => b.created_at.localeCompare(a.created_at))
-  }
-  return unwrap<ExerciseSetRow[]>(
-    await supabase
-      .from('sets')
-      .select('*, session:sessions!inner(id, started_at)')
-      .eq('exercise_id', exerciseId)
-      .order('created_at', { ascending: false })
-      .limit(1000),
-  )
+  const sets = await rowsOf('sets').where('exercise_id').equals(exerciseId).toArray()
+  const sessions = new Map((await rowsOf('sessions').where('id').anyOf([...new Set(sets.map((set) => set.session_id))]).toArray()).map((s) => [s.id, s]))
+  return sets
+    .flatMap((set) => {
+      const session = sessions.get(set.session_id)
+      // A workout still being set up has no start time; its sets aren't history yet.
+      return session?.started_at ? [{ ...set, session: { id: session.id, started_at: session.started_at } }] : []
+    })
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
 }
 
 /**
@@ -112,22 +96,9 @@ export async function listSetsForExercise(exerciseId: string): Promise<ExerciseS
  * (used to prefill weights and show "last time"). Empty when it has never been done.
  */
 export async function lastSessionSetsForExercise(exerciseId: string, excludeSessionId: string): Promise<SetRow[]> {
-  let recent: SetRow[]
-  if (isGuestMode()) {
-    recent = [...readGuestData().sets]
-      .filter((set) => set.exercise_id === exerciseId && set.session_id !== excludeSessionId)
-      .sort((a, b) => b.created_at.localeCompare(a.created_at))
-  } else {
-    recent = unwrap<SetRow[]>(
-      await supabase
-        .from('sets')
-        .select('*')
-        .eq('exercise_id', exerciseId)
-        .neq('session_id', excludeSessionId)
-        .order('created_at', { ascending: false })
-        .limit(40),
-    )
-  }
+  const recent = (await rowsOf('sets').where('exercise_id').equals(exerciseId).filter((set) => set.session_id !== excludeSessionId).toArray()).sort((a, b) =>
+    b.created_at.localeCompare(a.created_at),
+  )
   if (recent.length === 0) return []
-  return recent.filter((set) => set.session_id === recent[0].session_id).sort((a, b) => a.set_order - b.set_order)
+  return recent.filter((set) => set.session_id === recent[0].session_id).sort(bySetOrder)
 }

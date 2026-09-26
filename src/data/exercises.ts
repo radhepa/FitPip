@@ -1,73 +1,80 @@
 import type { MappedExercise } from '../config/exerciseDbMap'
-import { supabase } from '../lib/supabase'
 import type { Exercise } from '../types/db'
-import { assertOk, unwrap } from './unwrap'
-import { GUEST_USER_ID, isGuestMode, readGuestData, writeGuestData } from './guest'
+import { isGuestUser } from './local/context'
+import { invalidError, duplicateError, inUseError, newId, nowIso, ownerId, putRow, removeCascaded, removeRow, rowsOf, writeTx } from './local/store'
+import { loadStarterExercisesOnline } from './sync/actions'
 
 export type ExerciseInput = Pick<Exercise, 'name' | 'primary_muscles' | 'secondary_muscles' | 'equipment' | 'category' | 'tracking'>
 
+const cleanName = (name: string): string => {
+  const trimmed = name.trim()
+  if (trimmed.length < 1 || trimmed.length > 80) throw invalidError('Give it a name (up to 80 characters).')
+  return trimmed
+}
+
+/** The server keeps one exercise per name (ignoring case) and one per ExerciseDB id. */
+async function assertUnique(name: string, externalId: string | null, exceptId?: string): Promise<void> {
+  const lowered = name.toLowerCase()
+  const clash = await rowsOf('exercises')
+    .filter((e) => e.id !== exceptId && (e.name.toLowerCase() === lowered || (externalId !== null && e.external_id === externalId)))
+    .first()
+  if (clash) throw duplicateError('exercise name')
+}
+
 export async function listExercises(): Promise<Exercise[]> {
-  if (isGuestMode()) return [...readGuestData().exercises].sort((a, b) => a.name.localeCompare(b.name))
-  return unwrap<Exercise[]>(await supabase.from('exercises').select('*').order('name'))
+  return (await rowsOf('exercises').toArray()).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function createExercise(input: ExerciseInput): Promise<Exercise> {
-  const row = { id: crypto.randomUUID(), ...input, name: input.name.trim() }
-  if (isGuestMode()) {
-    const data = readGuestData()
-    const now = new Date().toISOString()
-    const exercise: Exercise = { ...row, user_id: GUEST_USER_ID, external_id: null, image_url: null, instructions: [], created_at: now, updated_at: now }
-    data.exercises.push(exercise)
-    writeGuestData(data)
-    return exercise
-  }
-  return unwrap<Exercise>(await supabase.from('exercises').insert(row).select().single())
+  const name = cleanName(input.name)
+  const now = nowIso()
+  const exercise: Exercise = { id: newId(), user_id: ownerId(), ...input, name, external_id: null, image_url: null, instructions: [], created_at: now, updated_at: now }
+  await writeTx(async () => {
+    await assertUnique(name, null)
+    await putRow('exercises', exercise, { isNew: true })
+  })
+  return exercise
 }
 
 /** Saves an ExerciseDB exercise (already mapped to our vocabulary) into the user's bank. */
 export async function importExercise(mapped: MappedExercise): Promise<Exercise> {
-  if (isGuestMode()) {
-    const data = readGuestData()
-    const now = new Date().toISOString()
-    const exercise: Exercise = { id: crypto.randomUUID(), user_id: GUEST_USER_ID, category: 'strength', tracking: 'reps', ...mapped, created_at: now, updated_at: now }
-    data.exercises.push(exercise)
-    writeGuestData(data)
-    return exercise
-  }
-  return unwrap<Exercise>(await supabase.from('exercises').insert({ id: crypto.randomUUID(), ...mapped }).select().single())
+  const now = nowIso()
+  const exercise: Exercise = { id: newId(), user_id: ownerId(), category: 'strength', tracking: 'reps', ...mapped, created_at: now, updated_at: now }
+  await writeTx(async () => {
+    await assertUnique(cleanName(exercise.name), exercise.external_id)
+    await putRow('exercises', exercise, { isNew: true })
+  })
+  return exercise
 }
 
 export async function updateExercise(id: string, input: ExerciseInput): Promise<Exercise> {
-  const patch = { ...input, name: input.name.trim() }
-  if (isGuestMode()) {
-    const data = readGuestData()
-    const index = data.exercises.findIndex((exercise) => exercise.id === id)
-    if (index < 0) throw new Error('Exercise not found.')
-    data.exercises[index] = { ...data.exercises[index], ...patch, updated_at: new Date().toISOString() }
-    writeGuestData(data)
-    return data.exercises[index]
-  }
-  return unwrap<Exercise>(await supabase.from('exercises').update(patch).eq('id', id).select().single())
+  const name = cleanName(input.name)
+  return writeTx(async () => {
+    const existing = await rowsOf('exercises').get(id)
+    if (!existing) throw new Error('Exercise not found.')
+    await assertUnique(name, existing.external_id, id)
+    const updated: Exercise = { ...existing, ...input, name, updated_at: nowIso() }
+    await putRow('exercises', updated, { isNew: false })
+    return updated
+  })
 }
 
 export async function deleteExercise(id: string): Promise<void> {
-  if (isGuestMode()) {
-    const data = readGuestData()
-    if (data.sets.some((set) => set.exercise_id === id)) throw new Error("It's still in use, so it can't be deleted.")
-    data.exercises = data.exercises.filter((exercise) => exercise.id !== id)
-    writeGuestData(data)
-    return
-  }
-  assertOk(await supabase.from('exercises').delete().eq('id', id))
+  await writeTx(async () => {
+    // An exercise with logged sets can't be deleted (it would break history), same as on the server.
+    if ((await rowsOf('sets').where('exercise_id').equals(id).count()) > 0) throw inUseError()
+    await removeCascaded('template_exercises', (await rowsOf('template_exercises').where('exercise_id').equals(id).primaryKeys()) as string[])
+    await removeCascaded('week_plan_items', (await rowsOf('week_plan_items').where('exercise_id').equals(id).primaryKeys()) as string[])
+    await removeRow('exercises', id)
+  })
 }
 
-/** Adds any missing starter exercises for the signed-in user. Returns how many were added. */
+/** Adds any missing starter exercises for the signed-in user. Needs a connection. Returns how many were added. */
 export async function loadStarterExercises(): Promise<number> {
-  if (isGuestMode()) return 0
-  return unwrap<number>(await supabase.rpc('load_starter_exercises'))
+  if (isGuestUser()) return 0
+  return loadStarterExercisesOnline()
 }
 
 export async function getExercise(id: string): Promise<Exercise | null> {
-  if (isGuestMode()) return readGuestData().exercises.find((exercise) => exercise.id === id) ?? null
-  return unwrap<Exercise | null>(await supabase.from('exercises').select('*').eq('id', id).maybeSingle())
+  return (await rowsOf('exercises').get(id)) ?? null
 }

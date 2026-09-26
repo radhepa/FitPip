@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { activateSession } from '../data/activate'
 import { getAuthSession, onAuthChange, type AuthSession } from '../data/auth'
 
 interface AuthValue {
   session: AuthSession | null
-  /** True until the stored session (if any) has been read. */
+  /** True until the stored session (if any) has been read and its on-device data opened. */
   loading: boolean
 }
 
@@ -14,10 +15,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true
-    getAuthSession()
-      .then((session) => active && setValue({ session, loading: false }))
-      .catch(() => active && setValue({ session: null, loading: false }))
-    const unsubscribe = onAuthChange((session) => setValue({ session, loading: false }))
+    let latest = 0
+
+    /** Opens the right on-device data first, so screens never render before it is ready. */
+    const apply = async (session: AuthSession | null) => {
+      const mine = ++latest
+      let ready = session
+      try {
+        await activateSession(session)
+      } catch {
+        ready = null // the device's storage could not be opened: treat as signed out
+      }
+      if (active && mine === latest) setValue({ session: ready, loading: false })
+    }
+
+    getAuthSession().then(apply).catch(() => apply(null))
+    const unsubscribe = onAuthChange((session) => void apply(session))
     return () => {
       active = false
       unsubscribe()

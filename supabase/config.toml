@@ -1,0 +1,8 @@
+# Used by the Supabase CLI (supabase functions deploy ...). Nothing here needs editing.
+project_id = "fitpip"
+
+[functions.suggest-workout]
+# The function verifies the caller's JWT itself (see index.ts: an Auth server round trip, so it
+# works with both the legacy and the newer asymmetric signing keys). The platform-level check
+# only understands the legacy keys, so it is switched off here.
+verify_jwt = false

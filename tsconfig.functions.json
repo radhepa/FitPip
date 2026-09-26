@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.functions.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": [],
+    "skipLibCheck": true,
+    "strict": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    /* Edge Functions import with Deno-style npm: specifiers; map them to the local packages for typechecking. */
+    "paths": {
+      "npm:zod@3.24.2": ["./node_modules/zod"],
+      "npm:@supabase/supabase-js@2": ["./node_modules/@supabase/supabase-js"]
+    }
+  },
+  "include": ["supabase/functions/**/*.ts"]
+}

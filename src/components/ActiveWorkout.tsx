@@ -1,0 +1,133 @@
+import { useMemo, useState } from 'react'
+import { deleteSet, logSet, updateSet, type SetPatch } from '../data/sets'
+import type { usePendingExercises } from '../hooks/usePendingExercises'
+import { useLastSessionSets } from '../hooks/useLastSessionSets'
+import { useRestTimer } from '../hooks/useRestTimer'
+import { defaultTarget, SECTION_INFO, sectionOf, type Section } from '../lib/activity'
+import { addManyToPlan, removeFromPlan } from '../lib/sessionPlan'
+import { buildBlocks, bySection, type PlanItem } from '../lib/workoutBlocks'
+import type { Category, DistanceUnit, Exercise, SetRow, WeightUnit } from '../types/db'
+import { Button } from './Button'
+import { CardioQuickAdd } from './CardioQuickAdd'
+import { ExerciseBlock, type NewEntry } from './ExerciseBlock'
+import { ExercisePicker } from './ExercisePicker'
+import { buzz } from './fx'
+import { RestTimer } from './RestTimer'
+import { SectionHeader } from './SectionHeader'
+
+interface Props {
+  sessionId: string
+  plan: PlanItem[]
+  sets: SetRow[]
+  exercises: Exercise[]
+  unit: WeightUnit
+  distanceUnit: DistanceUnit
+  pending: ReturnType<typeof usePendingExercises>
+  /** Runs a write and shows any failure in the banner instead of throwing into the UI. */
+  guard: (action: () => Promise<void>) => Promise<void>
+  onSetsChange: (update: (prev: SetRow[]) => SetRow[]) => void
+  onPlanChange: (plan: PlanItem[]) => void
+  onExerciseAdded: (exercise: Exercise) => void
+  onDiscard: () => void
+}
+
+/** A workout under way, in sections (strength, cardio, yoga & stretching), each exercise logged its own way. */
+export function ActiveWorkout({ sessionId, plan, sets, exercises, unit, distanceUnit, pending, guard, onSetsChange, onPlanChange, onExerciseAdded, onDiscard }: Props) {
+  const [picking, setPicking] = useState<Category | 'all' | null>(null)
+  const restTimer = useRestTimer()
+  const exerciseById = useMemo(() => new Map(exercises.map((e) => [e.id, e])), [exercises])
+  const blocks = useMemo(
+    () => buildBlocks({ sets, pendingIds: pending.ids, plan }).filter((b) => exerciseById.has(b.exerciseId)),
+    [sets, pending.ids, plan, exerciseById],
+  )
+  const sections = useMemo(() => bySection(blocks, (b) => sectionOf(exerciseById.get(b.exerciseId)!)), [blocks, exerciseById])
+  const present = useMemo(() => new Set(blocks.map((b) => b.exerciseId)), [blocks])
+  const lastSessionSets = useLastSessionSets(blocks.map((b) => b.exerciseId), sessionId)
+
+  const add = (picked: Exercise[]) => onPlanChange(addManyToPlan(plan, picked.map((e) => ({ exerciseId: e.id, target: defaultTarget(e) }))))
+
+  const onLog = (exercise: Exercise, entry: NewEntry) =>
+    guard(async () => {
+      const setOrder = sets.reduce((max, s) => Math.max(max, s.set_order), -1) + 1
+      const row = await logSet({ sessionId, exerciseId: exercise.id, setOrder, ...entry })
+      onSetsChange((prev) => [...prev, row])
+      pending.remove(exercise.id)
+      buzz(15)
+      if (exercise.tracking === 'reps') restTimer.start()
+    })
+
+  const onEditSet = (setId: string, patch: Partial<SetPatch>) =>
+    guard(async () => {
+      const row = await updateSet(setId, patch)
+      onSetsChange((prev) => prev.map((s) => (s.id === setId ? row : s)))
+    })
+
+  const onDeleteSet = (setId: string) =>
+    guard(async () => {
+      await deleteSet(setId)
+      onSetsChange((prev) => prev.filter((s) => s.id !== setId))
+    })
+
+  const firstCategory = (section: Section): Category | 'all' => (section === 'strength' ? 'strength' : section === 'cardio' ? 'cardio' : SECTION_INFO[section].categories[0])
+  let index = 0
+
+  return (
+    <>
+      {sections.map(({ section, items }) => {
+        if (items.length === 0 && section !== 'cardio' && blocks.length > 0) return null
+        return (
+          <div key={section}>
+            <SectionHeader section={section} count={items.length} onAdd={() => setPicking(firstCategory(section))} />
+            {section === 'cardio' && <CardioQuickAdd exercises={exercises} present={present} onAdd={(e) => add([e])} />}
+            {items.length === 0 && section !== 'cardio' && <p className="card card-pad mb-3 border-dashed text-sm text-muted">Nothing here yet. Tap Add.</p>}
+            <div className="stagger">
+              {items.map((block) => {
+                const exercise = exerciseById.get(block.exerciseId)!
+                return (
+                  <ExerciseBlock
+                    key={block.exerciseId}
+                    index={index++}
+                    exercise={exercise}
+                    sets={block.sets}
+                    plan={block.plan}
+                    unit={unit}
+                    distanceUnit={distanceUnit}
+                    lastSessionSets={lastSessionSets[block.exerciseId] ?? []}
+                    onLog={(entry) => onLog(exercise, entry)}
+                    onEditSet={onEditSet}
+                    onDeleteSet={onDeleteSet}
+                    onRemove={block.plan ? () => onPlanChange(removeFromPlan(plan, block.exerciseId)) : () => pending.remove(block.exerciseId)}
+                  />
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+
+      <div className="mt-6 grid grid-cols-1 gap-2">
+        <Button block onClick={() => setPicking('all')}>
+          + Add anything
+        </Button>
+        <Button variant="ghost" block onClick={onDiscard} className="!text-danger">
+          Discard workout
+        </Button>
+      </div>
+
+      {restTimer.rest && <RestTimer key={restTimer.rest.id} endsAt={restTimer.rest.endsAt} total={restTimer.rest.total} onChange={restTimer.change} onDone={restTimer.stop} />}
+
+      <ExercisePicker
+        open={picking !== null}
+        initialCategory={picking ?? 'all'}
+        exercises={exercises}
+        addedIds={present}
+        onClose={() => setPicking(null)}
+        onPick={(picked) => {
+          add(picked)
+          setPicking(null)
+        }}
+        onAdded={onExerciseAdded}
+      />
+    </>
+  )
+}

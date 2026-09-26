@@ -9,6 +9,7 @@ import { toWeighIns, weekAverage } from './bodyWeight'
 import { muscleLabel } from './format'
 import { overallRank, rankLifts, rankMuscles, unrankedLifts, type LiftBadge, type MuscleRank, type OverallRank } from './strengthRank'
 import { levelFor, xpHistory, type LevelProgress, type SessionXp } from './xp'
+import { assessStrength, type Assessment, type AssessmentResult } from './assessment'
 
 export interface ProfileInput {
   exercises: Exercise[]
@@ -20,6 +21,7 @@ export interface ProfileInput {
   sex: Sex | null
   bodyweightKg: number | null
   now?: Date
+  assessment?: Assessment | null
 }
 
 export interface Totals {
@@ -34,6 +36,7 @@ export interface Totals {
 }
 
 export interface Profile {
+  startingRank?: AssessmentResult
   xp: LevelProgress & { total: number; thisWeek: number }
   history: SessionXp[]
   lifts: LiftBadge[]
@@ -79,6 +82,7 @@ export function buildProfile(input: ProfileInput): Profile {
   }
 
   return {
+    startingRank: input.assessment ? assessStrength(input.assessment) : undefined,
     xp: { ...levelFor(total), total, thisWeek },
     history,
     lifts,

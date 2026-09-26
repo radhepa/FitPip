@@ -79,6 +79,30 @@ History, Progress or suggestions until you begin it.
 
 ## Ranks, badges and XP
 
+### Starting assessment
+
+After sign-in and the first sync, new and existing accounts see a one-time fitness assessment.
+It asks age, bodyweight, comparison standards, and five familiar exercises: push-ups, bench press,
+back squat, deadlift and pull-ups. Weighted lifts accept a known one-rep max or a best set of
+1–15 reps. Every exercise has a **Haven’t done this** option.
+
+The starting rank averages the answered exercises' scores using the existing strength standards;
+skipped exercises are excluded. With all five skipped, Wood is an unscored starting point. Age is
+recorded but does not adjust this version's standards. Answers create no workout sets or XP and
+do not replace an existing logged-history overall rank. With no logged rank, the Profile hero
+shows the starting rank. Assessment bodyweight is a fallback until a weigh-in is available.
+
+Drafts, completion and assessment answers are saved per account **on this device** in IndexedDB;
+they do not sync to other devices. The selected comparison standards sync through existing settings.
+No database migration is needed. Reloading preserves answers; **Do this later** dismisses the
+flow without replacing a saved result. Retake it from Settings or the assessment card on Profile.
+
+The flow lives at `/welcome`; questions are in `src/config/assessment.ts`, scoring and validation
+in `src/lib/assessment.ts`, and persistence in `src/data/onboarding.ts`. The device-local completion
+key is versioned so a future onboarding revision can be rolled out deliberately.
+
+### Workout ranks
+
 The **Profile** tab turns your history into a game. Nothing extra is stored: it's all worked out from
 your sets, workouts and weigh-ins, so editing a set or a weigh-in updates it straight away.
 

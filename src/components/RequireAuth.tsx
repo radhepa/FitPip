@@ -11,5 +11,5 @@ export function RequireAuth() {
   if (!session) return <Navigate to="/login" replace />
   // A signed-in device needs one full download before it can run from its own copy of the data.
   if (!session.guest && !sync.initialSyncDone) return <FirstSyncScreen />
-  return <Outlet />
+  return <Outlet key={session.user.id} />
 }

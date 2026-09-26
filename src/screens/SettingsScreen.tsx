@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { PageHeader } from '../components/PageHeader'
 import { RestSetting } from '../components/RestSetting'
@@ -66,6 +67,10 @@ export function SettingsScreen() {
       {message && <p className="card card-pad mb-3 text-sm">{message}</p>}
       <div className="stagger grid grid-cols-1 gap-3 lg:grid-cols-2">
         <SyncCard />
+
+        <Card title="Starting rank" hint="Answer five exercise questions to estimate your starting rank. Your logged workouts stay as they are.">
+          <Link to="/welcome" state={{ returnTo: '/settings' }} className="app-button button-secondary w-full">Retake fitness assessment</Link>
+        </Card>
 
         <Card title="Appearance" hint="Auto follows this device.">
           <Group label="Appearance" options={APPEARANCES} value={preference} onChange={setPreference} />

@@ -14,13 +14,15 @@ interface Props {
 /** The top of the profile: overall rank emblem, name, and XP level with its bar. */
 export function ProfileHero({ name, profile, onEdit }: Props) {
   const { overall, xp } = profile
+  const shownRank = overall?.rank ?? profile.startingRank?.rank
+  const rankLabel = overall ? 'Overall rank' : profile.startingRank ? 'Starting rank' : 'Overall rank'
   return (
     <section className="card card-hero p-4" aria-label="Your rank and level">
       <div className="flex items-start gap-3.5">
-        <RankEmblem rank={overall?.rank ?? null} size={84} artKey="overall" label={overall ? `Overall rank: ${rankName(overall.rank)}` : 'Not ranked yet'} className="badge-pop" />
+        <RankEmblem rank={shownRank ?? null} size={84} artKey="overall" label={shownRank ? `${rankLabel}: ${rankName(shownRank)}` : 'Not ranked yet'} className="badge-pop" />
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-extrabold tracking-wide text-muted uppercase">Overall rank</p>
-          <p className="font-display text-[1.6rem] leading-tight font-extrabold">{overall ? rankName(overall.rank) : 'Unranked'}</p>
+          <p className="text-xs font-extrabold tracking-wide text-muted uppercase">{rankLabel}</p>
+          <p className="font-display text-[1.6rem] leading-tight font-extrabold">{shownRank ? rankName(shownRank) : 'Unranked'}</p>
           <p className="truncate text-sm font-bold text-muted">{name ?? 'Add your name'}</p>
         </div>
         <button type="button" className="icon-button shrink-0" aria-label="Edit profile" onClick={onEdit}>

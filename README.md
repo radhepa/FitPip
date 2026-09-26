@@ -30,6 +30,8 @@ Stack: Vite, React, TypeScript, Tailwind, vite-plugin-pwa, Supabase (Auth + Post
    13. `20260927000100_offline_sync.sql` (lets your devices sync: a server-side change clock and a
        record of deleted rows)
    14. `20260927000200_rest_seconds.sql` (the rest timer length setting)
+   15. `20260928000100_profile.sql` (your name on the profile, and whether your lifts are ranked
+       against men's or women's standards)
 3. **Create your user.** *Authentication → Users → Add user → Create new user*: enter your email
    and a password and tick *Auto Confirm User*. Creating the user also fills your exercise bank.
 4. **Lock sign-ups** (it's a one-person app): *Authentication → Sign In / Providers* → turn off
@@ -52,6 +54,7 @@ Stack: Vite, React, TypeScript, Tailwind, vite-plugin-pwa, Supabase (Auth + Post
 - **Weigh-in**: the scale. Drag the ruler, tap ±1/±0.1 or type, pick the day, and step on. One
   weigh-in a day (saving again replaces it); trend chart with your goal line, 7/30 day change,
   7-day average and streak.
+- **Profile**: your ranks, badges and XP (see below).
 - **Workouts** are split into Strength, Cardio, and Yoga & stretching sections. Lifts log weight ×
   reps (with steppers, RPE chips and a rest timer), holds and rounds have a countdown timer that
   logs itself, and runs/rides/swims log time and distance (or use the stopwatch) with live pace.
@@ -73,6 +76,31 @@ History, Progress or suggestions until you begin it.
   rest without changing the setting.
 - **Editing a finished workout.** *Edit workout* on the summary changes sets, notes and the name in
   place. The recorded time never changes, and the workout doesn't come back as "open" on Home.
+
+## Ranks, badges and XP
+
+The **Profile** tab turns your history into a game. Nothing extra is stored: it's all worked out from
+your sets, workouts and weigh-ins, so editing a set or a weigh-in updates it straight away.
+
+- **10 ranks**: Wood, Bronze, Silver, Gold, Platinum, Emerald, Diamond, Master, Elite, Legend.
+- **Lift badges.** The best set of each lift becomes an estimated one-rep max (or reps, for pull-ups,
+  push-ups and other bodyweight moves) and is compared with strength standards for people who lift,
+  at your bodyweight (the average of your last week of weigh-ins). You get a percentile ("stronger
+  than 64% of lifters"), a rank, what the average lifter your size does, and what each rank takes.
+  Pick men's or women's standards the first time you open the tab.
+- **Strength map.** The body map coloured by rank: each muscle takes the rank of its best lift (lifts
+  where it only helps count at 80%). The overall rank averages chest, back, shoulders, arms, legs and
+  core.
+- **Cardio and practice badges.** Running, rowing, ski erg, outdoor cycling and freestyle swimming
+  are ranked on your best pace (any distance, converted with Riegel's formula). Walking, indoor
+  cycling, HIIT, other swims, boxing, yoga, stretching and sports rank up with hours put in.
+- **XP and levels.** 10 XP per lifting set, 3 XP per minute of cardio or practice, 25 for finishing a
+  workout, 50 per personal record and 20 for trying something new. The workout summary shows what
+  each workout earned, any records, and every badge it ranked up.
+
+Standards, rank thresholds, XP amounts and badge kinds live in `src/config/` (`strengthStandards.ts`,
+`ranks.ts`, `xp.ts`, `activityBadges.ts`). The emblems are placeholders: see
+[docs/badge-art.md](docs/badge-art.md) to swap in real art.
 
 ## Deploy (auto-deploys on every push to `main`)
 

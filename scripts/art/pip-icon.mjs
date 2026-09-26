@@ -1,11 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="FitPip, Pip the blue panda">
+// Pip's launcher portrait: the current blue coat, cream markings, cheek tufts,
+// dark ears and diamond headband, simplified for a small home-screen tile.
+export function pipIcon(scale = 1) {
+  const offset = 256 * (1 - scale)
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="FitPip, Pip the blue panda">
   <defs>
     <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#458EF4"/><stop offset="1" stop-color="#2561CB"/></linearGradient>
     <linearGradient id="coat" x2=".3" y2="1"><stop stop-color="#8DCEFF"/><stop offset="1" stop-color="#4F9AE9"/></linearGradient>
     <linearGradient id="cream" x2="0" y2="1"><stop stop-color="#F4FBFF"/><stop offset="1" stop-color="#D2EBFF"/></linearGradient>
   </defs>
   <path fill="url(#bg)" d="M0 0h512v512H0z"/>
-  <g transform="translate(0 0) scale(1)">
+  <g transform="translate(${offset} ${offset}) scale(${scale})">
     <path d="M105 181C66 158 47 94 64 47c53-1 94 33 110 79Zm302 0c39-23 58-87 41-134-53-1-94 33-110 79Z" fill="#193C69"/>
     <path d="M106 139C88 118 80 89 85 73c30 5 53 25 64 49Zm300 0c18-21 26-50 21-66-30 5-53 25-64 49Z" fill="#D7EFFF"/>
     <path d="m413 184 64 17-21 24-48-14 46 43-29 8-37-48Z" fill="#B9EFFF"/>
@@ -29,4 +33,5 @@
     <path d="M228 388q28 17 56 0c-3 40-53 40-56 0Z" fill="#142C4C"/>
     <path d="M238 411q18-17 36 0c-10 10-26 10-36 0Z" fill="#F0A7C4"/>
   </g>
-</svg>
+</svg>`
+}

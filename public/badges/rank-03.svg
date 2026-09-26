@@ -1,12 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Silver rank emblem">
-  <!-- Placeholder emblem: replace with your own art (see README.md in this folder). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Silver rank emblem">
   <defs>
-    <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#a9bce6"/>
-      <stop offset="1" stop-color="#6385D2"/>
-    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#dbe3f5"/><stop offset=".45" stop-color="#98aee1"/><stop offset=".46" stop-color="#6385D2"/><stop offset="1" stop-color="#2b395a"/></linearGradient>
+    <linearGradient id="enamel" x2="0" y2="1"><stop stop-color="#98aee1"/><stop offset="1" stop-color="#6385D2"/></linearGradient>
   </defs>
-  <circle cx="60" cy="60" r="52" fill="url(#fill)" stroke="#3d5282" stroke-width="5" stroke-linejoin="round"/>
-  <circle cx="60" cy="60" r="42" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="2"/>
-  <text x="60" y="76.56" text-anchor="middle" font-family="Archivo, system-ui, sans-serif" font-size="46" font-weight="800" fill="#ffffff" stroke="#3d5282" stroke-width="3" paint-order="stroke">3</text>
+  <path d="m23 42-13 12 5 27 20 11 3-21Z" fill="url(#metal)" stroke="#2b395a" stroke-width="3.5" stroke-linejoin="round"/><g transform="translate(128 0) scale(-1 1)"><path d="m23 42-13 12 5 27 20 11 3-21Z" fill="url(#metal)" stroke="#2b395a" stroke-width="3.5" stroke-linejoin="round"/></g>
+  <path d="M64 10 105 31 111 72 91 98 64 114 37 98 17 72 23 31Z" fill="#2b395a" transform="translate(0 4)"/>
+  <path d="M64 10 105 31 111 72 91 98 64 114 37 98 17 72 23 31Z" fill="url(#metal)" stroke="#2b395a" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M64 10 105 31 111 72 91 98 64 114 37 98 17 72 23 31Z" transform="translate(64 64) scale(.81) translate(-64 -64)" fill="url(#enamel)" stroke="#dbe3f5" stroke-width="2.5"/>
+
+  <g transform="translate(0 -8)"><path d="M43 55 39 39q13-1 18 12 7-3 14 0 5-13 18-12l-4 16q8 8 7 19l5 7-8 1c-5 14-15 21-25 21S44 96 39 82l-8-1 5-7q-1-11 7-19Z" fill="#2b395a"/>
+    <path d="m45 45 7 8-7 1Zm38 0-7 8 7 1Z" fill="#dbe3f5"/>
+    <path d="M42 60q22-9 44 0v5q-22-7-44 0Z" fill="#dbe3f5"/>
+    <path d="M42 75c0-11 10-15 16-6l2 10c-9 6-16 3-18-4Zm44 0c0-11-10-15-16-6l-2 10c9 6 16 3 18-4ZM46 86q7-8 18-2 11-6 18 2c-7 15-29 15-36 0Z" fill="#dbe3f5"/>
+    <ellipse cx="51" cy="73" rx="3" ry="4" fill="#2b395a"/><ellipse cx="77" cy="73" rx="3" ry="4" fill="#2b395a"/>
+    <path d="M60 84q4-2 8 0l-4 5Z" fill="#2b395a"/></g>
+
+
 </svg>

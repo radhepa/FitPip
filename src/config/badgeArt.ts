@@ -1,5 +1,5 @@
-// Where badge pictures come from. Everything here is a placeholder, meant to be replaced with real
-// art: drop new files into public/badges and point these paths at them (see docs/badge-art.md).
+// Shared Pip rank crests, generated into public/badges. See docs/badge-art.md
+// for the design system, regeneration, and optional per-badge art overrides.
 import type { RankNumber } from './ranks'
 
 /** One emblem per rank, used on every badge of that rank. */

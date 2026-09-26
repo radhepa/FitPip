@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Locked emblem">
-  <!-- Placeholder emblem: replace with your own art (see README.md in this folder). -->
-  <circle cx="60" cy="60" r="52" fill="#8a94a6" fill-opacity=".18" stroke="#8a94a6" stroke-width="4" stroke-dasharray="8 7"/>
-  <text x="60" y="76" text-anchor="middle" font-family="Archivo, system-ui, sans-serif" font-size="46" font-weight="800" fill="#8a94a6">?</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Not earned yet">
+  <path d="m64 17 43 16-4 43c-3 19-21 32-39 40-18-8-36-21-39-40l-4-43Z" fill="#687A91" stroke="#34465E" stroke-width="4" stroke-linejoin="round"/>
+  <path d="m64 28 32 12-3 34c-2 14-16 25-29 32-13-7-27-18-29-32l-3-34Z" fill="#43566F" stroke="#A6B7CC" stroke-width="2"/>
+  <path d="M51 60V50a13 13 0 0 1 26 0v10" fill="none" stroke="#D3DDE9" stroke-width="7" stroke-linecap="round"/>
+  <rect x="43" y="58" width="42" height="32" rx="9" fill="#D3DDE9"/>
+  <path d="M64 71v7" stroke="#43566F" stroke-width="6" stroke-linecap="round"/>
 </svg>

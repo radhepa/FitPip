@@ -1,31 +1,14 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import sharp from 'sharp'
-
-const face = (scale = 1) => {
-  const offset = 256 * (1 - scale)
-  return `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-      <rect width="512" height="512" fill="#0A0E15"/>
-      <g transform="translate(${offset} ${offset}) scale(${scale})">
-        <path fill="#2E6FB8" d="M109 191 66 75c64-7 106 21 125 76 43-20 91-20 134 0 19-55 61-83 125-76l-43 116c20 35 27 75 17 119-19 88-88 139-168 139S107 398 88 310c-10-44-3-84 21-119Z"/>
-        <path fill="#4F96E8" d="M102 237c0-105 69-159 154-159s154 54 154 159c0 117-68 181-154 181S102 354 102 237Z"/>
-        <path fill="#A6E2FF" d="M110 185c89-35 203-35 292 2l-9 35c-83-31-191-31-274 0Z"/>
-        <path fill="#AFCFF0" d="M132 254c22-67 79-81 124-32 45-49 102-35 124 32-12 76-57 116-124 116s-112-40-124-116Z"/>
-        <path fill="#2E6FB8" d="M154 259c12 50 39 78 70 88l18-105c-36-19-70-11-88 17Zm204 0c-12 50-39 78-70 88l-18-105c36-19 70-11 88 17Z"/>
-        <path fill="#0A1728" d="M186 252c0-25 13-39 31-39s31 14 31 39-13 39-31 39-31-14-31-39Zm78 0c0-25 13-39 31-39s31 14 31 39-13 39-31 39-31-14-31-39Zm-8 56-22 18 22 19 22-19Z"/>
-      </g>
-    </svg>`
-}
+import { pipIcon } from './art/pip-icon.mjs'
 
 await mkdir('public/icons', { recursive: true })
-await writeFile('public/favicon.svg', face())
-
+await writeFile('public/favicon.svg', pipIcon())
 const render = (size, output, scale = 1) =>
-  sharp(Buffer.from(face(scale))).resize(size, size).png({ compressionLevel: 9 }).toFile(output)
-
+  sharp(Buffer.from(pipIcon(scale))).resize(size, size).png({ compressionLevel: 9 }).toFile(output)
 await render(192, 'public/icons/icon-192.png')
 await render(512, 'public/icons/icon-512.png')
-await render(512, 'public/icons/icon-maskable-512.png', .66)
+// The portrait fits Android's central 80%-diameter safe circle.
+await render(512, 'public/icons/icon-maskable-512.png', .70)
 await render(180, 'public/apple-touch-icon.png')
-
-console.log('Pip icons written to public/')
+console.log('Pip launcher, maskable, Apple touch and favicon assets written to public/')

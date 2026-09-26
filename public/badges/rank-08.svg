@@ -1,12 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Master rank emblem">
-  <!-- Placeholder emblem: replace with your own art (see README.md in this folder). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Master rank emblem">
   <defs>
-    <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#bba0ee"/>
-      <stop offset="1" stop-color="#8452E0"/>
-    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#e3d7f8"/><stop offset=".45" stop-color="#ae8deb"/><stop offset=".46" stop-color="#8452E0"/><stop offset="1" stop-color="#392360"/></linearGradient>
+    <linearGradient id="enamel" x2="0" y2="1"><stop stop-color="#ae8deb"/><stop offset="1" stop-color="#8452E0"/></linearGradient>
   </defs>
-  <polygon points="60.0,6.0 106.8,33.0 106.8,87.0 60.0,114.0 13.2,87.0 13.2,33.0" fill="url(#fill)" stroke="#52338b" stroke-width="5" stroke-linejoin="round"/>
-  <polygon points="60.0,17.0 97.2,38.5 97.2,81.5 60.0,103.0 22.8,81.5 22.8,38.5" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="2"/>
-  <text x="60" y="76.56" text-anchor="middle" font-family="Archivo, system-ui, sans-serif" font-size="46" font-weight="800" fill="#ffffff" stroke="#52338b" stroke-width="3" paint-order="stroke">8</text>
+  <path d="M40 46 9 25l3 27 10 9-10 1 7 18 20 15Z" fill="url(#metal)" stroke="#392360" stroke-width="3.5" stroke-linejoin="round"/><path d="m19 44 14 12m-10 15 11 9" stroke="#e3d7f8" stroke-width="4" stroke-linecap="round"/><g transform="translate(128 0) scale(-1 1)"><path d="M40 46 9 25l3 27 10 9-10 1 7 18 20 15Z" fill="url(#metal)" stroke="#392360" stroke-width="3.5" stroke-linejoin="round"/><path d="m19 44 14 12m-10 15 11 9" stroke="#e3d7f8" stroke-width="4" stroke-linecap="round"/></g>
+  <path d="M64 22 103 35 99 75c-3 18-19 31-35 39-16-8-32-21-35-39l-4-40Z" fill="#392360" transform="translate(0 4)"/>
+  <path d="M64 22 103 35 99 75c-3 18-19 31-35 39-16-8-32-21-35-39l-4-40Z" fill="url(#metal)" stroke="#392360" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M64 22 103 35 99 75c-3 18-19 31-35 39-16-8-32-21-35-39l-4-40Z" transform="translate(64 64) scale(.81) translate(-64 -64)" fill="url(#enamel)" stroke="#e3d7f8" stroke-width="2.5"/>
+
+  <g transform="translate(0 -8)"><path d="M43 55 39 39q13-1 18 12 7-3 14 0 5-13 18-12l-4 16q8 8 7 19l5 7-8 1c-5 14-15 21-25 21S44 96 39 82l-8-1 5-7q-1-11 7-19Z" fill="#392360"/>
+    <path d="m45 45 7 8-7 1Zm38 0-7 8 7 1Z" fill="#e3d7f8"/>
+    <path d="M42 60q22-9 44 0v5q-22-7-44 0Z" fill="#e3d7f8"/>
+    <path d="M42 75c0-11 10-15 16-6l2 10c-9 6-16 3-18-4Zm44 0c0-11-10-15-16-6l-2 10c9 6 16 3 18-4ZM46 86q7-8 18-2 11-6 18 2c-7 15-29 15-36 0Z" fill="#e3d7f8"/>
+    <ellipse cx="51" cy="73" rx="3" ry="4" fill="#392360"/><ellipse cx="77" cy="73" rx="3" ry="4" fill="#392360"/>
+    <path d="M60 84q4-2 8 0l-4 5Z" fill="#392360"/></g>
+  <path d="m56 98 8 7 8-7" fill="none" stroke="#e3d7f8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m42 32-5-22 17 8L64 4l10 14 17-8-5 22Z" fill="url(#metal)" stroke="#392360" stroke-width="3.5" stroke-linejoin="round"/><path d="m64 12 6 9-6 8-6-8Z" fill="#e3d7f8"/>
 </svg>

@@ -68,7 +68,7 @@ export function LiftBadgeSheet({ lift, unit, onClose }: Props) {
               aria-current={mine ? 'true' : undefined}
             >
               <span className="flex items-center gap-2">
-                <span className="rank-swatch" aria-hidden="true" />
+                <RankEmblem rank={step.rank} size={32} />
                 {step.rank} {rankInfo(step.rank).name}
                 {mine && <span className="pill">You</span>}
               </span>

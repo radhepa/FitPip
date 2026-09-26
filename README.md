@@ -1,7 +1,7 @@
 # FitPip
 
 A personal, single-user workout log for lifts, runs, rides, swims, yoga and stretching, with Pip the
-red panda keeping count. Mobile-first, installs on your phone's home screen like an app (iPhone and
+blue panda keeping count. Mobile-first, installs on your phone's home screen like an app (iPhone and
 Android), synced between devices through Supabase. Free to run.
 
 Stack: Vite, React, TypeScript, Tailwind, vite-plugin-pwa, Supabase (Auth + Postgres).
@@ -99,8 +99,9 @@ your sets, workouts and weigh-ins, so editing a set or a weigh-in updates it str
   each workout earned, any records, and every badge it ranked up.
 
 Standards, rank thresholds, XP amounts and badge kinds live in `src/config/` (`strengthStandards.ts`,
-`ranks.ts`, `xp.ts`, `activityBadges.ts`). The emblems are placeholders: see
-[docs/badge-art.md](docs/badge-art.md) to swap in real art.
+`ranks.ts`, `xp.ts`, `activityBadges.ts`). All ten ranks use matching Pip enamel crests, growing from
+a wooden medallion to Legend's flame crown. See [docs/badge-art.md](docs/badge-art.md) for the artwork
+and regeneration commands, or [preview the full set](docs/art-preview.png).
 
 ## Deploy (auto-deploys on every push to `main`)
 
@@ -217,4 +218,5 @@ npm run build    typecheck + production build
 npm test         unit tests
 npm run lint     oxlint
 npm run icons    regenerate the PWA icons
+npm run badges   regenerate the ten rank crests and locked badge (Node 22.18+)
 ```

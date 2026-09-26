@@ -4,7 +4,7 @@ import type { usePendingExercises } from '../hooks/usePendingExercises'
 import { useLastSessionSets } from '../hooks/useLastSessionSets'
 import { useRestTimer } from '../hooks/useRestTimer'
 import { defaultTarget, SECTION_INFO, sectionOf, type Section } from '../lib/activity'
-import { addManyToPlan, removeFromPlan } from '../lib/sessionPlan'
+import { addManyToPlan, removeFromPlan, setPlanNote } from '../lib/sessionPlan'
 import { buildBlocks, bySection, type PlanItem } from '../lib/workoutBlocks'
 import type { Category, DistanceUnit, Exercise, SetRow, WeightUnit } from '../types/db'
 import { Button } from './Button'
@@ -112,6 +112,8 @@ export function ActiveWorkout({ sessionId, plan, sets, exercises, unit, distance
                     onLog={(entry) => onLog(exercise, entry)}
                     onEditSet={onEditSet}
                     onDeleteSet={onDeleteSet}
+                    note={block.plan?.note ?? ''}
+                    onNote={(text) => onPlanChange(setPlanNote(plan, block.exerciseId, text, defaultTarget(exercise)))}
                     onRemove={block.plan ? () => onPlanChange(removeFromPlan(plan, block.exerciseId)) : () => pending.remove(block.exerciseId)}
                   />
                 )

@@ -8,6 +8,8 @@ export interface PlanItem {
   targetReps: number
   /** Seconds per hold / round / session for timed and distance activities (absent for lifts). */
   targetSeconds?: number
+  /** A note about this exercise in this workout. */
+  note?: string
 }
 
 export interface WorkoutBlock {

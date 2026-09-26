@@ -12,6 +12,7 @@ export const DEFAULT_TARGET = { targetSets: 3, targetReps: 10 } as const
 export const MAX_TARGET_SETS = 20
 export const MAX_TARGET_REPS = 100
 export const MAX_TARGET_SECONDS = 86400
+export const MAX_NOTE_LENGTH = 500
 
 const isPositiveInt = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value > 0
 
@@ -22,7 +23,8 @@ const isPlanRow = (value: unknown): value is PlanRow => {
     typeof row.exercise_id === 'string' &&
     isPositiveInt(row.target_sets) &&
     isPositiveInt(row.target_reps) &&
-    (row.target_seconds == null || isPositiveInt(row.target_seconds))
+    (row.target_seconds == null || isPositiveInt(row.target_seconds)) &&
+    (row.note == null || typeof row.note === 'string')
   )
 }
 
@@ -39,6 +41,7 @@ export function planFromRows(value: unknown): PlanItem[] {
       targetSets: row.target_sets,
       targetReps: row.target_reps,
       ...(row.target_seconds ? { targetSeconds: row.target_seconds } : {}),
+      ...(row.note?.trim() ? { note: row.note.trim().slice(0, MAX_NOTE_LENGTH) } : {}),
     })
   }
   return plan
@@ -53,7 +56,22 @@ export const planToRows = (plan: PlanItem[]): PlanRow[] | null =>
         target_sets: p.targetSets,
         target_reps: p.targetReps,
         ...(p.targetSeconds ? { target_seconds: p.targetSeconds } : {}),
+        ...(p.note ? { note: p.note } : {}),
       }))
+
+/**
+ * Sets (or, with blank text, clears) the note on an exercise. An exercise that is in the workout but
+ * not in the plan yet gets a plan entry with the given target so the note has somewhere to live.
+ */
+export function setPlanNote(plan: PlanItem[], exerciseId: string, text: string, target?: Target): PlanItem[] {
+  const note = text.trim().slice(0, MAX_NOTE_LENGTH)
+  const withEntry = plan.some((p) => p.exerciseId === exerciseId) ? plan : note ? [...plan, planItem(exerciseId, target)] : plan
+  return withEntry.map((p) => {
+    if (p.exerciseId !== exerciseId) return p
+    const { note: _old, ...rest } = p
+    return note ? { ...rest, note } : rest
+  })
+}
 
 /** A plan item for an exercise with this target (seconds only when there are some). */
 export function planItem(exerciseId: string, target: Target | typeof DEFAULT_TARGET = DEFAULT_TARGET): PlanItem {

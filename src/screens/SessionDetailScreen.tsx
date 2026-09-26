@@ -15,6 +15,7 @@ import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
 import { useSettings } from '../hooks/useSettings'
 import { formatDate, formatTime, sessionDurationMs, sessionTitle } from '../lib/format'
+import { planFromRows } from '../lib/sessionPlan'
 import { computeVolume, workFromSets } from '../lib/muscleVolume'
 import { groupByExercise, totalVolume } from '../lib/sessionStats'
 
@@ -33,6 +34,8 @@ export function SessionDetailScreen() {
   const blocks = useMemo(() => groupByExercise(sets), [sets])
   const exerciseById = useMemo(() => new Map((exercisesState.data ?? []).map((e) => [e.id, e])), [exercisesState.data])
   const volume = useMemo(() => computeVolume(workFromSets(sets, exerciseById)), [sets, exerciseById])
+  const storedPlan = session.data?.plan
+  const exerciseNotes = useMemo(() => new Map(planFromRows(storedPlan).flatMap((p) => (p.note ? [[p.exerciseId, p.note] as const] : []))), [storedPlan])
   const activeSeconds = sets.reduce((total, s) => total + (s.duration_seconds ?? 0), 0)
   const hasLifts = sets.some((s) => exerciseById.get(s.exercise_id)?.tracking === 'reps')
 
@@ -72,6 +75,12 @@ export function SessionDetailScreen() {
         activeSeconds={activeSeconds}
         unit={unit}
       />
+      {s.notes && (
+        <section className="card card-pad mt-3">
+          <h2 className="mb-1 font-display text-lg font-extrabold">Notes</h2>
+          <p className="text-sm whitespace-pre-wrap">{s.notes}</p>
+        </section>
+      )}
       {hasLifts && <MuscleVolumePanel
         label="This workout"
         title="Muscles worked"
@@ -81,7 +90,7 @@ export function SessionDetailScreen() {
         periodLabel="this workout"
         emptyText="No sets were logged."
       />}
-      <SessionExerciseList blocks={blocks} exerciseById={exerciseById} unit={unit} distanceUnit={distanceUnit} />
+      <SessionExerciseList blocks={blocks} exerciseById={exerciseById} unit={unit} distanceUnit={distanceUnit} notes={exerciseNotes} />
 
       {actionError && <p className="mt-4 text-sm text-danger">{actionError}</p>}
       <div className="mt-6 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">

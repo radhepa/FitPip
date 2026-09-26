@@ -4,12 +4,14 @@ import type { SetPatch } from '../data/sets'
 import { CATEGORY_INFO, describeTarget } from '../lib/activity'
 import { formatEntry, formatSetList, formatWeight } from '../lib/format'
 import { suggestNextSet } from '../lib/prefill'
+import { MAX_NOTE_LENGTH } from '../lib/sessionPlan'
 import { distanceInput, lengthUnitFor } from '../lib/units'
 import type { PlanItem } from '../lib/workoutBlocks'
 import type { DistanceUnit, Exercise, SetRow, WeightUnit } from '../types/db'
 import { CategoryTile } from './CategoryTile'
 import { DistanceEntry } from './DistanceEntry'
 import { LoggedSet } from './LoggedSet'
+import { NoteField } from './NoteField'
 import { RepsEntry } from './RepsEntry'
 import { TallyMarks } from './TallyMarks'
 import { TimeEntry } from './TimeEntry'
@@ -35,6 +37,9 @@ interface Props {
   onLog: (entry: NewEntry) => Promise<void>
   onEditSet: (id: string, patch: Partial<SetPatch>) => Promise<void>
   onDeleteSet: (id: string) => Promise<void>
+  /** The note on this exercise in this workout (empty when none). */
+  note: string
+  onNote: (text: string) => void
   /** Offered while the exercise has no sets yet. */
   onRemove?: () => void
 }
@@ -42,7 +47,7 @@ interface Props {
 const NOUN = { combat: 'Round', cardio: 'Round', yoga: 'Hold', stretch: 'Hold', swim: 'Set', strength: 'Set', sport: 'Round' } as const
 
 /** One exercise or activity in the workout: what was logged, and the right way to log the next one. */
-export function ExerciseBlock({ exercise, sets, plan, unit, distanceUnit, lastSessionSets, index, onLog, onEditSet, onDeleteSet, onRemove }: Props) {
+export function ExerciseBlock({ exercise, sets, plan, unit, distanceUnit, lastSessionSets, index, onLog, onEditSet, onDeleteSet, note, onNote, onRemove }: Props) {
   const color = CATEGORY_INFO[exercise.category].color
   const lengthUnit = lengthUnitFor(exercise.category, distanceUnit)
   const target = plan ? { targetSets: plan.targetSets, targetReps: plan.targetReps, targetSeconds: plan.targetSeconds ?? null } : null
@@ -74,6 +79,10 @@ export function ExerciseBlock({ exercise, sets, plan, unit, distanceUnit, lastSe
             ×
           </button>
         )}
+      </div>
+
+      <div className="mt-1">
+        <NoteField label={`Note on ${exercise.name}`} addText="Add a note" maxLength={MAX_NOTE_LENGTH} value={note} onSave={onNote} />
       </div>
 
       {sets.length > 0 && (

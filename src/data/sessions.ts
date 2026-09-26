@@ -18,6 +18,9 @@ export interface NewWorkout {
   plan: PlanItem[]
 }
 
+/** Longest note on a whole workout. */
+export const MAX_WORKOUT_NOTE = 2000
+
 const isBegun = (session: Session): session is BegunSession => !!session.started_at
 
 /**
@@ -60,6 +63,7 @@ export async function updateSession(id: string, patch: SessionPatch): Promise<Se
     if (!existing) throw new Error('Workout not found.')
     const updated: Session = { ...existing, ...patch, updated_at: nowIso() }
     if (updated.name !== null && updated.name.length > 80) throw invalidError('A workout name can be up to 80 characters.')
+    if (updated.notes !== null && updated.notes.length > MAX_WORKOUT_NOTE) throw invalidError(`A note can be up to ${MAX_WORKOUT_NOTE} characters.`)
     if (updated.ended_at && !updated.started_at) throw invalidError('Begin the workout before finishing it.')
     if (updated.ended_at && updated.started_at && updated.ended_at < updated.started_at) throw invalidError('A workout cannot end before it starts.')
     await putRow('sessions', updated, { isNew: false })

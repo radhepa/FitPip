@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ActiveWorkout } from '../components/ActiveWorkout'
 import { EmptyState, ErrorBanner, Loading } from '../components/feedback'
+import { NoteField } from '../components/NoteField'
 import { WorkoutBuilder } from '../components/WorkoutBuilder'
 import { WorkoutHeader } from '../components/WorkoutHeader'
 import { listExercises } from '../data/exercises'
-import { beginSession, deleteSession, finishSession, getSession, setSessionPlan, updateSession } from '../data/sessions'
+import { beginSession, deleteSession, finishSession, getSession, MAX_WORKOUT_NOTE, setSessionPlan, updateSession } from '../data/sessions'
 import { listSetsForSession } from '../data/sets'
 import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
@@ -124,6 +125,20 @@ export function WorkoutScreen() {
           })
         }
       />
+      <div className="mb-3">
+        <NoteField
+          label="Workout note"
+          addText="Add a note about this workout"
+          maxLength={MAX_WORKOUT_NOTE}
+          rows={3}
+          value={session.data.notes ?? ''}
+          onSave={(text) =>
+            guard(async () => {
+              session.setData(await updateSession(id, { notes: text || null }))
+            })
+          }
+        />
+      </div>
       {error && (
         <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] z-50 mx-auto max-w-xl">
           <ErrorBanner error={error} />

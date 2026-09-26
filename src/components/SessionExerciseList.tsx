@@ -13,10 +13,12 @@ interface Props {
   exerciseById: Map<string, Exercise>
   unit: WeightUnit
   distanceUnit: DistanceUnit
+  /** Notes written on exercises during the workout, by exercise id. */
+  notes?: Map<string, string>
 }
 
 /** Read-only list of what was done per exercise in a finished workout. */
-export function SessionExerciseList({ blocks, exerciseById, unit, distanceUnit }: Props) {
+export function SessionExerciseList({ blocks, exerciseById, unit, distanceUnit, notes }: Props) {
   return (
     <div className="stagger grid grid-cols-1 gap-2.5">
       {blocks.map((block, i) => {
@@ -46,6 +48,7 @@ export function SessionExerciseList({ blocks, exerciseById, unit, distanceUnit }
                 </li>
               ))}
             </ol>
+            {notes?.get(block.exerciseId) && <p className="mt-2 text-sm whitespace-pre-wrap text-muted italic">“{notes.get(block.exerciseId)}”</p>}
           </section>
         )
       })}

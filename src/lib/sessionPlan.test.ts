@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addToPlan, DEFAULT_TARGET, moveInPlan, moveWithinGroup, planFromRows, planToRows, removeFromPlan, setPlanTargets } from './sessionPlan'
+import { addToPlan, DEFAULT_TARGET, MAX_NOTE_LENGTH, moveInPlan, moveWithinGroup, planFromRows, planToRows, removeFromPlan, setPlanNote, setPlanTargets } from './sessionPlan'
 import type { PlanItem } from './workoutBlocks'
 
 const plan: PlanItem[] = [
@@ -114,3 +114,42 @@ describe('moveWithinGroup', () => {
     expect(moveWithinGroup(mixed, 'nope', 1, group)).toBe(mixed)
   })
 })
+
+describe('exercise notes', () => {
+  const item = { exerciseId: 'a', targetSets: 3, targetReps: 10 }
+
+  it('survive the round trip to the stored form', () => {
+    const rows = planToRows([{ ...item, note: 'seat at 4' }, { exerciseId: 'b', targetSets: 3, targetReps: 8 }])
+    expect(rows?.[0]).toMatchObject({ exercise_id: 'a', note: 'seat at 4' })
+    expect(rows?.[1]).not.toHaveProperty('note')
+    expect(planFromRows(rows)).toEqual([{ ...item, note: 'seat at 4' }, { exerciseId: 'b', targetSets: 3, targetReps: 8 }])
+  })
+
+  it('are trimmed, capped and ignored when blank or not text', () => {
+    const rows = [
+      { exercise_id: 'a', target_sets: 3, target_reps: 10, note: '   ' },
+      { exercise_id: 'b', target_sets: 3, target_reps: 10, note: `  ${'x'.repeat(900)}  ` },
+      { exercise_id: 'c', target_sets: 3, target_reps: 10, note: 42 },
+    ]
+    const plan = planFromRows(rows)
+    expect(plan.map((p) => p.exerciseId)).toEqual(['a', 'b'])
+    expect(plan[0]).not.toHaveProperty('note')
+    expect(plan[1].note).toHaveLength(MAX_NOTE_LENGTH)
+  })
+
+  it('setPlanNote sets, replaces and clears a note without touching the rest', () => {
+    const plan = [item, { exerciseId: 'b', targetSets: 2, targetReps: 5 }]
+    const noted = setPlanNote(plan, 'a', '  tight left shoulder ')
+    expect(noted[0]).toEqual({ ...item, note: 'tight left shoulder' })
+    expect(noted[1]).toBe(plan[1])
+    expect(setPlanNote(noted, 'a', 'better today')[0].note).toBe('better today')
+    expect(setPlanNote(noted, 'a', '   ')[0]).toEqual(item)
+    expect(plan[0]).toEqual(item) // the original is untouched
+  })
+
+  it('setPlanNote adds an exercise that was not in the plan, but never for an empty note', () => {
+    expect(setPlanNote([], 'z', 'grip wide', { targetSets: 4, targetReps: 6, targetSeconds: null })).toEqual([{ exerciseId: 'z', targetSets: 4, targetReps: 6, note: 'grip wide' }])
+    expect(setPlanNote([], 'z', '  ')).toEqual([])
+  })
+})
+

@@ -75,6 +75,8 @@ export interface PlanRow {
   target_reps: number
   /** Target length of each hold / round / session, for timed and distance activities. */
   target_seconds?: number | null
+  /** A note about this exercise in this workout ("seat at 4", "left shoulder tight"). */
+  note?: string | null
 }
 
 export interface Session {

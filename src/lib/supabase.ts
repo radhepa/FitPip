@@ -1,7 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
-const url = import.meta.env.VITE_SUPABASE_URL
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+/** A blank or whitespace-only value counts as not set (a host's empty env var must not crash the app). */
+const clean = (value: string | undefined) => value?.trim() || undefined
+
+const url = clean(import.meta.env.VITE_SUPABASE_URL)
+const anonKey = clean(import.meta.env.VITE_SUPABASE_ANON_KEY)
 
 /** False until .env is filled in; the app shows a setup screen instead of calling Supabase. */
 export const isConfigured = Boolean(url && anonKey)

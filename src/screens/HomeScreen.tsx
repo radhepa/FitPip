@@ -5,6 +5,7 @@ import { OpenWorkoutBanner } from '../components/OpenWorkoutBanner'
 import { PipSpeech } from '../components/PipSpeech'
 import { SessionListItem } from '../components/SessionListItem'
 import { StatTiles } from '../components/StatTiles'
+import { SyncBadge } from '../components/SyncBadge'
 import { TodayLineup } from '../components/TodayLineup'
 import { WeekStrip } from '../components/WeekStrip'
 import { ChevronIcon, SettingsIcon, SparkIcon } from '../components/icons'
@@ -51,9 +52,12 @@ export function HomeScreen() {
             <p className="font-bold text-muted">{greeting(now)}</p>
             <h1 className="font-display text-[2.1rem] leading-[1.05] font-extrabold">{dateLine}</h1>
           </div>
-          <Link to="/settings" className="icon-button" aria-label="Settings">
-            <SettingsIcon size="size-5" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <SyncBadge />
+            <Link to="/settings" className="icon-button" aria-label="Settings">
+              <SettingsIcon size="size-5" />
+            </Link>
+          </div>
         </header>
 
         <section className="card card-hero mb-4 p-4">

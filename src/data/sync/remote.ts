@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase'
+import { serverReachable, supabase } from '../../lib/supabase'
 import { PK, type TableName } from '../local/tables'
 
 export type RawRow = Record<string, unknown>
@@ -90,13 +90,26 @@ const quote = (value: string) => `"${value.replaceAll('"', '')}"`
 
 export const supabaseRemote: Remote = {
   async currentUserId() {
+    // Checking the sign-in can mean renewing it over the network, which Supabase retries for up to
+    // 30 seconds when the connection is bad. Don't wait that long, and don't mistake "couldn't
+    // check" for "signed out".
+    const unreachable = () => new SyncFailure('network', "Can't reach the server.")
+    if (!(await serverReachable())) throw unreachable()
+    const giveUp = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), 8_000))
+    let result
     try {
-      const { data, error } = await supabase.auth.getSession()
-      if (error) return null
-      return data.session?.user.id ?? null
+      result = await Promise.race([supabase.auth.getSession(), giveUp])
     } catch {
+      throw unreachable()
+    }
+    if (result === 'timeout') throw unreachable()
+    const { data, error } = result
+    if (error) {
+      const retryable = error.name === 'AuthRetryableFetchError' || (error as { status?: number }).status === 0
+      if (retryable) throw unreachable()
       return null
     }
+    return data.session?.user.id ?? null
   },
 
   async fetchRows(table, { since, after, limit }) {

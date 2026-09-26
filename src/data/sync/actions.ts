@@ -45,6 +45,24 @@ export async function discardRejectedChanges(): Promise<number> {
   return count
 }
 
+export interface RejectedChange {
+  key: string
+  table: string
+  what: 'added' | 'changed' | 'deleted'
+  message: string
+}
+
+/** The changes the server refused, for the Settings screen. */
+export async function listRejectedChanges(): Promise<RejectedChange[]> {
+  const entries = await getDb().pending.filter((entry) => !!entry.error).toArray()
+  return entries.map((entry) => ({
+    key: entry.key,
+    table: entry.table.replaceAll('_', ' '),
+    what: entry.op === 'delete' ? 'deleted' : entry.isNew ? 'added' : 'changed',
+    message: entry.error?.message ?? 'Refused by the server.',
+  }))
+}
+
 /** True when signing out would leave changes on this device that have not reached the server. */
 export const hasUnsyncedChanges = (): boolean => {
   const { pending, failed, phase } = getSyncStatus()

@@ -59,12 +59,22 @@ function resolve(session: SupabaseSession | null, event?: string): AuthSession |
   return user ? { user, offline: true } : null
 }
 
+/** How long to wait for the server to confirm the stored sign-in before opening the app without it. */
+const SESSION_CHECK_MS = 2_500
+
 export async function getAuthSession(): Promise<AuthSession | null> {
   if (isGuestMode()) return guestSession()
+  // Offline the check can't succeed, and Supabase keeps retrying the renewal for about 30 seconds.
+  // Never make someone stare at a spinner for that: open the app as the last user straight away.
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    const user = lastUser()
+    if (user) return { user, offline: true }
+  }
   let session: SupabaseSession | null = null
   try {
-    const { data } = await supabase.auth.getSession()
-    session = data.session
+    const check = supabase.auth.getSession().then(({ data }) => data.session)
+    const giveUp = new Promise<null>((resolve) => setTimeout(() => resolve(null), SESSION_CHECK_MS))
+    session = await Promise.race([check, giveUp])
   } catch {
     // Offline: fall back to the remembered user below.
   }

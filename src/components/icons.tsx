@@ -160,6 +160,38 @@ export const MoonIcon = ({ size }: P) => (
   </Icon>
 )
 
+const CLOUD = 'M6.5 18.5a4.5 4.5 0 0 1-.5-8.97 6 6 0 0 1 11.6 1.47 3.75 3.75 0 0 1-.6 7.5Z'
+
+/** Synced. */
+export const CloudCheckIcon = ({ size }: P) => (
+  <Icon size={size}>
+    <path d={CLOUD} />
+    <path d="m9.5 13.5 2 2 3.5-3.5" />
+  </Icon>
+)
+
+/** Offline. */
+export const CloudOffIcon = ({ size }: P) => (
+  <Icon size={size}>
+    <path d={CLOUD} />
+    <path d="M4 4l16 16" />
+  </Icon>
+)
+
+/** Syncing (spins when given the `animate-spin` class by its parent). */
+export const SyncIcon = ({ size }: P) => (
+  <Icon size={size}>
+    <path d="M20 7.5A8.5 8.5 0 0 0 5.2 6M4 3.5V7h3.5M4 16.5A8.5 8.5 0 0 0 18.8 18M20 20.5V17h-3.5" />
+  </Icon>
+)
+
+export const AlertIcon = ({ size }: P) => (
+  <Icon size={size}>
+    <path d="M12 4 3 19.5h18Z" />
+    <path d="M12 10v4.5M12 17.5v.01" />
+  </Icon>
+)
+
 // ---------------------------------------------------------------------------------------------
 // One icon per kind of activity.
 

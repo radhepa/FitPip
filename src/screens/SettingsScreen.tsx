@@ -1,8 +1,11 @@
 import { useState, type ReactNode } from 'react'
 import { Button } from '../components/Button'
 import { PageHeader } from '../components/PageHeader'
+import { SyncCard } from '../components/SyncCard'
 import { signOut } from '../data/auth'
 import { loadStarterExercises } from '../data/exercises'
+import { hasUnsyncedChanges } from '../data/sync/actions'
+import { getSyncStatus } from '../data/sync/status'
 import { errorMessage } from '../data/unwrap'
 import { useAuth } from '../hooks/useAuth'
 import { useAppearance, type AppearancePreference } from '../hooks/useAppearance'
@@ -61,6 +64,8 @@ export function SettingsScreen() {
       <PageHeader back title="Settings" />
       {message && <p className="card card-pad mb-3 text-sm">{message}</p>}
       <div className="stagger grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <SyncCard />
+
         <Card title="Appearance" hint="Auto follows this device.">
           <Group label="Appearance" options={APPEARANCES} value={preference} onChange={setPreference} />
         </Card>
@@ -102,7 +107,15 @@ export function SettingsScreen() {
 
         <Card title="Account">
           <p className="mb-3 truncate text-sm text-muted">{session?.user.email ?? 'Guest'}</p>
-          <Button variant="danger" block disabled={busy} onClick={() => run(async () => { await signOut(); return '' })}>
+          <Button variant="danger" block disabled={busy} onClick={() =>
+              run(async () => {
+                const { pending, failed } = getSyncStatus()
+                const waiting = pending + failed
+                if (hasUnsyncedChanges() && !window.confirm(`${waiting} change${waiting === 1 ? '' : 's'} haven't synced yet. They stay on this device and sync the next time you sign in here. Sign out anyway?`)) return ''
+                await signOut()
+                return ''
+              })
+            }>
             Sign out
           </Button>
         </Card>

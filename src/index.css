@@ -501,3 +501,38 @@ button:focus-visible,
   }
 }
 }
+
+/* ------------------------------------------------------------------------------------------
+   Sync indicator (Today header, Settings) and the offline / problem banner
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  .sync-badge[data-tone="ok"] { color: var(--color-target); }
+  .sync-badge[data-tone="busy"] { color: var(--color-accent); }
+  .sync-badge[data-tone="wait"] { color: var(--cat-combat); }
+  .sync-badge[data-tone="warn"] { color: var(--color-danger); }
+  .sync-spin { display: inline-grid; animation: sync-spin 1s linear infinite; }
+  @keyframes sync-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .sync-spin { animation: none; } }
+
+  .sync-banner {
+    --tone: var(--color-accent);
+    position: sticky;
+    top: calc(env(safe-area-inset-top) + .5rem);
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: 1rem;
+    border: 1px solid color-mix(in srgb, var(--tone) 40%, transparent);
+    border-radius: 1rem;
+    padding: .65rem .9rem;
+    background: color-mix(in srgb, var(--tone) 14%, var(--color-surface));
+    color: var(--color-text);
+    font-size: .875rem;
+    line-height: 1.3;
+    backdrop-filter: blur(10px);
+  }
+  .sync-banner[data-tone="wait"] { --tone: var(--cat-combat); }
+  .sync-banner[data-tone="warn"] { --tone: var(--color-danger); }
+  .sync-banner svg { flex: none; color: var(--tone); }
+}

@@ -1,12 +1,14 @@
+import { serverReachable } from '../../lib/supabase'
 import { getMeta, setMeta, type FitPipDB } from '../local/db'
 import { announceRemoteChange, onLocalWrite } from '../local/events'
 import { countPending, runSync } from './engine'
 import { SyncFailure, asFailure, supabaseRemote, type Remote } from './remote'
-import { resetSyncStatus, setSyncStatus } from './status'
+import { getSyncStatus, resetSyncStatus, setSyncStatus } from './status'
 
 // Decides WHEN to sync. The engine (engine.ts) does the work of one sync.
 
 const INTERVAL_MS = 60_000
+const PROBE_MS = 10_000
 const AFTER_WRITE_MS = 1_500
 const MAX_BACKOFF_MS = 5 * 60_000
 
@@ -22,6 +24,11 @@ let running: Promise<void> | null = null
 let rerun = false
 let timer: ReturnType<typeof setTimeout> | null = null
 let failures = 0
+let showProgress = false
+let lastAttemptAt = 0
+let lastOk = true
+/** Returning to the app shouldn't hammer a server that just failed to answer. */
+const MIN_GAP_MS = 5_000
 
 const offline = () => typeof navigator !== 'undefined' && navigator.onLine === false
 
@@ -44,15 +51,23 @@ export async function startSync(db: FitPipDB, userId: string, remote: Remote = s
   }
   const onOffline = () => setSyncStatus({ phase: 'offline', message: null })
   const onVisible = () => {
-    if (document.visibilityState === 'visible') void requestSync()
+    if (document.visibilityState === 'visible' && Date.now() - lastAttemptAt >= MIN_GAP_MS) void requestSync()
   }
   const unsubscribeWrites = onLocalWrite(() => {
     void refreshCounts()
     void requestSync(AFTER_WRITE_MS)
   })
-  const interval = setInterval(() => {
-    if (document.visibilityState === 'visible') void requestSync()
-  }, INTERVAL_MS)
+  // While offline, poke the server every few seconds so the sync resumes as soon as it is back,
+  // even when the phone still believes it is online (a weak signal). Otherwise sync once a minute.
+  const interval = setInterval(async () => {
+    if (document.visibilityState !== 'visible') return
+    const quietFor = Date.now() - lastAttemptAt
+    if (getSyncStatus().phase === 'offline') {
+      if (quietFor >= PROBE_MS && (await serverReachable(3_000))) void requestSync()
+    } else if (quietFor >= INTERVAL_MS) {
+      void requestSync()
+    }
+  }, PROBE_MS)
   window.addEventListener('online', onOnline)
   window.addEventListener('offline', onOffline)
   document.addEventListener('visibilitychange', onVisible)
@@ -105,6 +120,7 @@ export function requestSync(delayMs = 0): Promise<void> {
 /** A sync the user asked for: try again from a clean slate and wait for it to finish. */
 export function syncNow(): Promise<void> {
   failures = 0
+  showProgress = true
   return requestSync()
 }
 
@@ -115,10 +131,12 @@ function run(): Promise<void> {
   }
   running = cycle().finally(() => {
     running = null
-    if (rerun) {
+    // Only go again right away after a success; after a failure a retry is already scheduled.
+    if (rerun && lastOk) {
       rerun = false
       void run()
     }
+    rerun = false
   })
   return running
 }
@@ -151,6 +169,8 @@ async function withTabLock(userId: string, work: () => Promise<void>): Promise<b
 async function cycle(): Promise<void> {
   const current = ctx
   if (!current) return
+  lastAttemptAt = Date.now()
+  lastOk = false
   if (offline()) {
     await refreshCounts()
     setSyncStatus({ phase: 'offline', message: null })
@@ -158,7 +178,11 @@ async function cycle(): Promise<void> {
   }
 
   const ran = await withTabLock(current.userId, async () => {
-    setSyncStatus({ phase: 'syncing', message: null })
+    // Background retries keep the offline / problem banner steady; only a fresh sync (or one the
+    // user asked for) shows progress.
+    const { phase } = getSyncStatus()
+    if (showProgress || (phase !== 'offline' && phase !== 'error' && phase !== 'signed-out')) setSyncStatus({ phase: 'syncing', message: null })
+    showProgress = false
     try {
       // Never sync one user's data into another user's account.
       if ((await current.remote.currentUserId()) !== current.userId) {
@@ -168,6 +192,7 @@ async function cycle(): Promise<void> {
       const lastSyncAt = new Date().toISOString()
       await setMeta(current.db, 'lastSyncAt', lastSyncAt)
       failures = 0
+      lastOk = true
       if (ctx !== current) return
       if (outcome.changed) announceRemoteChange()
       setSyncStatus({ phase: 'idle', lastSyncAt, initialSyncDone: true, message: null, ...(await countPending(current.db)) })

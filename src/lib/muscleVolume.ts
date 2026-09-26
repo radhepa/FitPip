@@ -153,8 +153,8 @@ export function regionLevels(volume: VolumeByMuscle): Partial<Record<BodyMuscle,
 }
 
 /** Input for the library's Model: one entry per lit region, with its level as the frequency. */
-export function toModelData(levels: Partial<Record<BodyMuscle, Level>>): IExerciseData[] {
-  return (Object.entries(levels) as [BodyMuscle, Level][]).map(([region, level]) => ({
+export function toModelData(levels: Partial<Record<BodyMuscle, number>>): IExerciseData[] {
+  return (Object.entries(levels) as [BodyMuscle, number][]).map(([region, level]) => ({
     name: region,
     muscles: [region],
     frequency: level,

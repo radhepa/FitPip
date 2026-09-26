@@ -20,8 +20,10 @@ export interface PaceStandard {
   /** Seconds to cover referenceM (or km/h when referenceM is 0), per sex, worst to best. */
   men: Anchors
   women: Anchors
-  /** How the best effort is described: "5K time", "2,000 m time", "Average speed", "Pace per 100 m". */
+  /** How the best effort is described: "5K time", "2,000 m time", "Average speed". */
   measure: string
+  /** Who you're compared with ("runners"). */
+  people: string
 }
 
 export interface ActivityBadgeDef {
@@ -42,21 +44,21 @@ export const ACTIVITY_BADGES: readonly ActivityBadgeDef[] = [
     label: 'Running',
     category: 'cardio',
     secondsPerKm: 360,
-    pace: { referenceM: 5000, minDistanceM: 1000, measure: '5K time', men: [min(45), min(36), min(29, 30), min(24, 30), min(21)], women: [min(50), min(41), min(34), min(28, 30), min(24, 30)] },
+    pace: { referenceM: 5000, minDistanceM: 1000, measure: '5K time', people: 'runners', men: [min(45), min(36), min(29, 30), min(24, 30), min(21)], women: [min(50), min(41), min(34), min(28, 30), min(24, 30)] },
   },
   {
     key: 'rowing',
     label: 'Rowing',
     category: 'cardio',
     secondsPerKm: 270,
-    pace: { referenceM: 2000, minDistanceM: 500, measure: '2,000 m time', men: [min(10, 15), min(9), min(8, 5), min(7, 25), min(6, 55)], women: [min(11, 45), min(10, 20), min(9, 15), min(8, 30), min(7, 55)] },
+    pace: { referenceM: 2000, minDistanceM: 500, measure: '2,000 m time', people: 'rowers', men: [min(10, 15), min(9), min(8, 5), min(7, 25), min(6, 55)], women: [min(11, 45), min(10, 20), min(9, 15), min(8, 30), min(7, 55)] },
   },
   {
     key: 'ski_erg',
     label: 'Ski erg',
     category: 'cardio',
     secondsPerKm: 300,
-    pace: { referenceM: 2000, minDistanceM: 500, measure: '2,000 m time', men: [min(11), min(9, 40), min(8, 40), min(7, 55), min(7, 20)], women: [min(12, 30), min(11), min(9, 55), min(9, 5), min(8, 30)] },
+    pace: { referenceM: 2000, minDistanceM: 500, measure: '2,000 m time', people: 'people on the ski erg', men: [min(11), min(9, 40), min(8, 40), min(7, 55), min(7, 20)], women: [min(12, 30), min(11), min(9, 55), min(9, 5), min(8, 30)] },
   },
   {
     key: 'cycling',
@@ -64,14 +66,14 @@ export const ACTIVITY_BADGES: readonly ActivityBadgeDef[] = [
     category: 'cardio',
     secondsPerKm: 150,
     // km/h here (referenceM 0): the average speed of a ride.
-    pace: { referenceM: 0, minDistanceM: 5000, measure: 'Average speed', men: [16, 20, 24, 28, 32], women: [14, 17.5, 21, 24.5, 28] },
+    pace: { referenceM: 0, minDistanceM: 5000, measure: 'Average speed', people: 'cyclists', men: [16, 20, 24, 28, 32], women: [14, 17.5, 21, 24.5, 28] },
   },
   {
     key: 'freestyle',
     label: 'Freestyle swimming',
     category: 'swim',
     secondsPerKm: 1500,
-    pace: { referenceM: 400, minDistanceM: 100, measure: '400 m time', men: [min(13), min(10, 20), min(8, 20), min(6, 48), min(5, 40)], women: [min(14), min(11, 20), min(9), min(7, 20), min(6, 8)] },
+    pace: { referenceM: 400, minDistanceM: 100, measure: '400 m time', people: 'swimmers', men: [min(13), min(10, 20), min(8, 20), min(6, 48), min(5, 40)], women: [min(14), min(11, 20), min(9), min(7, 20), min(6, 8)] },
   },
   { key: 'walking', label: 'Walking & hiking', category: 'cardio', secondsPerKm: 720 },
   { key: 'indoor_cycling', label: 'Indoor cycling', category: 'cardio', secondsPerKm: 150 },

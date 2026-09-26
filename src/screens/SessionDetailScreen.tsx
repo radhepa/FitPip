@@ -6,6 +6,7 @@ import { MuscleVolumePanel } from '../components/MuscleVolumePanel'
 import { PageHeader } from '../components/PageHeader'
 import { SessionExerciseList } from '../components/SessionExerciseList'
 import { SessionStats } from '../components/SessionStats'
+import { WorkoutRewards } from '../components/WorkoutRewards'
 import { confetti } from '../components/fx'
 import { PipSpeech } from '../components/PipSpeech'
 import { listExercises } from '../data/exercises'
@@ -75,6 +76,7 @@ export function SessionDetailScreen() {
         activeSeconds={activeSeconds}
         unit={unit}
       />
+      <WorkoutRewards sessionId={id} />
       {s.notes && (
         <section className="card card-pad mt-3">
           <h2 className="mb-1 font-display text-lg font-extrabold">Notes</h2>

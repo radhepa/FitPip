@@ -14,3 +14,10 @@ export async function loadTrainingWindow(days: number): Promise<TrainingWindow> 
   const sets = await listSetsForSessions(sessions.map((s) => s.id))
   return { sessions, sets }
 }
+
+/** Every workout that has begun, ever, with its sets (for ranks, badges and XP). */
+export async function loadAllTraining(): Promise<TrainingWindow> {
+  const sessions = await listSessionsSince('')
+  const sets = await listSetsForSessions(sessions.map((s) => s.id))
+  return { sessions, sets }
+}

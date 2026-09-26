@@ -1,4 +1,5 @@
-import type { BegunSession, Exercise, SetRow } from '../types/db'
+import type { BegunSession, BodyWeight, Exercise, SetRow } from '../types/db'
+import { localDateIso } from '../lib/bodyWeight'
 import { GUEST_USER_ID } from './local/context'
 import { getMeta, setMeta, type FitPipDB } from './local/db'
 
@@ -92,17 +93,23 @@ function demoData() {
       updated_at: session.started_at,
     }
   })
-  return { exercises, sessions, sets }
+  // Two weigh-ins so the profile can rank the demo lifts.
+  const weights: BodyWeight[] = [[6, 181.4], [1, 180.2]].map(([days, weight]) => {
+    const at = isoDaysAgo(days, 8)
+    return { id: `guest-weight-${days}`, user_id: GUEST_USER_ID, measured_on: localDateIso(new Date(at)), weight, unit: 'lb', note: null, created_at: at, updated_at: at }
+  })
+  return { exercises, sessions, sets, weights }
 }
 
 /** Puts the demo data into a brand-new guest database. Never queued for the server. */
 export async function seedGuestIfNew(db: FitPipDB): Promise<void> {
   if (await getMeta<boolean>(db, 'guestSeeded')) return
-  const { exercises, sessions, sets } = demoData()
+  const { exercises, sessions, sets, weights } = demoData()
   await db.transaction('rw', db.tables, async () => {
     await db.exercises.bulkPut(exercises)
     await db.sessions.bulkPut(sessions)
     await db.sets.bulkPut(sets)
+    await db.body_weights.bulkPut(weights)
     await setMeta(db, 'guestSeeded', true)
   })
 }

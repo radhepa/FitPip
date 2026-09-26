@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { brand } from '../config/brand'
-import { CalendarIcon, ChartIcon, HistoryIcon, HomeIcon, PipHeadIcon, ScaleIcon } from './icons'
+import { CalendarIcon, ChartIcon, HistoryIcon, HomeIcon, MedalIcon, PipHeadIcon, ScaleIcon } from './icons'
 
 const TABS: { to: string; label: string; icon: ReactNode; end?: boolean; match: RegExp }[] = [
   { to: '/', label: 'Today', icon: <HomeIcon />, end: true, match: /^\/($|workout|session|settings|suggest)/ },
@@ -9,6 +9,7 @@ const TABS: { to: string; label: string; icon: ReactNode; end?: boolean; match: 
   { to: '/weigh-in', label: 'Weigh-in', icon: <ScaleIcon />, match: /^\/weigh-in/ },
   { to: '/progress', label: 'Progress', icon: <ChartIcon />, match: /^\/(progress|exercises)/ },
   { to: '/history', label: 'History', icon: <HistoryIcon />, match: /^\/history/ },
+  { to: '/profile', label: 'Profile', icon: <MedalIcon />, match: /^\/profile/ },
 ]
 
 /** Floating tab bar with a highlight that slides to the active tab. */

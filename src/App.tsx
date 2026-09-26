@@ -10,6 +10,7 @@ import { HomeScreen } from './screens/HomeScreen'
 import { LoginScreen } from './screens/LoginScreen'
 import { NotFoundScreen } from './screens/NotFoundScreen'
 import { PlanScreen } from './screens/PlanScreen'
+import { ProfileScreen } from './screens/ProfileScreen'
 import { ProgressScreen } from './screens/ProgressScreen'
 import { SessionDetailScreen } from './screens/SessionDetailScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
@@ -37,6 +38,7 @@ export default function App() {
                 <Route path="exercises/:id" element={<ExerciseDetailScreen />} />
                 <Route path="history" element={<HistoryScreen />} />
                 <Route path="weigh-in" element={<WeighInScreen />} />
+                <Route path="profile" element={<ProfileScreen />} />
                 <Route path="settings" element={<SettingsScreen />} />
                 <Route path="*" element={<NotFoundScreen />} />
               </Route>

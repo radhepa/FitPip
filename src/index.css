@@ -604,3 +604,37 @@ button:focus-visible,
   }
   .note-field:focus { outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent); outline-offset: 1px; }
 }
+
+/* ------------------------------------------------------------------------------------------
+   Ranks and badges (Profile, workout rewards)
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  .rank-emblem { filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .28)); }
+  .rank-bar { height: .5rem; overflow: hidden; border-radius: 999px; background: var(--color-surface-2); }
+  .rank-bar > span {
+    display: block;
+    width: var(--fill);
+    height: 100%;
+    border-radius: inherit;
+    background: var(--rank);
+    transition: width 700ms var(--ease-spring);
+  }
+  .rank-name { color: var(--color-text); font-weight: 800; }
+  .rank-swatch { display: inline-block; width: .7rem; height: .7rem; flex-shrink: 0; border-radius: .25rem; background: var(--rank); }
+  .badge-tile {
+    display: flex;
+    min-height: 100%;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: .35rem;
+    padding: .85rem .6rem .75rem;
+    text-align: center;
+    border-top: 3px solid var(--rank, var(--color-line));
+  }
+  .badge-pop { animation: badge-pop 560ms var(--ease-spring) both; animation-delay: calc(var(--i, 0) * 70ms); }
+  @keyframes badge-pop { from { opacity: 0; transform: scale(.6) rotate(-8deg); } to { opacity: 1; transform: none; } }
+  .xp-bar { height: .65rem; overflow: hidden; border-radius: 999px; background: color-mix(in srgb, var(--color-text) 12%, transparent); }
+  .xp-bar > span { display: block; width: var(--fill); height: 100%; border-radius: inherit; background: var(--grad-accent); transition: width 900ms var(--ease-spring); }
+  @media (prefers-reduced-motion: reduce) { .badge-pop { animation: none; } }
+}

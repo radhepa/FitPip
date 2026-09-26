@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ACTIVITY_BADGES, activityBadgeDef, activityBadgeKey } from '../config/activityBadges'
 import { ex, session, set } from './rankFixtures.test-utils'
-import { pacePercentile, paceValue, practiceSeconds, rankActivities } from './activityRank'
+import { paceLadder, pacePercentile, paceValue, practiceSeconds, rankActivities } from './activityRank'
 
 const cardio = (name: string, tracking: 'distance' | 'time' | 'reps' = 'distance') => ({ name, category: 'cardio' as const, tracking })
 
@@ -93,5 +93,15 @@ describe('rankActivities', () => {
         }
       }
     }
+  })
+})
+
+describe('paceLadder', () => {
+  it('gets faster rank by rank', () => {
+    const ladder = paceLadder(activityBadgeDef('running').pace!, 'male')
+    expect(ladder[0].value).toBeNull()
+    for (let i = 2; i < ladder.length; i += 1) expect(ladder[i].value!).toBeLessThan(ladder[i - 1].value!)
+    const cycling = paceLadder(activityBadgeDef('cycling').pace!, 'female')
+    for (let i = 2; i < cycling.length; i += 1) expect(cycling[i].value!).toBeGreaterThan(cycling[i - 1].value!)
   })
 })

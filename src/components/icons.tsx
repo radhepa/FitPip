@@ -123,6 +123,20 @@ export const TrophyIcon = ({ size }: P) => (
   </Icon>
 )
 
+export const MedalIcon = ({ size }: P) => (
+  <Icon size={size}>
+    <path d="M8 3h8l-2.5 6.2M8 3l2.5 6.2" />
+    <circle cx="12" cy="15" r="5.5" />
+    <path d="m12 12.4.8 1.6 1.7.25-1.25 1.2.3 1.7-1.55-.8-1.55.8.3-1.7-1.25-1.2 1.7-.25z" />
+  </Icon>
+)
+
+export const PencilIcon = ({ size = 'size-5' }: P) => (
+  <Icon size={size}>
+    <path d="M14.5 5.5l4 4M4 20l1-4.5L15.5 5a1.8 1.8 0 0 1 2.5 0l1 1a1.8 1.8 0 0 1 0 2.5L8.5 19z" />
+  </Icon>
+)
+
 export const TrashIcon = ({ size = 'size-5' }: P) => (
   <Icon size={size}>
     <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12.5a1.5 1.5 0 0 0 1.5 1.5h7a1.5 1.5 0 0 0 1.5-1.5L18 7M9 7V4.5h6V7" />

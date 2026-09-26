@@ -1,9 +1,9 @@
 // Ranks for cardio and practice badges (see config/activityBadges.ts).
 import { ACTIVITY_BADGES, SECONDS_PER_REPS_SET, activityBadgeKey, paceAnchors, type ActivityBadgeDef, type PaceStandard } from '../config/activityBadges'
-import type { RankNumber } from '../config/ranks'
+import { RANKS, type RankNumber } from '../config/ranks'
 import { ANCHOR_PERCENTILES, type Sex } from '../config/strengthStandards'
 import type { BegunSession, Exercise, SetRow } from '../types/db'
-import { percentileOf, rankForHours, rankForPercentile } from './percentile'
+import { percentileOf, rankForHours, rankForPercentile, valueAtPercentile } from './percentile'
 
 /** Riegel's endurance exponent: time grows a little faster than distance. */
 export const RIEGEL_EXPONENT = 1.06
@@ -59,6 +59,17 @@ export function pacePercentile(value: number, pace: PaceStandard, sex: Sex): num
   if (pace.referenceM === 0) return percentileOf(value, anchors, ANCHOR_PERCENTILES)
   // As speed, so bigger is better and the anchors increase.
   return percentileOf(pace.referenceM / value, anchors.map((t) => pace.referenceM / t), ANCHOR_PERCENTILES)
+}
+
+/** The pace value (seconds or km/h) that reaches each rank. Rank 1 needs nothing (null). */
+export function paceLadder(pace: PaceStandard, sex: Sex): { rank: RankNumber; value: number | null }[] {
+  const anchors = paceAnchors(pace, sex)
+  const speeds = pace.referenceM === 0 ? [...anchors] : anchors.map((t) => pace.referenceM / t)
+  return RANKS.map((r) => {
+    if (r.fromPercentile === 0) return { rank: r.rank, value: null }
+    const speed = valueAtPercentile(r.fromPercentile, speeds, ANCHOR_PERCENTILES)
+    return { rank: r.rank, value: pace.referenceM === 0 ? speed : pace.referenceM / speed }
+  })
 }
 
 export function rankActivities(input: {

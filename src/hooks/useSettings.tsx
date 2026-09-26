@@ -58,12 +58,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const change = useCallback(
     async (patch: Partial<UserSettings>, save: () => Promise<void>) => {
       if (!userId) return
-      const previous = settings
-      setSettings({ ...settings, ...patch })
+      // Only the changed fields are put back, so two quick changes in a row don't undo each other.
+      const previous = Object.fromEntries(Object.keys(patch).map((key) => [key, settings[key as keyof UserSettings]])) as Partial<UserSettings>
+      setSettings((current) => ({ ...current, ...patch }))
       try {
         await save()
       } catch (e) {
-        setSettings(previous)
+        setSettings((current) => ({ ...current, ...previous }))
         throw e
       }
     },

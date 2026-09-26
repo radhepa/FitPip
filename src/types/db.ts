@@ -37,6 +37,8 @@ export const EQUIPMENT = [
 export type Equipment = (typeof EQUIPMENT)[number]
 
 export type WeightUnit = 'kg' | 'lb'
+/** Which strength standards lifts are compared with. */
+export type Sex = 'male' | 'female'
 export type DistanceUnit = 'km' | 'mi'
 
 /** What kind of activity an exercise is: drives its colour, icon and workout section. */
@@ -123,6 +125,10 @@ export interface UserSettings {
   goal_weight_unit: WeightUnit | null
   /** Seconds of rest after a lifting set; 0 turns the rest timer off. */
   rest_seconds: number
+  /** Which strength standards lifts are ranked against; null until chosen. */
+  compare_sex: Sex | null
+  /** Name shown on the profile. */
+  display_name: string | null
 }
 
 /** One weigh-in. Kept in the unit it was entered in. */

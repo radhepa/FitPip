@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { DEFAULT_SETTINGS, getSettings, saveDistanceUnit, saveGoalWeight, saveRestSeconds, saveWeightUnit } from '../data/settings'
-import type { DistanceUnit, UserSettings, WeightUnit } from '../types/db'
+import { DEFAULT_SETTINGS, getSettings, saveCompareSex, saveDisplayName, saveDistanceUnit, saveGoalWeight, saveRestSeconds, saveWeightUnit } from '../data/settings'
+import type { DistanceUnit, Sex, UserSettings, WeightUnit } from '../types/db'
 import { useAuth } from './useAuth'
 import { useDataVersion } from './useSyncStatus'
 
@@ -10,10 +10,15 @@ interface SettingsValue {
   goal: { weight: number; unit: WeightUnit } | null
   /** Seconds of rest after a lifting set; 0 means the timer is off. */
   restSeconds: number
+  /** Which strength standards lifts are ranked against; null until chosen. */
+  compareSex: Sex | null
+  displayName: string | null
   setUnit: (unit: WeightUnit) => Promise<void>
   setDistanceUnit: (unit: DistanceUnit) => Promise<void>
   setGoal: (goal: { weight: number; unit: WeightUnit } | null) => Promise<void>
   setRestSeconds: (seconds: number) => Promise<void>
+  setCompareSex: (sex: Sex) => Promise<void>
+  setDisplayName: (name: string) => Promise<void>
 }
 
 const noop = async () => {}
@@ -22,10 +27,14 @@ const SettingsContext = createContext<SettingsValue>({
   distanceUnit: 'mi',
   goal: null,
   restSeconds: DEFAULT_SETTINGS.rest_seconds,
+  compareSex: null,
+  displayName: null,
   setUnit: noop,
   setDistanceUnit: noop,
   setGoal: noop,
   setRestSeconds: noop,
+  setCompareSex: noop,
+  setDisplayName: noop,
 })
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
@@ -66,6 +75,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     distanceUnit: settings.distance_unit,
     goal: settings.goal_weight !== null && settings.goal_weight_unit ? { weight: settings.goal_weight, unit: settings.goal_weight_unit } : null,
     restSeconds: settings.rest_seconds,
+    compareSex: settings.compare_sex,
+    displayName: settings.display_name,
+    setCompareSex: (sex) => change({ compare_sex: sex }, () => saveCompareSex(sex)),
+    setDisplayName: (name) =>
+      change({ display_name: name.replace(/\s+/g, ' ').trim() || null }, async () => {
+        await saveDisplayName(name)
+      }),
     setRestSeconds: (seconds) => change({ rest_seconds: seconds }, () => saveRestSeconds(seconds)),
     setUnit: (unit) => change({ weight_unit: unit }, () => saveWeightUnit(unit)),
     setDistanceUnit: (unit) => change({ distance_unit: unit }, () => saveDistanceUnit(unit)),

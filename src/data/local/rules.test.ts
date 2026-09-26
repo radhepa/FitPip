@@ -4,7 +4,7 @@ import { createExercise } from '../exercises'
 import { setActiveDbForTests } from './context'
 import { FitPipDB } from './db'
 import { createWorkout } from '../sessions'
-import { getSettings, saveDistanceUnit, saveGoalWeight, saveRestSeconds, saveWeightUnit } from '../settings'
+import { getSettings, saveCompareSex, saveDisplayName, saveDistanceUnit, saveGoalWeight, saveRestSeconds, saveWeightUnit } from '../settings'
 import { addTemplateExercises, createTemplate, deleteTemplate, getTemplate, listTemplates, renameTemplate, updateTemplateExercise } from '../templates'
 import { addWeekPlanItems, clearWeekday, listWeekPlan, removeWeekPlanItem, saveWeekPlanOrder } from '../weekPlan'
 import { deleteBodyWeight, listBodyWeights, saveBodyWeight } from '../bodyWeights'
@@ -130,13 +130,37 @@ describe('weigh-ins', () => {
 describe('settings', () => {
   it('starts with defaults, then remembers each change', async () => {
     device()
-    expect(await getSettings()).toEqual({ weight_unit: 'lb', distance_unit: 'mi', goal_weight: null, goal_weight_unit: null, rest_seconds: 90 })
+    expect(await getSettings()).toEqual({ weight_unit: 'lb', distance_unit: 'mi', goal_weight: null, goal_weight_unit: null, rest_seconds: 90, compare_sex: null, display_name: null })
     await saveWeightUnit('kg')
     await saveDistanceUnit('km')
     await saveGoalWeight({ weight: 75, unit: 'kg' })
-    expect(await getSettings()).toEqual({ weight_unit: 'kg', distance_unit: 'km', goal_weight: 75, goal_weight_unit: 'kg', rest_seconds: 90 })
+    expect(await getSettings()).toEqual({ weight_unit: 'kg', distance_unit: 'km', goal_weight: 75, goal_weight_unit: 'kg', rest_seconds: 90, compare_sex: null, display_name: null })
     await saveGoalWeight(null)
     expect((await getSettings()).goal_weight).toBeNull()
+  })
+})
+
+describe('profile settings', () => {
+  it('saves which standards to compare with and a tidy name, and blank clears the name', async () => {
+    device()
+    await saveCompareSex('female')
+    expect(await saveDisplayName('  Sam   Lee ')).toBe('Sam Lee')
+    expect(await getSettings()).toMatchObject({ compare_sex: 'female', display_name: 'Sam Lee' })
+    expect(await saveDisplayName('   ')).toBeNull()
+    expect((await getSettings()).display_name).toBeNull()
+    await expect(saveDisplayName('x'.repeat(41))).rejects.toThrow(/40 characters/)
+    await expect(saveCompareSex('other' as never)).rejects.toThrow(/standards/)
+  })
+
+  it('leaves the new columns out of a saved row until they are set, so older databases keep syncing', async () => {
+    const db = device()
+    await saveWeightUnit('kg')
+    const row = (await db.user_settings.get('user-1'))!
+    expect('compare_sex' in row).toBe(false)
+    expect('display_name' in row).toBe(false)
+    await saveCompareSex('male')
+    await saveWeightUnit('lb')
+    expect(await db.user_settings.get('user-1')).toMatchObject({ compare_sex: 'male', weight_unit: 'lb' })
   })
 })
 

@@ -17,9 +17,9 @@
 // The first standard whose `match` fits an exercise's name (and equipment, when given) is used,
 // so specific entries come before general ones. Only strength exercises logged as weight x reps
 // are ranked this way.
-import type { Equipment, Muscle } from '../types/db'
+import type { Equipment, Muscle, Sex } from '../types/db'
 
-export type Sex = 'male' | 'female'
+export type { Sex }
 
 /** Values at the 5th, 20th, 50th, 80th and 95th percentile. */
 export type Anchors = readonly [number, number, number, number, number]

@@ -125,9 +125,13 @@ export const supabaseRemote: Remote = {
   },
 
   async fetchByKeys(table, keys) {
-    if (keys.length === 0) return []
-    const reply = check(await supabase.from(table).select('*').in(PK[table], keys))
-    return (reply.data ?? []) as RawRow[]
+    // A hundred ids at a time keeps the request address short enough for any server.
+    const rows: RawRow[] = []
+    for (let i = 0; i < keys.length; i += 100) {
+      const reply = check(await supabase.from(table).select('*').in(PK[table], keys.slice(i, i + 100)))
+      rows.push(...((reply.data ?? []) as RawRow[]))
+    }
+    return rows
   },
 
   async fetchTombstones(afterId, limit) {

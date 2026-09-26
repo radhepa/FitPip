@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from './Button'
 import { ElapsedClock } from './ElapsedClock'
+import { formatClock } from '../lib/format'
 import { CheckIcon } from './icons'
 import { ProgressRing } from './ProgressRing'
 
@@ -8,15 +9,20 @@ interface Props {
   name: string
   /** Null while the workout is being set up: no clock runs until it begins. */
   startedAt: string | null
+  /** Set when a finished workout is being edited: its recorded time is shown and never changes. */
+  endedAt?: string | null
   /** Sets done out of the sets planned (null when nothing has a target). */
   progress: { done: number; target: number } | null
   onRename: (name: string) => void
   onFinish: () => void
   finishing: boolean
+  /** Editing a finished workout: leaves the edit screen (nothing is "finished" again). */
+  onDone?: () => void
 }
 
 /** The workout's hero card: its name, the big clock, how far through the plan you are, and Finish. */
-export function WorkoutHeader({ name, startedAt, progress, onRename, onFinish, finishing }: Props) {
+export function WorkoutHeader({ name, startedAt, endedAt = null, progress, onRename, onFinish, finishing, onDone }: Props) {
+  const editing = endedAt !== null && startedAt !== null
   const [draft, setDraft] = useState(name)
 
   return (
@@ -32,7 +38,14 @@ export function WorkoutHeader({ name, startedAt, progress, onRename, onFinish, f
       />
       <div className="mt-3 flex items-center gap-4">
         <div className="min-w-0 flex-1">
-          {startedAt ? (
+          {editing ? (
+            <>
+              <p className="font-display text-[3.75rem] leading-none font-extrabold text-muted" aria-label="Recorded time">
+                {formatClock(new Date(endedAt).getTime() - new Date(startedAt).getTime())}
+              </p>
+              <p className="mt-1 text-sm font-semibold text-muted">Editing a finished workout. Its time stays as recorded.</p>
+            </>
+          ) : startedAt ? (
             <p className="gradient-text font-display text-[3.75rem] leading-none font-extrabold">
               <ElapsedClock startedAt={startedAt} />
             </p>
@@ -53,8 +66,8 @@ export function WorkoutHeader({ name, startedAt, progress, onRename, onFinish, f
         )}
       </div>
       {startedAt && (
-        <Button variant="primary" block className="mt-4" onClick={onFinish} disabled={finishing}>
-          <CheckIcon /> {finishing ? 'Finishing…' : 'Finish workout'}
+        <Button variant="primary" block className="mt-4" onClick={editing ? onDone : onFinish} disabled={finishing}>
+          <CheckIcon /> {editing ? 'Done editing' : finishing ? 'Finishing…' : 'Finish workout'}
         </Button>
       )}
     </header>

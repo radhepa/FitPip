@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { deleteSet, logSet, updateSet, type SetPatch } from '../data/sets'
+import { deleteSet, logSet, restoreSet, updateSet, type SetPatch } from '../data/sets'
 import type { usePendingExercises } from '../hooks/usePendingExercises'
 import { useLastSessionSets } from '../hooks/useLastSessionSets'
 import { useRestTimer } from '../hooks/useRestTimer'
@@ -14,6 +14,7 @@ import { ExercisePicker } from './ExercisePicker'
 import { buzz } from './fx'
 import { RestTimer } from './RestTimer'
 import { SectionHeader } from './SectionHeader'
+import { UndoToast } from './UndoToast'
 
 interface Props {
   sessionId: string
@@ -28,13 +29,16 @@ interface Props {
   onSetsChange: (update: (prev: SetRow[]) => SetRow[]) => void
   onPlanChange: (plan: PlanItem[]) => void
   onExerciseAdded: (exercise: Exercise) => void
+  /** Editing a finished workout: no rest timer, and "delete" instead of "discard". */
+  editing?: boolean
   onDiscard: () => void
 }
 
 /** A workout under way, in sections (strength, cardio, yoga & stretching), each exercise logged its own way. */
-export function ActiveWorkout({ sessionId, plan, sets, exercises, unit, distanceUnit, pending, guard, onSetsChange, onPlanChange, onExerciseAdded, onDiscard }: Props) {
+export function ActiveWorkout({ sessionId, plan, sets, exercises, unit, distanceUnit, pending, guard, onSetsChange, onPlanChange, onExerciseAdded, editing = false, onDiscard }: Props) {
   const [picking, setPicking] = useState<Category | 'all' | null>(null)
   const restTimer = useRestTimer()
+  const [undo, setUndo] = useState<{ set: SetRow; key: number } | null>(null)
   const exerciseById = useMemo(() => new Map(exercises.map((e) => [e.id, e])), [exercises])
   const blocks = useMemo(
     () => buildBlocks({ sets, pendingIds: pending.ids, plan }).filter((b) => exerciseById.has(b.exerciseId)),
@@ -53,7 +57,7 @@ export function ActiveWorkout({ sessionId, plan, sets, exercises, unit, distance
       onSetsChange((prev) => [...prev, row])
       pending.remove(exercise.id)
       buzz(15)
-      if (exercise.tracking === 'reps') restTimer.start()
+      if (exercise.tracking === 'reps' && !editing) restTimer.start()
     })
 
   const onEditSet = (setId: string, patch: Partial<SetPatch>) =>
@@ -64,9 +68,21 @@ export function ActiveWorkout({ sessionId, plan, sets, exercises, unit, distance
 
   const onDeleteSet = (setId: string) =>
     guard(async () => {
+      const removed = sets.find((s) => s.id === setId)
       await deleteSet(setId)
       onSetsChange((prev) => prev.filter((s) => s.id !== setId))
+      if (removed) setUndo({ set: removed, key: Date.now() })
     })
+
+  const onUndoDelete = () => {
+    const removed = undo?.set
+    setUndo(null)
+    if (!removed) return
+    void guard(async () => {
+      const restored = await restoreSet(removed)
+      onSetsChange((prev) => [...prev, restored].sort((a, b) => a.set_order - b.set_order || a.created_at.localeCompare(b.created_at)))
+    })
+  }
 
   const firstCategory = (section: Section): Category | 'all' => (section === 'strength' ? 'strength' : section === 'cardio' ? 'cardio' : SECTION_INFO[section].categories[0])
   let index = 0
@@ -110,10 +126,13 @@ export function ActiveWorkout({ sessionId, plan, sets, exercises, unit, distance
           + Add anything
         </Button>
         <Button variant="ghost" block onClick={onDiscard} className="!text-danger">
-          Discard workout
+          {editing ? 'Delete workout' : 'Discard workout'}
         </Button>
       </div>
 
+      {undo && <UndoToast key={undo.key} message="Set deleted" raised={!!restTimer.rest} onUndo={onUndoDelete} onExpire={() => setUndo(null)} />}
+      {/* Room to scroll past the floating rest timer, so the last buttons are never hidden behind it. */}
+      {restTimer.rest && <div className="h-24" aria-hidden="true" />}
       {restTimer.rest && <RestTimer key={restTimer.rest.id} endsAt={restTimer.rest.endsAt} total={restTimer.rest.total} onChange={restTimer.change} onDone={restTimer.stop} />}
 
       <ExercisePicker

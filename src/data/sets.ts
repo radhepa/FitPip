@@ -74,6 +74,16 @@ export async function updateSet(id: string, patch: Partial<SetPatch>): Promise<S
   })
 }
 
+/** Puts back a set that was just deleted (the Undo button), with its original id, order and time. */
+export async function restoreSet(set: SetRow): Promise<SetRow> {
+  return writeTx(async () => {
+    if (!(await rowsOf('sessions').get(set.session_id))) throw new Error('That workout no longer exists.')
+    const restored: SetRow = { ...set, updated_at: nowIso() }
+    await putRow('sets', restored, { isNew: true })
+    return restored
+  })
+}
+
 export async function deleteSet(id: string): Promise<void> {
   await writeTx(() => removeRow('sets', id))
 }

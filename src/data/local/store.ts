@@ -37,8 +37,9 @@ async function markUpsert(db: FitPipDB, table: TableName, pk: string, isNew: boo
     table,
     pk,
     op: 'upsert',
-    // A row created offline stays "new" however often it is edited before it first syncs.
-    isNew: existing?.op === 'upsert' ? existing.isNew : isNew,
+    // A row created offline stays "new" however often it is edited before it first syncs. One whose
+    // deletion was still queued (then brought back) is on the server, so it is not new.
+    isNew: existing ? existing.op === 'upsert' && existing.isNew : isNew,
     rev: (existing?.rev ?? 0) + 1,
     at: nowIso(),
     tries: 0,

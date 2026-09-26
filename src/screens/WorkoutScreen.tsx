@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ActiveWorkout } from '../components/ActiveWorkout'
 import { EmptyState, ErrorBanner, Loading } from '../components/feedback'
 import { WorkoutBuilder } from '../components/WorkoutBuilder'
@@ -62,9 +62,10 @@ export function WorkoutScreen() {
   async function discard(message: string) {
     if (!window.confirm(message)) return
     await guard(async () => {
+      const wasFinished = session.data?.ended_at != null
       await deleteSession(id)
       pending.clear()
-      navigate('/', { replace: true })
+      navigate(wasFinished ? '/history' : '/', { replace: true })
     })
   }
 
@@ -95,8 +96,9 @@ export function WorkoutScreen() {
   const loadError = session.error ?? setsState.error ?? exercisesState.error
   if (loadError) return <ErrorBanner error={loadError} onRetry={reloadAll} />
   if (!session.data) return <EmptyState title="Workout not found" />
-  if (session.data.ended_at) return <Navigate to={`/session/${id}`} replace />
 
+  // A finished workout can be edited in place. It is never re-opened, so its recorded time can't change.
+  const editing = session.data.ended_at !== null
   const begun = session.data.started_at !== null
   // Sets done against the sets planned (only exercises with a target count).
   const targetSets = plan.reduce((total, p) => total + p.targetSets, 0)
@@ -108,9 +110,14 @@ export function WorkoutScreen() {
       <WorkoutHeader
         name={session.data.name ?? ''}
         startedAt={session.data.started_at}
-        progress={targetSets > 0 ? { done: doneSets, target: targetSets } : null}
+        endedAt={session.data.ended_at}
+        progress={editing || targetSets === 0 ? null : { done: doneSets, target: targetSets }}
         finishing={busy === 'finishing'}
         onFinish={finish}
+        onDone={() => {
+          pending.clear()
+          navigate(`/session/${id}`, { replace: true })
+        }}
         onRename={(name) =>
           guard(async () => {
             session.setData(await updateSession(id, { name: name || null }))
@@ -136,7 +143,8 @@ export function WorkoutScreen() {
           onSetsChange={(update) => setsState.setData((prev) => update(prev ?? []))}
           onPlanChange={changePlan}
           onExerciseAdded={onExerciseAdded}
-          onDiscard={() => discard('Discard this workout and all its sets?')}
+          editing={editing}
+          onDiscard={() => discard(editing ? 'Delete this workout and all its sets?' : 'Discard this workout and all its sets?')}
         />
       ) : (
         <WorkoutBuilder

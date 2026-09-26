@@ -73,7 +73,6 @@ export const setSessionPlan = (id: string, plan: PlanItem[]) => updateSession(id
 // Both times come from the client clock, so ended_at >= started_at always holds.
 export const beginSession = (id: string) => updateSession(id, { started_at: nowIso() })
 export const finishSession = (id: string) => updateSession(id, { ended_at: nowIso() })
-export const reopenSession = (id: string) => updateSession(id, { ended_at: null })
 
 export async function deleteSession(id: string): Promise<void> {
   await writeTx(async () => {

@@ -35,6 +35,33 @@ export async function runSync(db: FitPipDB, remote: Remote): Promise<SyncOutcome
 }
 
 // ---------------------------------------------------------------------------------------------
+// Our own deletions come back as tombstones. Without care, that echo would delete a row the user
+// has since restored (Undo). So each deletion this device sends is remembered until its echo is seen.
+
+const OWN_DELETES_KEY = 'ownDeletes'
+const OWN_DELETE_TTL_MS = 7 * 24 * 60 * 60 * 1000
+type OwnDeletes = Record<string, { n: number; at: number }>
+
+async function noteOwnDeletes(db: FitPipDB, keys: string[]): Promise<void> {
+  if (keys.length === 0) return
+  const now = Date.now()
+  const saved = (await getMeta<OwnDeletes>(db, OWN_DELETES_KEY)) ?? {}
+  const fresh: OwnDeletes = Object.fromEntries(Object.entries(saved).filter(([, entry]) => now - entry.at <= OWN_DELETE_TTL_MS))
+  for (const key of keys) fresh[key] = { n: (fresh[key]?.n ?? 0) + 1, at: now }
+  await setMeta(db, OWN_DELETES_KEY, fresh)
+}
+
+/** True (and forgets one) when a tombstone is the echo of a deletion this device sent. */
+async function takeOwnDelete(db: FitPipDB, key: string): Promise<boolean> {
+  const saved = await getMeta<OwnDeletes>(db, OWN_DELETES_KEY)
+  const entry = saved?.[key]
+  if (!saved || !entry || Date.now() - entry.at > OWN_DELETE_TTL_MS) return false
+  const { [key]: _taken, ...rest } = saved
+  await setMeta(db, OWN_DELETES_KEY, entry.n > 1 ? { ...rest, [key]: { n: entry.n - 1, at: entry.at } } : rest)
+  return true
+}
+
+// ---------------------------------------------------------------------------------------------
 // Pull: server -> device
 
 async function pull(db: FitPipDB, remote: Remote, outcome: SyncOutcome): Promise<void> {
@@ -144,6 +171,8 @@ async function makeRoomForWeighIn(db: FitPipDB, incoming: Row, incomingId: strin
  * Also removes what the server removed along with it. Returns whether a local row was there.
  */
 async function applyRemoteDelete(db: FitPipDB, table: TableName, key: string): Promise<boolean> {
+  // Our own deletion coming back: this device already reflects it (and may have restored the row since).
+  if (await takeOwnDelete(db, `${table}/${key}`)) return false
   const rows = db.table(table)
   const existed = (await rows.get(key)) !== undefined
   await rows.delete(key)
@@ -247,6 +276,7 @@ async function sendBatches(
 async function settle(db: FitPipDB, batch: PendingChange[]): Promise<number> {
   let cleared = 0
   await db.transaction('rw', db.tables, async () => {
+    await noteOwnDeletes(db, batch.filter((sent) => sent.op === 'delete').map((sent) => sent.key))
     for (const sent of batch) {
       const current = await db.pending.get(sent.key)
       if (current && current.rev === sent.rev) {

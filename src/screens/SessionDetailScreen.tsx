@@ -9,7 +9,7 @@ import { SessionStats } from '../components/SessionStats'
 import { confetti } from '../components/fx'
 import { PipSpeech } from '../components/PipSpeech'
 import { listExercises } from '../data/exercises'
-import { deleteSession, getSession, reopenSession } from '../data/sessions'
+import { deleteSession, getSession } from '../data/sessions'
 import { listSetsForSession } from '../data/sets'
 import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
@@ -85,16 +85,7 @@ export function SessionDetailScreen() {
 
       {actionError && <p className="mt-4 text-sm text-danger">{actionError}</p>}
       <div className="mt-6 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
-        <Button
-          onClick={() =>
-            run(async () => {
-              await reopenSession(id)
-              navigate(`/workout/${id}`)
-            })
-          }
-        >
-          Edit workout
-        </Button>
+        <Button onClick={() => navigate(`/workout/${id}`)}>Edit workout</Button>
         <Button
           variant="danger"
           onClick={() =>

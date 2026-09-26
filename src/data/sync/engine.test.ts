@@ -4,7 +4,7 @@ import { createExercise, deleteExercise, listExercises, updateExercise } from '.
 import { setActiveDbForTests } from '../local/context'
 import { FitPipDB } from '../local/db'
 import { beginSession, createWorkout, deleteSession, finishSession, getSession, listSessionSummaries } from '../sessions'
-import { deleteSet, listSetsForSession, logSet, updateSet } from '../sets'
+import { deleteSet, listSetsForSession, logSet, restoreSet, updateSet } from '../sets'
 import { getSettings, saveWeightUnit } from '../settings'
 import { listBodyWeights, saveBodyWeight } from '../bodyWeights'
 import { errorMessage } from '../unwrap'
@@ -415,5 +415,81 @@ describe('rules that match the server, so offline behaves the same', () => {
     const session = await createWorkout({ plan: [] })
     await expect(finishSession(session.id)).rejects.toThrow(/Begin the workout/)
     expect((await getSession(session.id))?.ended_at).toBeNull()
+  })
+})
+
+describe('undoing a deleted set', () => {
+  async function synced() {
+    const a = newDevice()
+    const b = newDevice()
+    as(a)
+    const made = await logWorkout()
+    await sync(a)
+    await sync(b)
+    const row = (await a.sets.get(made.first.id))!
+    return { a, b, row, ...made }
+  }
+
+  it('keeps the set on the server when the undo comes before the delete was sent', async () => {
+    const { a, row } = await synced()
+    as(a)
+    await deleteSet(row.id)
+    await restoreSet(row)
+    await sync(a)
+    expect(server.tables.sets.has(row.id)).toBe(true)
+    expect((await a.sets.get(row.id))?.weight).toBe(row.weight)
+    expect(await countPending(a)).toEqual({ pending: 0, failed: 0 })
+  })
+
+  it('still deletes it everywhere after delete, undo, delete again', async () => {
+    const { a, b, row } = await synced()
+    as(a)
+    await deleteSet(row.id)
+    await restoreSet(row)
+    await deleteSet(row.id)
+    await sync(a)
+    expect(server.tables.sets.has(row.id)).toBe(false)
+    await sync(b)
+    expect(await b.sets.get(row.id)).toBeUndefined()
+  })
+
+  it('brings it back on the server and on the other device when the delete had already synced', async () => {
+    const { a, b, row } = await synced()
+    as(a)
+    await deleteSet(row.id)
+    await sync(a)
+    await sync(b)
+    expect(await b.sets.get(row.id)).toBeUndefined()
+
+    as(a)
+    await restoreSet(row)
+    await sync(a)
+    expect(server.tables.sets.has(row.id)).toBe(true)
+    await sync(b)
+    expect((await b.sets.get(row.id))?.reps).toBe(row.reps)
+    expect((await b.sets.get(row.id))?.set_order).toBe(row.set_order)
+  })
+
+  it("won't restore a set into a workout that no longer exists", async () => {
+    const { a, row, session } = await synced()
+    as(a)
+    await deleteSession(session.id)
+    await expect(restoreSet(row)).rejects.toThrow(/no longer exists/)
+  })
+})
+
+describe('editing a finished workout', () => {
+  it('never changes its recorded time', async () => {
+    const a = newDevice()
+    as(a)
+    const { session, exercise, first } = await logWorkout()
+    const before = (await getSession(session.id))!
+    vi.setSystemTime(new Date('2026-03-05T09:00:00Z')) // days later
+    await updateSet(first.id, { weight: 30 })
+    await logSet({ sessionId: session.id, exerciseId: exercise.id, setOrder: 9, reps: 5, weight: 40, rpe: null })
+    await deleteSet(first.id)
+    const after = (await getSession(session.id))!
+    expect(after.started_at).toBe(before.started_at)
+    expect(after.ended_at).toBe(before.ended_at)
   })
 })

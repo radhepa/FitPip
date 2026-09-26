@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Bronze rank emblem">
+  <!-- Placeholder emblem: replace with your own art (see README.md in this folder). -->
+  <defs>
+    <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e0bc84"/>
+      <stop offset="1" stop-color="#C68520"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="52" fill="url(#fill)" stroke="#7b5214" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="60" cy="60" r="42" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="2"/>
+  <text x="60" y="76.56" text-anchor="middle" font-family="Archivo, system-ui, sans-serif" font-size="46" font-weight="800" fill="#ffffff" stroke="#7b5214" stroke-width="3" paint-order="stroke">2</text>
+</svg>

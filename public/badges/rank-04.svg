@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Gold rank emblem">
+  <!-- Placeholder emblem: replace with your own art (see README.md in this folder). -->
+  <defs>
+    <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d8bf77"/>
+      <stop offset="1" stop-color="#B88A08"/>
+    </linearGradient>
+  </defs>
+  <path d="M60 7 L106 21 V57 C106 86 86 104 60 113 C34 104 14 86 14 57 V21 Z" fill="url(#fill)" stroke="#725605" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M60 18 L96 29 V57 C96 80 80 95 60 102 C40 95 24 80 24 57 V29 Z" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="2"/>
+  <text x="60" y="76.56" text-anchor="middle" font-family="Archivo, system-ui, sans-serif" font-size="46" font-weight="800" fill="#ffffff" stroke="#725605" stroke-width="3" paint-order="stroke">4</text>
+</svg>

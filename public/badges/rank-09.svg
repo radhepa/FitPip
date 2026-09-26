@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Elite rank emblem">
+  <!-- Placeholder emblem: replace with your own art (see README.md in this folder). -->
+  <defs>
+    <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dd8db8"/>
+      <stop offset="1" stop-color="#C2307E"/>
+    </linearGradient>
+  </defs>
+  <polygon points="60.0,6.0 106.8,33.0 106.8,87.0 60.0,114.0 13.2,87.0 13.2,33.0" fill="url(#fill)" stroke="#781e4e" stroke-width="5" stroke-linejoin="round"/>
+  <polygon points="60.0,17.0 97.2,38.5 97.2,81.5 60.0,103.0 22.8,81.5 22.8,38.5" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="2"/>
+  <text x="60" y="76.56" text-anchor="middle" font-family="Archivo, system-ui, sans-serif" font-size="46" font-weight="800" fill="#ffffff" stroke="#781e4e" stroke-width="3" paint-order="stroke">9</text>
+</svg>

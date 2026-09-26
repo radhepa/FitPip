@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { signOut } from '../data/auth'
+import { skipFirstSync } from '../data/sync/actions'
 import { syncNow } from '../data/sync/manager'
 import { useSyncStatus } from '../hooks/useSyncStatus'
 import { Button } from './Button'
@@ -47,6 +48,11 @@ export function FirstSyncScreen() {
           >
             Try again
           </Button>
+          {status.phase === 'error' && (
+            <Button block onClick={skipFirstSync}>
+              Open the app anyway
+            </Button>
+          )}
           <Button block onClick={() => void signOut()}>
             Sign out
           </Button>

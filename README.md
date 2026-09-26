@@ -27,6 +27,8 @@ Stack: Vite, React, TypeScript, Tailwind, vite-plugin-pwa, Supabase (Auth + Post
        existing accounts get them straight away)
    12. `20260926000200_week_plan_categories.sql` (plan a day by kind of workout: Weightlifting,
        Cardio, Yoga, Stretching...)
+   13. `20260927000100_offline_sync.sql` (lets your devices sync: a server-side change clock and a
+       record of deleted rows)
 3. **Create your user.** *Authentication → Users → Add user → Create new user*: enter your email
    and a password and tick *Auto Confirm User*. Creating the user also fills your exercise bank.
 4. **Lock sign-ups** (it's a one-person app): *Authentication → Sign In / Providers* → turn off
@@ -88,7 +90,24 @@ Then sign in with the email and password you made in Supabase. The installed app
 sign-in, so you sign in once inside it even if you already did in the browser. Updates arrive by
 themselves: the next time you open FitPip online it fetches the newest version.
 
-Logging a workout needs a connection for now; offline logging is not built yet.
+## Works offline
+
+FitPip keeps a full copy of your data on the device (in the browser's IndexedDB) and works from
+that copy, so everything runs without a connection: logging sets, finishing workouts, browsing
+history, the plan, weigh-ins. Changes are saved on the device first and sent to Supabase in the
+background whenever there is a connection.
+
+- **Sync** runs when you open the app, when the connection returns, a moment after every change and
+  every minute while it is open. There is a status icon next to Settings on Today, a banner while
+  you are offline, and a Sync card in Settings (Sync now, and what to do if the server ever refuses a
+  change). iPhones do not sync in the background: it happens when you open the app.
+- **Two devices** stay in step. If the same thing is edited on both while apart, the later edit
+  wins. Deleting something on one device removes it on the others.
+- **First time on a device** it downloads your data once (this needs a connection). After that it
+  opens instantly, even with no signal and an expired sign-in.
+- Your data on the server is the backup. Signing out keeps changes that have not synced on the device
+  (you are asked first) and they send the next time you sign in.
+- The one thing that still needs a connection is *Load starter exercises* (and Suggest, below).
 
 ## Exercise data
 
@@ -106,7 +125,11 @@ your own database, so the app keeps working if that service is down.
 
 ## Workout suggestions
 
-The **Suggest a workout** screen (Home and Plan link to it) asks an Edge Function for a workout based
+**Off by default.** The public build hides *Suggest a workout* until the function below is deployed and
+the key is set. To show it again, set `VITE_ENABLE_SUGGEST=true` (in `.env`, and in Vercel's
+environment variables) and rebuild.
+
+The **Suggest a workout** screen (a card on Today) asks an Edge Function for a workout based
 on your recent training, weekly muscle volume, today's planned template and your exercise bank. You can
 start the suggestion as a workout or save it as a template. There is no SQL for this: the only setup is
 deploying one function and adding one secret.

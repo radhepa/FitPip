@@ -60,8 +60,8 @@ export function SyncCard() {
           <ul className="mt-2 grid grid-cols-1 gap-1 text-sm">
             {rejected.data?.slice(0, 5).map((change) => (
               <li key={change.key} className="min-w-0">
-                <span className="font-semibold capitalize">
-                  {change.what} {change.table}:
+                <span className="font-semibold">
+                  {change.action[0].toUpperCase() + change.action.slice(1)} {change.what}:
                 </span>{' '}
                 <span className="text-muted">{change.message}</span>
               </li>

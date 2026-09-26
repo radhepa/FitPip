@@ -8,6 +8,7 @@ import { StatTiles } from '../components/StatTiles'
 import { TodayLineup } from '../components/TodayLineup'
 import { WeekStrip } from '../components/WeekStrip'
 import { ChevronIcon, SettingsIcon, SparkIcon } from '../components/icons'
+import { SUGGEST_ENABLED } from '../config/features'
 import { useNewWorkout } from '../hooks/useNewWorkout'
 import { useSettings } from '../hooks/useSettings'
 import { useTodayData } from '../hooks/useTodayData'
@@ -77,16 +78,18 @@ export function HomeScreen() {
           />
         )}
 
-        <Link to="/suggest" className="card pressable mt-4 flex items-center gap-3 p-4">
-          <span className="icon-tile" style={{ background: 'var(--grad-accent)', color: 'white' }}>
-            <SparkIcon />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-extrabold">Suggest a workout</span>
-            <span className="block text-sm text-muted">Built from what you trained this week</span>
-          </span>
-          <ChevronIcon size="size-5" />
-        </Link>
+        {SUGGEST_ENABLED && (
+          <Link to="/suggest" className="card pressable mt-4 flex items-center gap-3 p-4">
+            <span className="icon-tile" style={{ background: 'var(--grad-accent)', color: 'white' }}>
+              <SparkIcon />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-extrabold">Suggest a workout</span>
+              <span className="block text-sm text-muted">Built from what you trained this week</span>
+            </span>
+            <ChevronIcon size="size-5" />
+          </Link>
+        )}
       </div>
 
       <section className="min-w-0">

@@ -1,5 +1,6 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
+import { SUGGEST_ENABLED } from './config/features'
 import { RequireAuth } from './components/RequireAuth'
 import { AuthProvider } from './hooks/useAuth'
 import { SettingsProvider } from './hooks/useSettings'
@@ -31,7 +32,7 @@ export default function App() {
                 <Route path="session/:id" element={<SessionDetailScreen />} />
                 <Route path="plan" element={<PlanScreen />} />
                 <Route path="plan/templates/:id" element={<TemplateScreen />} />
-                <Route path="suggest" element={<SuggestScreen />} />
+                <Route path="suggest" element={SUGGEST_ENABLED ? <SuggestScreen /> : <Navigate to="/" replace />} />
                 <Route path="progress" element={<ProgressScreen />} />
                 <Route path="exercises/:id" element={<ExerciseDetailScreen />} />
                 <Route path="history" element={<HistoryScreen />} />

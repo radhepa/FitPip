@@ -29,6 +29,7 @@ Stack: Vite, React, TypeScript, Tailwind, vite-plugin-pwa, Supabase (Auth + Post
        Cardio, Yoga, Stretching...)
    13. `20260927000100_offline_sync.sql` (lets your devices sync: a server-side change clock and a
        record of deleted rows)
+   14. `20260927000200_rest_seconds.sql` (the rest timer length setting)
 3. **Create your user.** *Authentication → Users → Add user → Create new user*: enter your email
    and a password and tick *Auto Confirm User*. Creating the user also fills your exercise bank.
 4. **Lock sign-ups** (it's a one-person app): *Authentication → Sign In / Providers* → turn off
@@ -63,6 +64,15 @@ target sets and reps, reorder or remove them. Tap **Begin workout** when you're 
 counting in seconds. Log each set with its weight, reps and an optional **RPE** (1 to 10, in halves).
 A workout you set up but haven't begun stays on Home as "Continue setting up" and is not counted in
 History, Progress or suggestions until you begin it.
+
+- **Undo.** Deleting a set shows an *Undo* bar for a few seconds.
+- **Notes.** Add a note to the whole workout, or to any exercise in it ("seat at 4", "left shoulder
+  tight"). They save by themselves and show on the workout summary.
+- **Rest timer.** After a lifting set a countdown runs. Set its length (or turn it off) under
+  *Settings → Rest timer*; it follows you between devices. You can still add or trim 15 s on a single
+  rest without changing the setting.
+- **Editing a finished workout.** *Edit workout* on the summary changes sets, notes and the name in
+  place. The recorded time never changes, and the workout doesn't come back as "open" on Home.
 
 ## Deploy (auto-deploys on every push to `main`)
 

@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Button } from '../components/Button'
 import { PageHeader } from '../components/PageHeader'
+import { RestSetting } from '../components/RestSetting'
 import { SyncCard } from '../components/SyncCard'
 import { signOut } from '../data/auth'
 import { loadStarterExercises } from '../data/exercises'
@@ -43,7 +44,7 @@ function Card({ title, hint, children }: { title: string; hint?: string; childre
 export function SettingsScreen() {
   const { session } = useAuth()
   const { preference, setPreference } = useAppearance()
-  const { unit, setUnit, distanceUnit, setDistanceUnit } = useSettings()
+  const { unit, setUnit, distanceUnit, setDistanceUnit, restSeconds, setRestSeconds } = useSettings()
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -87,6 +88,14 @@ export function SettingsScreen() {
             value={distanceUnit}
             disabled={busy}
             onChange={(u) => run(async () => { await setDistanceUnit(u); return `Distance unit set to ${u === 'mi' ? 'miles' : 'kilometres'}.` })}
+          />
+        </Card>
+
+        <Card title="Rest timer" hint="The countdown after each lifting set. You can still add or trim time on one rest without changing this.">
+          <RestSetting
+            seconds={restSeconds}
+            disabled={busy}
+            onChange={(seconds) => run(async () => { await setRestSeconds(seconds); return '' })}
           />
         </Card>
 

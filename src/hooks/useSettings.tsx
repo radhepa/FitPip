@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { DEFAULT_SETTINGS, getSettings, saveDistanceUnit, saveGoalWeight, saveWeightUnit } from '../data/settings'
+import { DEFAULT_SETTINGS, getSettings, saveDistanceUnit, saveGoalWeight, saveRestSeconds, saveWeightUnit } from '../data/settings'
 import type { DistanceUnit, UserSettings, WeightUnit } from '../types/db'
 import { useAuth } from './useAuth'
 import { useDataVersion } from './useSyncStatus'
@@ -8,9 +8,12 @@ interface SettingsValue {
   unit: WeightUnit
   distanceUnit: DistanceUnit
   goal: { weight: number; unit: WeightUnit } | null
+  /** Seconds of rest after a lifting set; 0 means the timer is off. */
+  restSeconds: number
   setUnit: (unit: WeightUnit) => Promise<void>
   setDistanceUnit: (unit: DistanceUnit) => Promise<void>
   setGoal: (goal: { weight: number; unit: WeightUnit } | null) => Promise<void>
+  setRestSeconds: (seconds: number) => Promise<void>
 }
 
 const noop = async () => {}
@@ -18,9 +21,11 @@ const SettingsContext = createContext<SettingsValue>({
   unit: 'lb',
   distanceUnit: 'mi',
   goal: null,
+  restSeconds: DEFAULT_SETTINGS.rest_seconds,
   setUnit: noop,
   setDistanceUnit: noop,
   setGoal: noop,
+  setRestSeconds: noop,
 })
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
@@ -60,6 +65,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     unit: settings.weight_unit,
     distanceUnit: settings.distance_unit,
     goal: settings.goal_weight !== null && settings.goal_weight_unit ? { weight: settings.goal_weight, unit: settings.goal_weight_unit } : null,
+    restSeconds: settings.rest_seconds,
+    setRestSeconds: (seconds) => change({ rest_seconds: seconds }, () => saveRestSeconds(seconds)),
     setUnit: (unit) => change({ weight_unit: unit }, () => saveWeightUnit(unit)),
     setDistanceUnit: (unit) => change({ distance_unit: unit }, () => saveDistanceUnit(unit)),
     setGoal: (goal) =>

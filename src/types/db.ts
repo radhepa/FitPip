@@ -121,6 +121,8 @@ export interface UserSettings {
   distance_unit: DistanceUnit
   goal_weight: number | null
   goal_weight_unit: WeightUnit | null
+  /** Seconds of rest after a lifting set; 0 turns the rest timer off. */
+  rest_seconds: number
 }
 
 /** One weigh-in. Kept in the unit it was entered in. */

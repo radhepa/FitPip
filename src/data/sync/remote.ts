@@ -77,6 +77,9 @@ export function failureFrom(reply: Reply): SyncFailure {
   if (code === 'PGRST204' && /category/.test(message)) {
     return new SyncFailure('permanent', 'Planning by kind of workout needs a database update. Run supabase/migrations/20260926000200_week_plan_categories.sql in the Supabase SQL Editor.', code)
   }
+  if (code === 'PGRST204' && /rest_seconds/.test(message)) {
+    return new SyncFailure('permanent', 'The rest timer setting needs a database update. Run supabase/migrations/20260927000200_rest_seconds.sql in the Supabase SQL Editor.', code)
+  }
   return new SyncFailure('permanent', message, code)
 }
 

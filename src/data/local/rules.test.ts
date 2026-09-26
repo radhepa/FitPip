@@ -4,7 +4,7 @@ import { createExercise } from '../exercises'
 import { setActiveDbForTests } from './context'
 import { FitPipDB } from './db'
 import { createWorkout } from '../sessions'
-import { getSettings, saveDistanceUnit, saveGoalWeight, saveWeightUnit } from '../settings'
+import { getSettings, saveDistanceUnit, saveGoalWeight, saveRestSeconds, saveWeightUnit } from '../settings'
 import { addTemplateExercises, createTemplate, deleteTemplate, getTemplate, listTemplates, renameTemplate, updateTemplateExercise } from '../templates'
 import { addWeekPlanItems, clearWeekday, listWeekPlan, removeWeekPlanItem, saveWeekPlanOrder } from '../weekPlan'
 import { deleteBodyWeight, listBodyWeights, saveBodyWeight } from '../bodyWeights'
@@ -130,12 +130,43 @@ describe('weigh-ins', () => {
 describe('settings', () => {
   it('starts with defaults, then remembers each change', async () => {
     device()
-    expect(await getSettings()).toEqual({ weight_unit: 'lb', distance_unit: 'mi', goal_weight: null, goal_weight_unit: null })
+    expect(await getSettings()).toEqual({ weight_unit: 'lb', distance_unit: 'mi', goal_weight: null, goal_weight_unit: null, rest_seconds: 90 })
     await saveWeightUnit('kg')
     await saveDistanceUnit('km')
     await saveGoalWeight({ weight: 75, unit: 'kg' })
-    expect(await getSettings()).toEqual({ weight_unit: 'kg', distance_unit: 'km', goal_weight: 75, goal_weight_unit: 'kg' })
+    expect(await getSettings()).toEqual({ weight_unit: 'kg', distance_unit: 'km', goal_weight: 75, goal_weight_unit: 'kg', rest_seconds: 90 })
     await saveGoalWeight(null)
     expect((await getSettings()).goal_weight).toBeNull()
   })
 })
+
+describe('rest timer length', () => {
+  it('defaults to 90 s, is remembered, and can be turned off with 0', async () => {
+    device()
+    expect((await getSettings()).rest_seconds).toBe(90)
+    await saveRestSeconds(150)
+    expect((await getSettings()).rest_seconds).toBe(150)
+    await saveRestSeconds(0)
+    expect((await getSettings()).rest_seconds).toBe(0)
+  })
+
+  it('refuses lengths the server would refuse', async () => {
+    device()
+    for (const bad of [5, 14, 601, 12.5, -30]) await expect(saveRestSeconds(bad)).rejects.toThrow(/Rest can be off/)
+    expect((await getSettings()).rest_seconds).toBe(90)
+  })
+
+  it('reads a settings row saved before the setting existed as the old 90 s', async () => {
+    const db = device()
+    await db.user_settings.put({ user_id: 'user-1', weight_unit: 'kg', distance_unit: 'km', goal_weight: null, goal_weight_unit: null, created_at: '2026-01-01T00:00:00.000Z', updated_at: '2026-01-01T00:00:00.000Z' } as never)
+    expect(await getSettings()).toMatchObject({ weight_unit: 'kg', rest_seconds: 90 })
+  })
+
+  it('queues the change to sync like any other setting', async () => {
+    const db = device()
+    await saveRestSeconds(120)
+    expect((await db.pending.toArray()).map((p) => p.key)).toEqual(['user_settings/user-1'])
+    expect((await db.user_settings.get('user-1'))?.rest_seconds).toBe(120)
+  })
+})
+

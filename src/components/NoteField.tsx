@@ -1,20 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Props {
-  value: string
   /** Screen-reader label for the text box. */
   label: string
   /** The button that opens an empty note. */
   addText?: string
+  value: string
   placeholder?: string
   maxLength: number
   rows?: number
   onSave: (text: string) => void | Promise<void>
 }
 
+/** Saves this long after typing stops. Also saves when you tap away or leave the screen. */
+const SAVE_AFTER_MS = 700
+
 /**
- * A note that stays out of the way: "+ Add a note" until there is one, then a text box that saves when
- * you tap away.
+ * A note that stays out of the way: "+ Add a note" until there is one, then a text box. It saves by
+ * itself (a moment after you stop typing, on blur, and when the screen closes), because on a phone
+ * tapping a button doesn't always take focus away from the box, so blur alone would lose the note.
  */
 export function NoteField({ value, label, addText = 'Add a note', placeholder, maxLength, rows = 2, onSave }: Props) {
   const [draft, setDraft] = useState(value)
@@ -27,7 +31,26 @@ export function NoteField({ value, label, addText = 'Add a note', placeholder, m
     if (!open) setDraft(value)
   }
 
-  if (!value && !open) {
+  // Always the latest, for the timer and the leave-the-screen save.
+  const latest = useRef({ draft, value, onSave })
+  useEffect(() => {
+    latest.current = { draft, value, onSave }
+  })
+
+  const saveIfChanged = () => {
+    const { draft: text, value: saved, onSave: save } = latest.current
+    if (text.trim() !== saved.trim()) void save(text.trim())
+  }
+
+  useEffect(() => {
+    if (draft.trim() === value.trim()) return
+    const timer = setTimeout(saveIfChanged, SAVE_AFTER_MS)
+    return () => clearTimeout(timer)
+  }, [draft, value])
+
+  useEffect(() => () => saveIfChanged(), [])
+
+  if (!value && !open && !draft) {
     return (
       <button type="button" className="note-add" onClick={() => setOpen(true)}>
         + {addText}
@@ -48,7 +71,7 @@ export function NoteField({ value, label, addText = 'Add a note', placeholder, m
         onFocus={() => setOpen(true)}
         onBlur={() => {
           setOpen(false)
-          if (draft.trim() !== value.trim()) void onSave(draft.trim())
+          saveIfChanged()
         }}
         className="note-field"
       />

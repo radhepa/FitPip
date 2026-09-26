@@ -69,7 +69,7 @@ export function DistanceEntry({ initialSeconds, initialDistance, lengthUnit, onL
   return (
     <div className="mt-3">
       <div className="grid grid-cols-2 gap-2">
-        <Stepper label="Time" value={time} inputMode="text" onChange={setTime} onStep={(d) => setTime(stepClock(time, d * 60, 'minutes', 60))} invalid={time !== '' && seconds === null} placeholder="min" />
+        <Stepper label="Time" value={time} inputMode="text" onChange={setTime} onStep={(d) => setTime(stepClock(time, d * 60, 'minutes', 60))} invalid={time !== '' && seconds === null} placeholder="min" stackOnPhone />
         <Stepper
           label={`Distance · ${lengthUnit}`}
           value={distance}
@@ -77,6 +77,7 @@ export function DistanceEntry({ initialSeconds, initialDistance, lengthUnit, onL
           onStep={(d) => setDistance(stepNumber(distance, d * DISTANCE_STEP[lengthUnit]))}
           invalid={parsedDistance === undefined}
           placeholder="–"
+          stackOnPhone
         />
       </div>
       <p className="mt-2 min-h-5 text-center text-sm font-semibold text-muted">{pace ? `Pace ${pace}` : 'Type minutes (30) or a time (26:10). Distance is optional.'}</p>

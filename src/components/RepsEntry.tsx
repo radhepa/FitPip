@@ -47,16 +47,22 @@ export function RepsEntry({ unit, initialWeight, initialReps, setNumber, onLog }
           onStep={(d) => setWeight(stepNumber(weight, d * plateStep))}
           invalid={parsedWeight === null}
           ariaLabel={`Weight in ${unit}`}
+          stackOnPhone
         />
-        <Stepper label="Reps" value={reps} inputMode="numeric" onChange={setReps} onStep={(d) => setReps(stepNumber(reps, d, 1))} invalid={reps !== '' && parsedReps === null} />
+        <Stepper label="Reps" value={reps} inputMode="numeric" onChange={setReps} onStep={(d) => setReps(stepNumber(reps, d, 1))} invalid={reps !== '' && parsedReps === null} stackOnPhone />
       </div>
-      <div className="chip-row mt-2" role="group" aria-label="Effort (RPE), optional">
-        <span className="flex-none self-center text-xs font-bold text-muted">RPE</span>
-        {RPE_CHOICES.map((value) => (
-          <button key={value} type="button" className="filter-chip !min-h-8 !px-2.5" aria-pressed={rpe === value} onClick={() => setRpe(rpe === value ? null : value)}>
-            {formatWeight(value)}
-          </button>
-        ))}
+      <div className="mt-2" role="group" aria-label="Effort (RPE), optional">
+        <p className="mb-1 text-xs font-bold text-muted">
+          RPE <span className="font-medium">(optional)</span>
+        </p>
+        {/* A grid on phones so all eight choices are in view (a single row ran off the screen). */}
+        <div className="grid grid-cols-4 gap-2 min-[441px]:flex min-[441px]:flex-wrap">
+          {RPE_CHOICES.map((value) => (
+            <button key={value} type="button" className="filter-chip !min-h-11 justify-center" aria-pressed={rpe === value} onClick={() => setRpe(rpe === value ? null : value)}>
+              {formatWeight(value)}
+            </button>
+          ))}
+        </div>
       </div>
       <Button variant="primary" block className="mt-2 min-h-14 text-lg" disabled={!valid || busy} onClick={log}>
         <CheckIcon /> {busy ? 'Saving…' : `Log set ${setNumber}`}

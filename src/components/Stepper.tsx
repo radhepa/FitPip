@@ -1,4 +1,5 @@
 import { buzz } from './fx'
+import { RepeatButton } from './RepeatButton'
 
 interface Props {
   label: string
@@ -17,7 +18,7 @@ interface Props {
   stackOnPhone?: boolean
 }
 
-/** A big number field with − and + buttons either side. */
+/** A big number field with − and + buttons either side (hold one to keep stepping). */
 export function Stepper({ label, value, onChange, onStep, inputMode = 'decimal', placeholder = '0', invalid, ariaLabel, stackOnPhone = false }: Props) {
   const step = (direction: -1 | 1) => {
     buzz(6)
@@ -34,9 +35,9 @@ export function Stepper({ label, value, onChange, onStep, inputMode = 'decimal',
     <div className={`rounded-2xl border bg-bg p-1.5 ${invalid ? 'border-danger' : 'border-line'}`}>
       <span className="block pt-0.5 text-center text-[.7rem] font-bold tracking-wide text-muted uppercase">{label}</span>
       <div className={rowClass}>
-        <button type="button" className={buttonClass} onClick={() => step(-1)} aria-label={`Less ${label.toLowerCase()}`}>
+        <RepeatButton className={buttonClass} onStep={() => step(-1)} aria-label={`Less ${label.toLowerCase()}`}>
           −
-        </button>
+        </RepeatButton>
         <input
           inputMode={inputMode}
           value={value}
@@ -47,9 +48,9 @@ export function Stepper({ label, value, onChange, onStep, inputMode = 'decimal',
           aria-invalid={invalid}
           className={inputClass}
         />
-        <button type="button" className={buttonClass} onClick={() => step(1)} aria-label={`More ${label.toLowerCase()}`}>
+        <RepeatButton className={buttonClass} onStep={() => step(1)} aria-label={`More ${label.toLowerCase()}`}>
           +
-        </button>
+        </RepeatButton>
       </div>
     </div>
   )

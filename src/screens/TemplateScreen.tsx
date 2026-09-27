@@ -19,6 +19,7 @@ import {
 } from '../data/templates'
 import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
+import { saveAllEdits } from '../hooks/usePendingEdit'
 import { useSettings } from '../hooks/useSettings'
 import { useNewWorkout } from '../hooks/useNewWorkout'
 import { defaultTarget } from '../lib/activity'
@@ -157,7 +158,10 @@ export function TemplateScreen() {
           variant="primary"
           block
           disabled={creating || items.length === 0}
-          onClick={() => create({ template: { id: template.id, name: template.name } })}
+          onClick={async () => {
+            await saveAllEdits()
+            void create({ template: { id: template.id, name: template.name } })
+          }}
         >
           <PlayIcon /> {creating ? 'Opening…' : 'Start this routine'}
         </Button>

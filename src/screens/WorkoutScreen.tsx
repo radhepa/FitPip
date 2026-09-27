@@ -11,6 +11,7 @@ import { beginSession, deleteSession, finishSession, finishSessionAt, getSession
 import { listSetsForSession } from '../data/sets'
 import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
+import { saveAllEdits } from '../hooks/usePendingEdit'
 import { usePendingExercises } from '../hooks/usePendingExercises'
 import { useSettings } from '../hooks/useSettings'
 import { withExercise } from '../lib/exerciseList'
@@ -75,12 +76,14 @@ export function WorkoutScreen() {
 
   async function begin() {
     setBusy('beginning')
+    await saveAllEdits()
     await guard(async () => session.setData(await beginSession(id)))
     setBusy(null)
   }
 
   /** Finishes now, or at `at` (the last set, for a workout that was left running). */
   async function finish(at?: string) {
+    await saveAllEdits()
     if (sets.length === 0) return discard('No sets were logged. Discard this workout?')
     setBusy('finishing')
     await guard(async () => {
@@ -130,7 +133,8 @@ export function WorkoutScreen() {
         progress={editing || targetSets === 0 ? null : { done: doneSets, target: targetSets }}
         finishing={busy === 'finishing'}
         onFinish={() => void finish()}
-        onDone={() => {
+        onDone={async () => {
+          await saveAllEdits()
           pending.clear()
           navigate(`/session/${id}`, { replace: true })
         }}

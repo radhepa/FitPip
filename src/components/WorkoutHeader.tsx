@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePendingEdit } from '../hooks/usePendingEdit'
 import { Button } from './Button'
 import { ElapsedClock } from './ElapsedClock'
 import { countOf, formatClock } from '../lib/format'
@@ -13,7 +14,7 @@ interface Props {
   endedAt?: string | null
   /** Sets done out of the sets planned (null when nothing has a target). */
   progress: { done: number; target: number } | null
-  onRename: (name: string) => void
+  onRename: (name: string) => void | Promise<void>
   onFinish: () => void
   finishing: boolean
   /** Editing a finished workout: leaves the edit screen (nothing is "finished" again). */
@@ -24,6 +25,8 @@ interface Props {
 export function WorkoutHeader({ name, startedAt, endedAt = null, progress, onRename, onFinish, finishing, onDone }: Props) {
   const editing = endedAt !== null && startedAt !== null
   const [draft, setDraft] = useState(name)
+  // Finish can come before the name field loses focus (iPhone): it saves the typed name first.
+  usePendingEdit(() => (draft.trim() !== name ? onRename(draft.trim()) : undefined))
 
   return (
     <header className="card card-hero mb-2 p-4">

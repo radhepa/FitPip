@@ -38,8 +38,11 @@ export function useNewWorkout() {
         setCreating(false)
         return
       }
-      const plan = request.plan ?? (request.template ? planFromTemplate((await getTemplate(request.template.id))?.items ?? []) : [])
-      const session = await createWorkout({ name: request.template?.name ?? request.name, templateId: request.template?.id, plan })
+      // Read the routine as saved now (it may have just been edited), for its exercises and its name.
+      const template = request.template ? await getTemplate(request.template.id) : null
+      const plan = request.plan ?? (template ? planFromTemplate(template.items) : [])
+      const name = template?.template.name ?? request.template?.name ?? request.name
+      const session = await createWorkout({ name, templateId: request.template?.id, plan })
       navigate(`/workout/${session.id}${request.pick ? `?add=${request.pick}` : ''}`)
     } catch (e) {
       setError(errorMessage(e))

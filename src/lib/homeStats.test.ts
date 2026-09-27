@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { greeting, startOfWeek, weekStatus, weekTotals, workoutStreak } from './homeStats'
+import { greeting, startOfWeek, weekStatus, weekStreak, weekTotals, workoutStreak } from './homeStats'
 
 // Thursday 24 Sep 2026, 10:00 local.
 const now = new Date(2026, 8, 24, 10, 0)
@@ -33,6 +33,30 @@ describe('workoutStreak', () => {
 
   it('counts two workouts on one day once', () => {
     expect(workoutStreak([workout(8, 23, 7), workout(8, 23, 19)], now)).toBe(1)
+  })
+})
+
+describe('weekStreak', () => {
+  // Weeks start Mon 7, 14 and 21 Sep; `now` is Thursday 24 Sep.
+  it('counts weeks in a row with two or more workouts, rest days and all', () => {
+    const sessions = [workout(8, 7), workout(8, 11), workout(8, 14), workout(8, 19), workout(8, 21), workout(8, 23)]
+    expect(weekStreak(sessions, now)).toBe(3)
+  })
+
+  it('lets the week in progress count once it qualifies, without breaking the run before then', () => {
+    const lastTwoWeeks = [workout(8, 7), workout(8, 9), workout(8, 14), workout(8, 16)]
+    expect(weekStreak([...lastTwoWeeks, workout(8, 22)], now)).toBe(2)
+    expect(weekStreak([...lastTwoWeeks, workout(8, 22), workout(8, 24, 7)], now)).toBe(3)
+  })
+
+  it('breaks on a week with too few workouts and ignores unfinished ones', () => {
+    expect(weekStreak([workout(8, 7), workout(8, 8), workout(8, 15), workout(8, 21), workout(8, 22)], now)).toBe(1)
+    expect(weekStreak([workout(8, 21), { started_at: workout(8, 22).started_at, ended_at: null }], now)).toBe(0)
+    expect(weekStreak([], now)).toBe(0)
+  })
+
+  it('takes another minimum', () => {
+    expect(weekStreak([workout(8, 15), workout(8, 22)], now, 1)).toBe(2)
   })
 })
 

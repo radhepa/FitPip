@@ -14,7 +14,7 @@ import { useNewWorkout } from '../hooks/useNewWorkout'
 import { useSettings } from '../hooks/useSettings'
 import { useTodayData } from '../hooks/useTodayData'
 import { changeOver, toWeighIns } from '../lib/bodyWeight'
-import { greeting, weekStatus, weekTotals, workoutStreak } from '../lib/homeStats'
+import { greeting, WEEK_MINIMUM, weekStatus, weekStreak, weekTotals } from '../lib/homeStats'
 import { entriesForDay, planForDay, type TodayPlan } from '../lib/weekPlan'
 
 const UNPLANNED: TodayPlan = { kind: 'unplanned' }
@@ -35,6 +35,7 @@ export function HomeScreen() {
   const sessions = useMemo(() => history.data?.sessions ?? [], [history.data])
   const days = useMemo(() => weekStatus(sessions, plannedWeekdays), [sessions, plannedWeekdays])
   const totals = useMemo(() => weekTotals(sessions, days), [sessions, days])
+  const streak = useMemo(() => ({ weeks: weekStreak(sessions), thisWeek: totals.workouts, minimum: WEEK_MINIMUM }), [sessions, totals.workouts])
   const pipPlan = useMemo(() => ({ plan: today, week: { planned: totals.plannedDays, done: totals.plannedDaysDone } }), [today, totals])
   const weight = useMemo(() => {
     const list = toWeighIns(weights.data ?? [], unit)
@@ -66,7 +67,7 @@ export function HomeScreen() {
         </section>
 
         <div className="grid grid-cols-1 gap-3">
-          <StatTiles streak={workoutStreak(sessions)} totals={totals} weight={weight} />
+          <StatTiles streak={streak} totals={totals} weight={weight} />
           <WeekStrip days={days} />
           {open.data && <OpenWorkoutBanner session={open.data} />}
         </div>

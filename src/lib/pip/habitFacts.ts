@@ -3,7 +3,7 @@ import { activityBadgeKey } from '../../config/activityBadges'
 import type { BegunSession, Exercise, SetRow } from '../../types/db'
 import { localDateIso } from '../bodyWeight'
 import { sessionTitle } from '../format'
-import { startOfWeek, workoutStreak } from '../homeStats'
+import { WEEK_MINIMUM, startOfWeek, weekStreak, workoutStreak } from '../homeStats'
 import { MUSCLE_GROUPS } from '../strengthRank'
 import { daysBetween } from './time'
 
@@ -44,16 +44,13 @@ export interface HabitFacts {
   cardio: CardioFacts
 }
 
-export const WEEK_MINIMUM = 2
+export { WEEK_MINIMUM }
 /** A muscle group is "missing you" after this many days without a set. */
 export const GAP_DAYS = 8
 const SINGLE_ARM = /\b(single|one)[- ]arm\b/i
 const CARDIO_CATEGORIES = new Set(['cardio', 'swim', 'combat', 'sport'])
 
 const dayOf = (iso: string) => localDateIso(new Date(iso))
-
-/** Local Monday of the week a date is in, as YYYY-MM-DD. */
-const weekKey = (iso: string) => localDateIso(startOfWeek(new Date(iso)))
 
 /** The longest run of consecutive dates in an ascending list of YYYY-MM-DD days. */
 function longestRunOfDays(days: string[]): number {
@@ -67,20 +64,6 @@ function longestRunOfDays(days: string[]): number {
     previous = current
   }
   return best
-}
-
-function weeksInARow(sessions: BegunSession[], now: Date): number {
-  const counts = new Map<string, number>()
-  for (const s of sessions) counts.set(weekKey(s.started_at), (counts.get(weekKey(s.started_at)) ?? 0) + 1)
-  const cursor = startOfWeek(now)
-  // The week in progress only counts once it qualifies, but it never breaks a run.
-  if ((counts.get(localDateIso(cursor)) ?? 0) < WEEK_MINIMUM) cursor.setDate(cursor.getDate() - 7)
-  let weeks = 0
-  while ((counts.get(localDateIso(cursor)) ?? 0) >= WEEK_MINIMUM) {
-    weeks += 1
-    cursor.setDate(cursor.getDate() - 7)
-  }
-  return weeks
 }
 
 export function habitFacts(input: { exercises: Exercise[]; sessions: BegunSession[]; sets: SetRow[]; now: Date }): HabitFacts {
@@ -156,7 +139,7 @@ export function habitFacts(input: { exercises: Exercise[]; sessions: BegunSessio
     thisWeek: finished.filter((s) => new Date(s.started_at).getTime() >= weekStart).length,
     streak: workoutStreak(finished, now),
     bestStreak: longestRunOfDays(days),
-    weekStreak: weeksInARow(finished, now),
+    weekStreak: weekStreak(finished, now),
     daysSinceLast: last ? daysBetween(last.started_at, now) : null,
     lastName: last ? sessionTitle(last) : null,
     firstDaysAgo: first ? daysBetween(first.started_at, now) : null,

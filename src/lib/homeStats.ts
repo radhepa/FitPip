@@ -35,6 +35,29 @@ export function workoutStreak(sessions: Finished[], now: Date = new Date()): num
   return streak
 }
 
+/** Workouts a week needs for the week streak. Rest days never break it, a week without enough does. */
+export const WEEK_MINIMUM = 2
+
+/**
+ * Weeks in a row (Monday to Sunday) with at least `minimum` finished workouts. The week in progress
+ * counts once it has enough, but never breaks the run while it is still going.
+ */
+export function weekStreak(sessions: Finished[], now: Date = new Date(), minimum: number = WEEK_MINIMUM): number {
+  const counts = new Map<string, number>()
+  for (const s of finishedOnly(sessions)) {
+    const week = localDateIso(startOfWeek(new Date(s.started_at)))
+    counts.set(week, (counts.get(week) ?? 0) + 1)
+  }
+  const cursor = startOfWeek(now)
+  if ((counts.get(localDateIso(cursor)) ?? 0) < minimum) cursor.setDate(cursor.getDate() - 7)
+  let weeks = 0
+  while ((counts.get(localDateIso(cursor)) ?? 0) >= minimum) {
+    weeks += 1
+    cursor.setDate(cursor.getDate() - 7)
+  }
+  return weeks
+}
+
 export interface DayStatus {
   weekday: number
   date: Date

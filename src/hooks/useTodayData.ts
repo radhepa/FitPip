@@ -7,8 +7,6 @@ import { listWeekPlan } from '../data/weekPlan'
 import type { BodyWeight, Exercise, TemplateWithItems, WeekPlanItem } from '../types/db'
 import { useAsync } from './useAsync'
 
-const STREAK_DAYS = 90
-
 /** Resolves to a fallback instead of failing (e.g. a migration that has not been run yet). */
 const orElse = async <T,>(load: Promise<T>, fallback: T): Promise<T> => {
   try {
@@ -31,10 +29,8 @@ export function useTodayData() {
     return { items, routines, exercises }
   }, [], { cacheKey: 'today:plan' })
   const history = useAsync(async () => {
-    const since = new Date()
-    since.setHours(0, 0, 0, 0)
-    since.setDate(since.getDate() - STREAK_DAYS)
-    const sessions = await listSessionsSince(since.toISOString())
+    // Every begun workout (the rows only, no sets): the week streak can run back a long way.
+    const sessions = await listSessionsSince('')
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const todays = sessions.filter((s) => new Date(s.started_at) >= today)

@@ -94,7 +94,7 @@ export function TemplateScreen() {
 
   return (
     <>
-      <PageHeader back eyebrow="Routine" title={template.name} subtitle={`${items.length} ${items.length === 1 ? 'exercise' : 'exercises'}`} />
+      <PageHeader back backTo="/plan" eyebrow="Routine" title={template.name} subtitle={`${items.length} ${items.length === 1 ? 'exercise' : 'exercises'}`} />
 
       <TemplateNameField
         name={template.name}

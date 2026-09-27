@@ -63,7 +63,7 @@ export function SessionDetailScreen() {
 
   return (
     <>
-      <PageHeader back eyebrow={justFinished ? 'Workout saved' : formatDate(s.started_at)} title={sessionTitle(s)} subtitle={`${formatDate(s.started_at)} · ${formatTime(s.started_at)}`} />
+      <PageHeader back backTo="/history" eyebrow={justFinished ? 'Workout saved' : formatDate(s.started_at)} title={sessionTitle(s)} subtitle={`${formatDate(s.started_at)} · ${formatTime(s.started_at)}`} />
       <WorkoutCompletion key={id} justFinished={justFinished} sets={sets.length} pipLine={pipLine} />
       <SessionStats
         durationMs={sessionDurationMs(s)}

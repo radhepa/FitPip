@@ -51,6 +51,7 @@ export function ExerciseDetailScreen() {
     <>
       <PageHeader
         back
+        backTo="/progress"
         eyebrow={CATEGORY_INFO[ex.category].label}
         title={ex.name}
         action={

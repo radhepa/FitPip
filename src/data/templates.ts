@@ -1,3 +1,4 @@
+import { compareText } from '../lib/compareText'
 import type { Template, TemplateExercise, TemplateWithItems } from '../types/db'
 import { duplicateError, invalidError, newId, nowIso, ownerId, putRow, putRows, removeCascaded, removeRow, rowsOf, writeTx } from './local/store'
 
@@ -23,7 +24,7 @@ const cleanName = (name: string): string => {
 /** The server keeps one routine per name, ignoring case. */
 async function assertNameFree(name: string, exceptId?: string): Promise<void> {
   const lowered = name.toLowerCase()
-  if (await rowsOf('templates').filter((t) => t.id !== exceptId && t.name.toLowerCase() === lowered).first()) throw duplicateError('routine name')
+  if ((await rowsOf('templates').toArray()).some((t) => t.id !== exceptId && t.name.toLowerCase() === lowered)) throw duplicateError('routine name')
 }
 
 function itemRow(templateId: string, item: NewTemplateItem, position: number): TemplateExercise {
@@ -51,7 +52,7 @@ function itemRow(templateId: string, item: NewTemplateItem, position: number): T
 
 /** Every template with its exercises. */
 export async function listTemplates(): Promise<TemplateWithItems[]> {
-  const templates = (await rowsOf('templates').toArray()).sort((a, b) => a.name.localeCompare(b.name))
+  const templates = (await rowsOf('templates').toArray()).sort((a, b) => compareText(a.name, b.name))
   const items = await rowsOf('template_exercises').toArray()
   return templates.map((template) => ({ template, items: items.filter((i) => i.template_id === template.id).sort(byPosition) }))
 }

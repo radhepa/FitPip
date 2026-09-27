@@ -35,10 +35,25 @@ export async function listSetsForSession(sessionId: string): Promise<SetRow[]> {
   return (await rowsOf('sets').where('session_id').equals(sessionId).toArray()).sort(bySetOrder)
 }
 
-/** Sets for many sessions at once (history summaries, the muscle heatmap). */
+const binary = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
+/** The order the session_id index gives (workout, then set id), whichever way the sets were read. */
+const bySessionThenId = (a: SetRow, b: SetRow) => binary(a.session_id, b.session_id) || binary(a.id, b.id)
+
+/** Above this many workouts, reading every set once beats looking each workout up. */
+const WHOLE_TABLE_FROM = 24
+
+/** Sets for many sessions at once (history summaries, the muscle heatmap, the whole history). */
 export async function listSetsForSessions(sessionIds: string[]): Promise<SetRow[]> {
   if (sessionIds.length === 0) return []
-  return rowsOf('sets').where('session_id').anyOf(sessionIds).toArray()
+  const wanted = new Set(sessionIds)
+  const sets = rowsOf('sets')
+  // Not Dexie's anyOf(): it steps a cursor through the rows one by one, which gets slow on a phone
+  // once the history is long. A handful of indexed reads, or one read of the whole table, is quicker.
+  const rows =
+    wanted.size < WHOLE_TABLE_FROM
+      ? (await Promise.all([...wanted].map((id) => sets.where('session_id').equals(id).toArray()))).flat()
+      : (await sets.toArray()).filter((set) => wanted.has(set.session_id))
+  return rows.sort(bySessionThenId)
 }
 
 export async function logSet(input: NewSet): Promise<SetRow> {
@@ -106,9 +121,9 @@ export async function listSetsForExercise(exerciseId: string): Promise<ExerciseS
  * (used to prefill weights and show "last time"). Empty when it has never been done.
  */
 export async function lastSessionSetsForExercise(exerciseId: string, excludeSessionId: string): Promise<SetRow[]> {
-  const recent = (await rowsOf('sets').where('exercise_id').equals(exerciseId).filter((set) => set.session_id !== excludeSessionId).toArray()).sort((a, b) =>
-    b.created_at.localeCompare(a.created_at),
-  )
+  const recent = (await rowsOf('sets').where('exercise_id').equals(exerciseId).toArray())
+    .filter((set) => set.session_id !== excludeSessionId)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
   if (recent.length === 0) return []
   return recent.filter((set) => set.session_id === recent[0].session_id).sort(bySetOrder)
 }

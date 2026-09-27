@@ -49,9 +49,12 @@ export async function getSession(id: string): Promise<Session | null> {
   return (await rowsOf('sessions').get(id)) ?? null
 }
 
+// Reads avoid Dexie's `.filter()` on a whole table: that walks the rows one cursor step at a time,
+// which is far slower in IndexedDB than reading them in one go (or through an index) and filtering here.
+
 /** The newest workout that is set up or under way but not finished. */
 export async function getOpenSession(): Promise<Session | null> {
-  const open = await rowsOf('sessions').filter((session) => !session.ended_at).toArray()
+  const open = (await rowsOf('sessions').toArray()).filter((session) => !session.ended_at)
   return open.sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ?? null
 }
 
@@ -88,16 +91,22 @@ export async function deleteSession(id: string): Promise<void> {
 
 /** Every workout that has begun (finished or not) at or after the given moment. Workouts still being set up are left out. */
 export async function listSessionsSince(sinceIso: string): Promise<BegunSession[]> {
-  const sessions = await rowsOf('sessions').filter((session): boolean => isBegun(session) && session.started_at >= sinceIso).toArray()
-  return (sessions as BegunSession[]).sort((a, b) => b.started_at.localeCompare(a.started_at))
+  // Workouts still being set up have no start time, so the started_at index leaves them out.
+  const sessions = (await rowsOf('sessions').where('started_at').aboveOrEqual(sinceIso).toArray()).filter(isBegun)
+  return sessions.sort((a, b) => b.started_at.localeCompare(a.started_at))
 }
 
 /** Finished workouts, newest first, each with its sets. Pass `before` (a started_at) to page. */
 export async function listSessionSummaries(limit: number, before?: string): Promise<SessionWithSets[]> {
-  const finished = await rowsOf('sessions')
-    .filter((session) => isBegun(session) && !!session.ended_at && (!before || session.started_at! < before))
-    .toArray()
-  const sessions = (finished as BegunSession[]).sort((a, b) => b.started_at.localeCompare(a.started_at)).slice(0, limit)
+  // Newest first straight from the started_at index, stopping after `limit` finished ones, so a long
+  // history is not read in full for one page. (Timestamps are stored as ISO strings in UTC, so index
+  // order is time order.)
+  const begun = before ? rowsOf('sessions').where('started_at').below(before) : rowsOf('sessions').orderBy('started_at')
+  const sessions = (await begun
+    .reverse()
+    .filter((session) => isBegun(session) && !!session.ended_at)
+    .limit(limit)
+    .toArray()) as BegunSession[]
   const sets = await listSetsForSessions(sessions.map((session) => session.id))
   return sessions.map((session) => ({ session, sets: sets.filter((set) => set.session_id === session.id) }))
 }

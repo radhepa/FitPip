@@ -1,4 +1,5 @@
 import type { MappedExercise } from '../config/exerciseDbMap'
+import { compareText } from '../lib/compareText'
 import type { Exercise } from '../types/db'
 import { isGuestUser } from './local/context'
 import { invalidError, duplicateError, inUseError, newId, nowIso, ownerId, putRow, removeCascaded, removeRow, rowsOf, writeTx } from './local/store'
@@ -15,14 +16,14 @@ const cleanName = (name: string): string => {
 /** The server keeps one exercise per name (ignoring case) and one per ExerciseDB id. */
 async function assertUnique(name: string, externalId: string | null, exceptId?: string): Promise<void> {
   const lowered = name.toLowerCase()
-  const clash = await rowsOf('exercises')
-    .filter((e) => e.id !== exceptId && (e.name.toLowerCase() === lowered || (externalId !== null && e.external_id === externalId)))
-    .first()
+  const clash = (await rowsOf('exercises').toArray()).some(
+    (e) => e.id !== exceptId && (e.name.toLowerCase() === lowered || (externalId !== null && e.external_id === externalId)),
+  )
   if (clash) throw duplicateError('exercise name')
 }
 
 export async function listExercises(): Promise<Exercise[]> {
-  return (await rowsOf('exercises').toArray()).sort((a, b) => a.name.localeCompare(b.name))
+  return (await rowsOf('exercises').toArray()).sort((a, b) => compareText(a.name, b.name))
 }
 
 export async function createExercise(input: ExerciseInput): Promise<Exercise> {

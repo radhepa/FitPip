@@ -13,10 +13,12 @@ import { deleteSession, getSession } from '../data/sessions'
 import { listSetsForSession } from '../data/sets'
 import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
+import { usePipFacts } from '../hooks/usePipFacts'
 import { useSettings } from '../hooks/useSettings'
 import { formatDate, formatTime, sessionDurationMs, sessionTitle } from '../lib/format'
 import { planFromRows } from '../lib/sessionPlan'
 import { computeVolume, workFromSets } from '../lib/muscleVolume'
+import { wrapUpNote } from '../lib/pip/notes'
 import { groupByExercise, totalVolume } from '../lib/sessionStats'
 
 /** Summary of a finished workout (also where you land right after finishing one). */
@@ -29,6 +31,10 @@ export function SessionDetailScreen() {
   const setsState = useAsync(() => listSetsForSession(id), [id])
   const exercisesState = useAsync(listExercises, [])
   const [actionError, setActionError] = useState<string | null>(null)
+  // Pip only looks at your history for the celebration right after finishing, not on every visit to a past workout.
+  const [celebrating] = useState(justFinished)
+  const pipFacts = usePipFacts({ skip: !celebrating })
+  const pipLine = useMemo(() => (pipFacts ? (wrapUpNote(pipFacts)?.text ?? null) : null), [pipFacts])
 
   const sets = useMemo(() => setsState.data ?? [], [setsState.data])
   const blocks = useMemo(() => groupByExercise(sets), [sets])
@@ -58,7 +64,7 @@ export function SessionDetailScreen() {
   return (
     <>
       <PageHeader back eyebrow={justFinished ? 'Workout saved' : formatDate(s.started_at)} title={sessionTitle(s)} subtitle={`${formatDate(s.started_at)} · ${formatTime(s.started_at)}`} />
-      <WorkoutCompletion key={id} justFinished={justFinished} sets={sets.length} />
+      <WorkoutCompletion key={id} justFinished={justFinished} sets={sets.length} pipLine={pipLine} />
       <SessionStats
         durationMs={sessionDurationMs(s)}
         exercises={blocks.length}

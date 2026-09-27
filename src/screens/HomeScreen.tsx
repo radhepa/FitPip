@@ -35,6 +35,7 @@ export function HomeScreen() {
   const sessions = useMemo(() => history.data?.sessions ?? [], [history.data])
   const days = useMemo(() => weekStatus(sessions, plannedWeekdays), [sessions, plannedWeekdays])
   const totals = useMemo(() => weekTotals(sessions, days), [sessions, days])
+  const pipPlan = useMemo(() => ({ plan: today, week: { planned: totals.plannedDays, done: totals.plannedDaysDone } }), [today, totals])
   const weight = useMemo(() => {
     const list = toWeighIns(weights.data ?? [], unit)
     const latest = list.at(-1)
@@ -61,7 +62,7 @@ export function HomeScreen() {
         </header>
 
         <section className="card card-hero mb-4 p-4">
-          <PipSpeech pose={today.kind === 'rest' ? 'sleep' : 'idle'} size={120} />
+          <PipSpeech pose={today.kind === 'rest' ? 'sleep' : 'idle'} size={120} plan={pipPlan} ready={Boolean(plan.data && history.data)} />
         </section>
 
         <div className="grid grid-cols-1 gap-3">

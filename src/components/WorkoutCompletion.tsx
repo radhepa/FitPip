@@ -6,8 +6,11 @@ import { CheckIcon } from './icons'
 import { Pip } from './Pip'
 import './workoutCompletion.css'
 
-/** Consume the navigation signal once, after the saved summary has loaded. */
-export function WorkoutCompletion({ justFinished, sets }: { justFinished: boolean; sets: number }) {
+/**
+ * Consume the navigation signal once, after the saved summary has loaded. `pipLine` is what Pip
+ * has to say about this particular workout (a record, a streak...), when he has something.
+ */
+export function WorkoutCompletion({ justFinished, sets, pipLine = null }: { justFinished: boolean; sets: number; pipLine?: string | null }) {
   const [finishedHere] = useState(justFinished)
   const [open, setOpen] = useState(justFinished)
   const replayRef = useRef<HTMLButtonElement>(null)
@@ -34,13 +37,13 @@ export function WorkoutCompletion({ justFinished, sets }: { justFinished: boolea
         <p className="flex items-center gap-2 font-bold"><CheckIcon /> Workout complete. Proud of you!</p>
         <button ref={replayRef} type="button" className="app-button button-ghost button-sm" onClick={() => setOpen(true)}>Celebrate with Pip</button>
       </section>
-      {open && <PipCelebration sets={sets} onDismiss={() => setOpen(false)} />}
+      {open && <PipCelebration sets={sets} pipLine={pipLine} onDismiss={() => setOpen(false)} />}
     </>
   )
 }
 
 /** Native modal keeps focus inside, supports Escape, and sits above the app's page transitions. */
-function PipCelebration({ sets, onDismiss }: { sets: number; onDismiss: () => void }) {
+function PipCelebration({ sets, pipLine, onDismiss }: { sets: number; pipLine: string | null; onDismiss: () => void }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [replay, setReplay] = useState(0)
 
@@ -61,7 +64,7 @@ function PipCelebration({ sets, onDismiss }: { sets: number; onDismiss: () => vo
       ref={dialogRef}
       className="workout-celebration"
       aria-labelledby="pip-complete-title"
-      aria-describedby="pip-complete-message"
+      aria-describedby={pipLine ? 'pip-complete-message pip-complete-note' : 'pip-complete-message'}
       onCancel={(event) => { event.preventDefault(); onDismiss() }}
     >
       <div className="completion-content">
@@ -93,6 +96,7 @@ function PipCelebration({ sets, onDismiss }: { sets: number; onDismiss: () => vo
         </div>
         <h2 id="pip-complete-title" className="completion-title">You did it!</h2>
         <p id="pip-complete-message" className="completion-message">You showed up. You put in the work.<br />That deserves a little happy dance.</p>
+        {pipLine && <p id="pip-complete-note" className="completion-note">{pipLine}</p>}
         <p className="completion-saved"><CheckIcon size="size-4" /> {sets} {sets === 1 ? 'set' : 'sets'} in the books. Workout saved.</p>
         <Button autoFocus variant="primary" block onClick={onDismiss}>View workout</Button>
         <Button variant="ghost" size="sm" className="completion-replay" onClick={() => setReplay((n) => n + 1)}>Replay Pip’s celebration</Button>

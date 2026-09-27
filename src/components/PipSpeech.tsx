@@ -1,50 +1,53 @@
-import { useEffect, useRef, useState } from 'react'
-import { usePipLine } from '../hooks/usePipLine'
-import { buzz } from './fx'
-import { Pip, type PipPose, type PipReaction } from './Pip'
+import { usePipFacts } from '../hooks/usePipFacts'
+import { usePipVoice } from '../hooks/usePipVoice'
+import type { PlanInput } from '../lib/pip/planFacts'
+import { Pip, type PipPose } from './Pip'
+import { PipTalk } from './PipTalk'
 
 interface Props {
   pose?: PipPose
   size?: number
-  /** Say this instead of the rotating line (the tap still deals a new one). */
-  override?: string
+  /** Today's plan and the week so far, so Pip can talk about them. Memoise it. */
+  plan?: PlanInput | null
+  /** False while the page is still loading the plan, so Pip waits rather than opening with half the picture. */
+  ready?: boolean
 }
 
-const reactions: PipReaction[] = ['dance', 'stretch', 'peekaboo', 'flex', 'nod', 'yawn', 'wave', 'bounce', 'love']
-
-/** Every tap deals a new line and a brief reaction, then returns to the page's pose. */
-export function PipSpeech({ pose = 'idle', size = 96, override }: Props) {
-  const { line, index, next } = usePipLine()
-  const [taps, setTaps] = useState(0)
-  const [reaction, setReaction] = useState<PipReaction>()
-  const settleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const [overridden, setOverridden] = useState(Boolean(override))
-  const said = overridden && override ? override : line
-
-  useEffect(() => () => clearTimeout(settleTimer.current), [])
+/**
+ * Pip with a speech bubble. He opens with what fits your day, says something new and acts it out
+ * on every tap, and has three chips (how am I doing, throwback, pep talk) for talking back.
+ */
+export function PipSpeech({ pose = 'idle', size = 96, plan = null, ready = true }: Props) {
+  const facts = usePipFacts({ plan, ready })
+  const voice = usePipVoice({ facts, base: pose })
 
   return (
-    <div className="flex items-end gap-3">
-      <button
-        type="button"
-        onClick={() => {
-          buzz(8)
-          setOverridden(false)
-          clearTimeout(settleTimer.current)
-          setReaction(reactions[taps % reactions.length])
-          setTaps((t) => t + 1)
-          settleTimer.current = setTimeout(() => setReaction(undefined), 2800)
-          next()
-        }}
-        aria-label="Tap Pip for another tip"
-        className="pip-button shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0"
-        style={{ width: size, maxWidth: '38%' }}
-      >
-        <Pip pose={pose} reaction={reaction} reactionId={taps} size={size} />
-      </button>
-      <p className="speech mb-3 min-w-0 flex-1 text-[.95rem]" aria-live="polite" aria-atomic="true">
-        <span key={`${index}-${taps}`} className="speech-in block">{said}</span>
-      </p>
+    <div>
+      <div className="flex items-end gap-3">
+        <button
+          type="button"
+          onClick={voice.tap}
+          aria-label="Tap Pip to hear something new"
+          className="pip-button shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0"
+          style={{ width: size, maxWidth: '38%' }}
+        >
+          <Pip pose={pose} reaction={voice.reaction} reactionId={voice.nonce} size={size} />
+        </button>
+        <p className="speech mb-3 min-w-0 flex-1 text-[.95rem]" aria-live="polite" aria-atomic="true" aria-busy={voice.said === null}>
+          {voice.said ? (
+            <span key={voice.nonce} className="speech-in block">
+              {voice.said.text}
+            </span>
+          ) : (
+            <span className="pip-typing" role="status" aria-label="Pip is thinking">
+              <i />
+              <i />
+              <i />
+            </span>
+          )}
+        </p>
+      </div>
+      <PipTalk said={voice.said} onTalk={voice.talk} onChoose={voice.choose} />
     </div>
   )
 }

@@ -60,9 +60,22 @@
 }
 .completion-title { margin: 18px 0 10px; font: 850 clamp(2.4rem, 10vw, 3.1rem)/1 var(--font-display); letter-spacing: -.045em; }
 .completion-message { margin: 0; color: var(--color-muted); line-height: 1.5; }
+.completion-note {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 16px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: .95rem;
+  font-weight: 700;
+  line-height: 1.4;
+  animation: completion-note 480ms 1.9s both;
+}
 .completion-saved { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 22px 0 16px; color: var(--color-muted); font-size: .8rem; }
 .completion-saved svg { flex-shrink: 0; color: var(--color-target); }
 .completion-replay { margin: 6px auto -8px; }
+@keyframes completion-note { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes completion-enter { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
 @keyframes completion-glow { 0% { transform: scale(.85); opacity: .3; } 30%, 50% { transform: scale(1.14); opacity: 1; } 100% { transform: scale(1); opacity: .8; } }
 @keyframes completion-burst {
@@ -88,6 +101,7 @@
   .completion-praise { padding: 4px 10px; font-size: .75rem; }
   .completion-title { margin: 12px 0 8px; font-size: 2rem; }
   .completion-message { font-size: .875rem; line-height: 1.4; }
+  .completion-note { margin-top: 8px; padding: 6px 10px; font-size: .8rem; }
   .completion-saved { margin: 12px 0; font-size: .75rem; }
 }
 @media (prefers-reduced-motion: reduce) {

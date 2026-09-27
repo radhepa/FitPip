@@ -46,8 +46,12 @@ Stack: Vite, React, TypeScript, Tailwind, vite-plugin-pwa, Supabase (Auth + Post
 
 ## What's where
 
-- **Today**: Pip (tap him for another line; he has ~90 and deals a new one each time the app opens),
-  your streak, this week against your plan, your latest weight, and today's lineup. Each planned
+- **Today**: Pip, who knows your training. He opens with what fits your day and acts out everything he
+  says: over 400 everyday lines that match his pose (a flex is about strength, a yawn about rest) and
+  personal ones from your own history ("two weeks ago you lifted 135 on Bench, now 155", new records,
+  your streak, how far you are from your goal weight). Tap him for another line, or use the chips:
+  *How am I doing?*, *Throwback*, *Pep talk*. Now and then he asks how your energy is, with quick
+  replies. Below him: your streak, this week against your plan, your latest weight, and today's lineup. Each planned
   routine or activity has its own start button, or do them all as one workout. Nothing planned?
   Tap Lift, Cardio, Swim, Yoga, Stretch or Boxing to start straight away.
 - **Plan**: the week as seven cards. Say what KIND of workout each day is (Weightlifting, Cardio,

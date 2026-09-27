@@ -58,15 +58,45 @@ Archivo Variable (display: titles, numbers, the clock) and Atkinson Hyperlegible
 
 ## Pip
 
-`PipSpeech` shows Pip with a speech bubble. Lines are in `src/config/pipLines.ts` (keep 50-100,
-each under 110 characters). `lib/pipDeck.ts` deals them like a shuffled deck stored in
-localStorage: a new line every launch, no repeats until all have been shown. Successive taps deal
-the next line and cycle through a dance, stretch, peekaboo, flex, encouraging nod, sleepy yawn,
-wave with a wink, two-hop celebration, and hug with hearts. Everyday gestures live in
-`pip/everyday.css`, with coordinated paws, head, feet and tail; the dance adds floating music notes.
-Each reaction lasts 2.8 seconds, then returns to the page's pose; tapping a sleeping Pip briefly
-wakes him. Repeated taps restart the reaction and its settling timer. The speech live region
-stays mounted so assistive technology can announce each new line.
+`PipSpeech` shows Pip with a speech bubble and three chips (How am I doing?, Throwback, Pep talk).
+Everything he says acts out a gesture, and the words match it: a flex is about strength, a yawn about
+rest, a stretch about mobility. Gestures live in `pip/everyday.css`, with coordinated paws, head, feet
+and tail; the dance adds floating music notes. Each lasts 2.8 seconds (`hooks/usePipGesture.ts`), then
+Pip returns to the page's pose; tapping a sleeping Pip briefly wakes him. The speech live region stays
+mounted so assistive technology can announce each new line.
+
+**What he says.** Two kinds of line, chosen by `lib/pip/voice.ts` (pure, tested):
+
+- *Everyday lines* (`src/config/pip/moodLines.ts`, `themeLines.ts`; about 440 lines). Fourteen mood banks
+  (one per pose or gesture) and nineteen topic banks (lifting, form, single-arm cable, cardio, cardio
+  machines, swim, mobility, boxing, recovery, scale, cutting, food, Purdue and the CoRec, gym floor,
+  mindset, goals, panda, pep). Keep each under 110 characters. Every bank is dealt like a shuffled deck
+  (`lib/pipDeck.ts`), and the banks themselves come from a weighted deck (`lib/pip/pools.ts`): a lifting
+  day leans on lifting and form, a cardio day on cardio, a rest day on recovery, a cut on cutting advice.
+  Never the same bank twice in a row.
+- *Personal lines* (`src/config/pip/personalLines.ts`, filled from your own history). `lib/pip/facts.ts`
+  works out what he knows (best set per lift per day, records, streaks, weeks in a row, gaps by muscle
+  group, cardio minutes, weigh-ins against your goal, today's plan); `lib/pip/moments/*` turns that into
+  moments, each with a priority, a cooldown and a gesture: "two weeks ago you lifted 135 on Bench, now
+  155", new records, first time over 225 (with the plates), a lift reaching your bodyweight, lighter
+  and stronger, weight milestones on the way to your goal, kind words about a week that went up, a
+  gentle word if it dropped very fast, comebacks, streaks, workout milestones, what's on today's board.
+  A wording with `{name}` is only used when a display name is set. The same wording is used all day.
+
+**When.** At launch he opens with the most fitting fresh moment (or an everyday line); the opening line
+stays while you move between screens and is replaced when your data changes. A tap brings up one of your
+own moments about 60% of the time, else an everyday line. On roughly one day in three, when there is a
+workout still to do and it is before 9 pm, the first tap is a question (energy or sleep) with three quick
+replies; the reply can recall what you did last time on the first lift in the plan. The chips ask for a
+status (rotating between training, body and strength), a throwback, or a pep talk. What Pip has said
+recently is remembered in localStorage (`fitpip.pip-voice`).
+
+**Elsewhere.** The Weigh-in screen has a small Pip (`PipNote`) with the best thing to say about your
+weight, updating as you save weigh-ins (tap him for the next thought). The workout-complete dialog adds
+one line about that workout (a record set today, a milestone, a streak) when he has one.
+
+To add a line, append it to a bank; the tests check every line is unique, short, and that each
+personal wording only uses the slots it is given (see the comment above each list).
 
 `Pip` is a layered SVG rig. Artwork and motion live in `src/components/pip/`; the head, ears,
 eyes, paws, feet, tail and headband ties have separate pivots. Keep anticipation, landing and

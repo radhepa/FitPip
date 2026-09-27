@@ -4,6 +4,7 @@ import { ErrorBanner, Loading } from '../components/feedback'
 import { GoalCard } from '../components/GoalCard'
 import { LineChart } from '../components/LineChart'
 import { PageHeader } from '../components/PageHeader'
+import { PipNote } from '../components/PipNote'
 import { WeighInPanel } from '../components/WeighInPanel'
 import { WeightHistory } from '../components/WeightHistory'
 import { WeightStats } from '../components/WeightStats'
@@ -11,8 +12,10 @@ import { deleteBodyWeight, listBodyWeights, saveBodyWeight } from '../data/bodyW
 import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
 import { useAuth } from '../hooks/useAuth'
+import { usePipFacts } from '../hooks/usePipFacts'
 import { useSettings } from '../hooks/useSettings'
 import { dateMs, goalProgress, toWeighIns } from '../lib/bodyWeight'
+import { weightNotes } from '../lib/pip/notes'
 import { convertWeight } from '../lib/units'
 
 const RANGES = [
@@ -31,6 +34,9 @@ export function WeighInScreen() {
   const [openedAt] = useState(() => Date.now())
 
   const weighIns = useMemo(() => toWeighIns(rows.data ?? [], unit), [rows.data, unit])
+  // Pip reacts to your weigh-ins as you save them, using the list on screen rather than waiting for a reload.
+  const pipFacts = usePipFacts({ weights: rows.data })
+  const pipNotes = useMemo(() => (pipFacts ? weightNotes(pipFacts) : []), [pipFacts])
   const goalShown = goal ? convertWeight(goal.weight, goal.unit, unit) : null
   const points = useMemo(() => {
     const from = range === 0 ? 0 : openedAt - range * 24 * 60 * 60 * 1000
@@ -66,6 +72,7 @@ export function WeighInScreen() {
     <>
       <PageHeader eyebrow="Body" title="Weigh-in" subtitle="One weigh-in a day. Watch the trend, not the wiggle." />
       <ErrorBanner error={rows.error} onRetry={rows.reload} />
+      {pipNotes.length > 0 && <PipNote notes={pipNotes} />}
       {rows.loading && !rows.data ? (
         <Loading rows={3} />
       ) : (

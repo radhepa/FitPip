@@ -69,6 +69,13 @@ the workout clock and the scale. Set `--tint` on an element to colour `.icon-til
   iOS long-press callout.
 - Reading the on-device database: avoid Dexie's `.filter()` over a whole table (it steps a cursor row
   by row); read through an index or `toArray()` and filter in JavaScript.
+- iPhone doesn't blur a field when a button is tapped. A field that saves on blur also saves after a
+  pause in typing and registers with `usePendingEdit`; a button that acts on saved data (Begin, Finish,
+  Start) awaits `saveAllEdits()` first. Number fields select their value on tap with `selectAll`.
+- A running timer lives in `useStoredState` (it survives leaving the screen or the app being closed)
+  and holds `useWakeLock` so the screen stays on.
+- Every screen sits in an `ErrorBoundary`: a crash shows Try again / Today / Reload, not a blank app.
+- Say counts with `countOf(n, 'set')` ("1 set", "2 sets"), never a fixed plural.
 
 ## Type
 

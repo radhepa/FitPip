@@ -42,6 +42,9 @@ Stack: Vite, React, TypeScript, Tailwind, vite-plugin-pwa, Supabase (Auth + Post
    *Allow new users to sign up*.
 5. **Add your keys.** *Project Settings → API*: copy the Project URL and the `anon` public key
    into a new `.env` (copy `.env.example`).
+   For *Forgot password?* emails: *Authentication → URL Configuration*, set the Site URL to where the
+   app lives (e.g. `https://your-app.vercel.app`) and add `https://your-app.vercel.app/reset-password`
+   to the Redirect URLs.
 6. `npm install`, then `npm run dev`.
 
 ## What's where
@@ -51,7 +54,8 @@ Stack: Vite, React, TypeScript, Tailwind, vite-plugin-pwa, Supabase (Auth + Post
   personal ones from your own history ("two weeks ago you lifted 135 on Bench, now 155", new records,
   your streak, how far you are from your goal weight). Tap him for another line, or use the chips:
   *How am I doing?*, *Throwback*, *Pep talk*. Now and then he asks how your energy is, with quick
-  replies. Below him: your streak, this week against your plan, your latest weight, and today's lineup. Each planned
+  replies. Below him: your week streak (weeks in a row with 2+ workouts; tap it for what this week still
+  needs), this week against your plan, your latest weight, and today's lineup. Each planned
   routine or activity has its own start button, or do them all as one workout. Nothing planned?
   Tap Lift, Cardio, Swim, Yoga, Stretch or Boxing to start straight away.
 - **Plan**: the week as seven cards. Say what KIND of workout each day is (Weightlifting, Cardio,
@@ -84,6 +88,17 @@ History, Progress or suggestions until you begin it.
   rest without changing the setting.
 - **Editing a finished workout.** *Edit workout* on the summary changes sets, notes and the name in
   place. The recorded time never changes, and the workout doesn't come back as "open" on Home.
+- **Personal records.** A set that beats every earlier workout gets a *PR* pill (and a little confetti).
+- **Timers keep going.** A running rest, stopwatch or countdown survives switching tabs or the phone
+  closing the app, and the screen stays on while one runs.
+- **Forgot to finish?** A workout with nothing logged for 3 hours offers to finish at the time of its
+  last set, so its time isn't counted up to the next day.
+
+## Your data
+
+*Settings → Your data* saves every set and every weigh-in as spreadsheet files (CSV), or a full copy
+of everything as JSON. *Settings → Account → Change password*, or *Forgot password?* on the sign-in
+screen (see setup step 5).
 
 ## Ranks, badges and XP
 

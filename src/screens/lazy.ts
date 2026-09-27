@@ -37,6 +37,7 @@ export const NotFoundScreen = screen(() => import('./NotFoundScreen'), 'NotFound
 export const PlanScreen = screen(() => import('./PlanScreen'), 'PlanScreen')
 export const ProfileScreen = screen(() => import('./ProfileScreen'), 'ProfileScreen')
 export const ProgressScreen = screen(() => import('./ProgressScreen'), 'ProgressScreen')
+export const ResetPasswordScreen = screen(() => import('./ResetPasswordScreen'), 'ResetPasswordScreen')
 export const SessionDetailScreen = screen(() => import('./SessionDetailScreen'), 'SessionDetailScreen')
 export const SettingsScreen = screen(() => import('./SettingsScreen'), 'SettingsScreen')
 export const SuggestScreen = screen(() => import('./SuggestScreen'), 'SuggestScreen')

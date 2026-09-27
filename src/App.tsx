@@ -15,6 +15,7 @@ import {
   preloadScreens,
   ProfileScreen,
   ProgressScreen,
+  ResetPasswordScreen,
   SessionDetailScreen,
   SettingsScreen,
   SuggestScreen,
@@ -36,6 +37,7 @@ export default function App() {
           <Suspense fallback={null}>
             <Routes>
               <Route path="/login" element={<LoginScreen />} />
+              <Route path="/reset-password" element={<ResetPasswordScreen />} />
               <Route element={<RequireAuth />}>
                 <Route path="welcome" element={<WelcomeScreen />} />
                 <Route element={<RequireOnboarding />}>

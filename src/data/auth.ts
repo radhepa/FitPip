@@ -110,6 +110,30 @@ export async function signUp(email: string, password: string): Promise<boolean> 
   return data.session === null
 }
 
+/** Where the reset email links to. */
+export const RESET_PATH = '/reset-password'
+
+/** Emails a link to choose a new password. Says nothing about whether the address has an account. */
+export async function requestPasswordReset(email: string): Promise<void> {
+  if (!isConfigured) throw new Error('Accounts are not configured yet.')
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}${RESET_PATH}` })
+  if (error) throw error
+}
+
+/** Signs in with the tokens from a reset link, so a new password can be set. */
+export async function startPasswordRecovery(tokens: { accessToken: string; refreshToken: string }): Promise<void> {
+  setGuestMode(false)
+  const { error } = await supabase.auth.setSession({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken })
+  if (error) throw error
+}
+
+/** Sets a new password for whoever is signed in. */
+export async function setNewPassword(password: string): Promise<void> {
+  if (password.length < 6) throw new Error('Use at least 6 characters.')
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) throw error
+}
+
 export async function signOut(): Promise<void> {
   if (isGuestMode()) {
     setGuestMode(false)

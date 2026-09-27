@@ -146,6 +146,11 @@ export function SettingsScreen() {
 
         <Card title="Account">
           <p className="mb-3 truncate text-sm text-muted">{session?.user.email ?? 'Guest'}</p>
+          {session && !session.guest && (
+            <Link to="/reset-password" className="app-button button-secondary mb-2 w-full">
+              Change password
+            </Link>
+          )}
           <Button variant="danger" block disabled={busy} onClick={() =>
               run(async () => {
                 const { pending, failed } = getSyncStatus()

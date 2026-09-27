@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { Pip } from '../components/Pip'
 import { ErrorBanner } from '../components/feedback'
-import { signIn, signInAsGuest, signUp } from '../data/auth'
+import { requestPasswordReset, signIn, signInAsGuest, signUp } from '../data/auth'
 import { useAuth } from '../hooks/useAuth'
 import { brand } from '../config/brand'
 
@@ -19,6 +19,25 @@ export function LoginScreen() {
   const [notice, setNotice] = useState<string | null>(null)
 
   if (session) return <Navigate to="/" replace />
+
+  async function forgot() {
+    setError(null)
+    setNotice(null)
+    const address = email.trim()
+    if (!address) {
+      setError(new Error('Type your email above, then tap “Forgot password?” again.'))
+      return
+    }
+    setBusy(true)
+    try {
+      await requestPasswordReset(address)
+      setNotice(`If ${address} has an account, a link to choose a new password is on its way. Open it on this device.`)
+    } catch (err) {
+      setError(err)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -85,6 +104,9 @@ export function LoginScreen() {
         </Button>
         {mode === 'in' && (
           <>
+            <button type="button" onClick={forgot} disabled={busy} className="block min-h-11 w-full text-center text-sm font-semibold text-accent">
+              Forgot password?
+            </button>
             <Button type="button" variant="ghost" block onClick={signInAsGuest}>Continue as guest</Button>
             <p className="m-0 text-center text-xs text-muted">Guest workouts stay on this device.</p>
           </>

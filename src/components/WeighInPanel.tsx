@@ -3,7 +3,7 @@ import { localDateIso } from '../lib/bodyWeight'
 import type { WeightUnit } from '../types/db'
 import { BathroomScale } from './BathroomScale'
 import { Button } from './Button'
-import { buzz } from './fx'
+import { buzz, selectAll } from './fx'
 import { CheckIcon } from './icons'
 import { RepeatButton } from './RepeatButton'
 import { WeightRuler } from './WeightRuler'
@@ -59,7 +59,7 @@ export function WeighInPanel({ unit, startWeight, takenDates, onSave }: Props) {
         <input
           inputMode="decimal"
           value={text ?? weight.toFixed(1)}
-          onFocus={(e) => e.target.select()}
+          onFocus={selectAll}
           onChange={(e) => {
             setText(e.target.value)
             const value = Number(e.target.value.replace(',', '.'))

@@ -11,6 +11,22 @@ export function buzz(pattern: number | number[] = 12): void {
   }
 }
 
+/**
+ * Selects a field's whole value when it is tapped, so typing replaces the number instead of adding to
+ * it. iOS Safari ignores select() while a tap is still focusing the field, so it is repeated just after.
+ */
+export function selectAll(e: { currentTarget: HTMLInputElement }): void {
+  const field = e.currentTarget
+  field.select()
+  setTimeout(() => {
+    try {
+      if (document.activeElement === field) field.setSelectionRange(0, field.value.length)
+    } catch {
+      // some input types have no selection: nothing to do
+    }
+  }, 0)
+}
+
 /** Keeps a drag's pointer events coming to this element even when the finger strays off it. */
 export function capture(e: { currentTarget: Element; pointerId: number }): void {
   try {

@@ -6,6 +6,7 @@ import { clockText } from '../lib/steps'
 import { distanceInput, toMetres, type LengthUnit } from '../lib/units'
 import type { SetRow, Tracking, WeightUnit } from '../types/db'
 import { Button } from './Button'
+import { selectAll } from './fx'
 import { CheckIcon, TrophyIcon } from './icons'
 
 interface Props {
@@ -98,7 +99,7 @@ export function LoggedSet({ index, set, record = false, tracking, unit, lengthUn
         {labels.map((label, i) => (
           <label key={label} className="block">
             <span className="mb-1 block text-center text-[.7rem] font-bold text-muted">{label}</span>
-            <input inputMode={i === 0 && tracking !== 'reps' ? 'text' : 'decimal'} value={values[i]} onChange={(e) => setters[i](e.target.value)} aria-label={label} className={inputClass} />
+            <input inputMode={i === 0 && tracking !== 'reps' ? 'text' : 'decimal'} onFocus={selectAll} value={values[i]} onChange={(e) => setters[i](e.target.value)} aria-label={label} className={inputClass} />
           </label>
         ))}
       </div>

@@ -1,4 +1,4 @@
-import { buzz } from './fx'
+import { buzz, selectAll } from './fx'
 import { RepeatButton } from './RepeatButton'
 
 interface Props {
@@ -42,7 +42,7 @@ export function Stepper({ label, value, onChange, onStep, inputMode = 'decimal',
           inputMode={inputMode}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onFocus={(e) => e.target.select()}
+          onFocus={selectAll}
           placeholder={placeholder}
           aria-label={ariaLabel ?? label}
           aria-invalid={invalid}

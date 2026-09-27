@@ -31,6 +31,7 @@ export function SessionDetailScreen() {
   const navigate = useNavigate()
   const { unit, distanceUnit } = useSettings()
   const justFinished = (useLocation().state as { justFinished?: boolean } | null)?.justFinished === true
+  const [celebrating] = useState(justFinished)
   const session = useAsync(() => getSession(id), [id], { cacheKey: `session:${id}` })
   const setsState = useAsync(() => listSetsForSession(id), [id], { cacheKey: `session-sets:${id}` })
   const exercisesState = useAsync(listExercises, [], { cacheKey: 'exercises' })
@@ -38,13 +39,12 @@ export function SessionDetailScreen() {
   // The rewards come from the whole history and take longest. The page waits for them too, so it arrives in
   // one piece instead of the rewards card appearing later and pushing everything below it down. (Not right
   // after finishing: the celebration covers the page, so it opens straight away.)
-  const waitForRewards = rewards.loading && !justFinished
+  const waitForRewards = rewards.loading && !celebrating
   // Shown at once when it was already read; otherwise it fades in as it arrives.
   const [arrives] = useState(() => session.loading || setsState.loading || exercisesState.loading || waitForRewards)
   const [actionError, setActionError] = useState<string | null>(null)
   const { repeat, repeating, error: repeatError } = useRepeatWorkout()
   // Pip only looks at your history for the celebration right after finishing, not on every visit to a past workout.
-  const [celebrating] = useState(justFinished)
   const pipFacts = usePipFacts({ skip: !celebrating })
   const pipLine = useMemo(() => (pipFacts ? (wrapUpNote(pipFacts)?.text ?? null) : null), [pipFacts])
 
@@ -83,7 +83,7 @@ export function SessionDetailScreen() {
         subtitle={`${formatDate(s.started_at)} · ${formatTime(s.started_at)}`}
         action={<FavoriteButton sessionId={id} initial={isFavorite(s)} onError={setActionError} />}
       />
-      <WorkoutCompletion key={id} justFinished={justFinished} sets={sets.length} pipLine={pipLine} />
+      <WorkoutCompletion key={id} sessionId={id} justFinished={justFinished} sets={sets.length} pipLine={pipLine} />
       <SessionStats
         durationMs={sessionDurationMs(s)}
         exercises={blocks.length}

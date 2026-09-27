@@ -37,7 +37,7 @@
   width: 226px;
   height: 226px;
   border-radius: 50%;
-  background: radial-gradient(circle, #8fc9ff2b, #8fc9ff08 62%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--completion-tint, #8ecbff) 22%, transparent), transparent 70%);
   box-shadow: inset 0 0 0 1px #95caff12;
   animation: completion-glow 3.2s ease-out both;
 }
@@ -56,7 +56,7 @@
   font-size: .875rem;
   font-weight: 800;
   transform: rotate(-4deg);
-  animation: completion-praise 500ms 1.85s both;
+  animation: completion-praise 500ms var(--praise-delay, 1.85s) both;
 }
 .completion-title { margin: 18px 0 10px; font: 850 clamp(2.4rem, 10vw, 3.1rem)/1 var(--font-display); letter-spacing: -.045em; }
 .completion-message { margin: 0; color: var(--color-muted); line-height: 1.5; }
@@ -74,7 +74,9 @@
 }
 .completion-saved { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 22px 0 16px; color: var(--color-muted); font-size: .8rem; }
 .completion-saved svg { flex-shrink: 0; color: var(--color-target); }
-.completion-replay { margin: 6px auto -8px; }
+.completion-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin: 6px -10px -8px; }
+.completion-scene--hearts .completion-bit, .completion-scene--music .completion-bit { animation-duration: 2s; }
+.completion-scene--high-five .completion-bit { animation-duration: 1.3s; }
 @keyframes completion-note { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes completion-enter { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
 @keyframes completion-glow { 0% { transform: scale(.85); opacity: .3; } 30%, 50% { transform: scale(1.14); opacity: 1; } 100% { transform: scale(1); opacity: .8; } }

@@ -147,10 +147,19 @@ in both themes, with rapid taps and keyboard activation; check that each reactio
 idle, sleep or cheer as appropriate. The home companion renders at up to 120px; speech companions
 shrink on narrow cards to keep the tip readable.
 
-Finishing a saved workout opens `WorkoutCompletion`: a focus-trapped native dialog with a
-3.2-second Pip celebration (wind-up, victory leap, rebound, shimmy, proud pose), a synchronized
-sparkle burst, and the saved set count. `pip/celebrate.css` owns the character motion and
-`workoutCompletion.css` owns the scene. View workout or Escape dismisses it immediately;
-replay restarts the scene. The completion navigation flag is consumed after the summary loads,
+Finishing a saved workout opens `WorkoutCompletion`: a focus-trapped native `PipCelebration`
+dialog with one of five 3.2-second finishes: the original victory jump, a high-five, a shuffle
+and bow, a double flex, or a heart hug. Each has its own message, accent colour, held pose,
+and synchronized confetti, music, stars or hearts. `config/pipCelebrations.ts` owns the choices
+and effect timing. `pip/celebrate.css` and `pip/finishVariations.css` own character motion;
+`PipCelebrationScene` and `workoutCompletion.css` own the scene.
+
+`lib/pip/celebrations.ts` deals all five before reshuffling and avoids a repeat at the boundary.
+`useWorkoutCelebration` remembers the deck in `fitpip.pip-celebrations.v1` localStorage, with an
+in-memory fallback when storage is unavailable. Reopening the same workout preserves its choice;
+Replay restarts it, while Another celebration advances the deck. View workout or Escape dismisses
+the dialog immediately. The completion navigation flag is consumed after the summary loads,
 so refreshing, history visits, and editing a finished workout never trigger another celebration.
-Reduced motion shows the happy final pose and message immediately, without particles.
+Reward loading must not unmount an active celebration after that flag is consumed. Reduced motion
+shows each expressive finishing pose and message immediately, without particles. Completion-only
+gestures use `PipVisualMood` so they do not enter the everyday voice banks.

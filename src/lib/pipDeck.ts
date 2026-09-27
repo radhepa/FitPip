@@ -34,6 +34,29 @@ export function drawLine(deck: PipDeck | null, count: number, random: () => numb
   return { index, deck: { order: rest, size: count, last: index } }
 }
 
+/** A deck of names (which bank of lines comes next), rebuilt whenever the set of names changes. */
+export interface KeyDeck {
+  /** What the deck was dealt from, so a different set of names starts a new deck. */
+  sig: string
+  /** Names still to deal, next first. */
+  order: string[]
+}
+
+/**
+ * Deals the next name from a shuffled deck of `keys` (a name can appear more than once to make it
+ * come up more often). Never the same name twice in a row, even across a reshuffle.
+ */
+export function drawKey(deck: KeyDeck | null, keys: readonly string[], last: string | null, random: () => number = Math.random): { key: string; deck: KeyDeck } {
+  if (keys.length === 0) throw new Error('No keys to draw from.')
+  const sig = keys.join(',')
+  let order = deck && deck.sig === sig ? [...deck.order] : []
+  // A fresh deck when this one is spent, or when all that is left is more of the name just dealt.
+  if (!order.some((k) => k !== last)) order = shuffled(keys.length, random).map((i) => keys[i])
+  const at = order.findIndex((k) => k !== last)
+  const [key] = order.splice(at === -1 ? 0 : at, 1)
+  return { key, deck: { sig, order } }
+}
+
 /** Reads a stored deck, or null if it is missing or not a deck. */
 export function parseDeck(raw: string | null): PipDeck | null {
   if (!raw) return null

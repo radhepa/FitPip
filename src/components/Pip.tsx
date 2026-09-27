@@ -2,18 +2,19 @@ import { useId, type CSSProperties } from 'react'
 import { usePipMotion } from '../hooks/usePipMotion'
 import { PipArms, PipBody, PipDefs, PipEffects, PipTail } from './pip/PipArt'
 import { PipFace } from './pip/PipFace'
-import type { PipPose, PipReaction } from './pip/types'
+import type { PipMood, PipPose, PipReaction } from './pip/types'
 import './pip/pip.css'
 import './pip/celebrate.css'
 import './pip/everyday.css'
 
-export type { PipPose, PipReaction } from './pip/types'
+export type { PipMood, PipPose, PipReaction } from './pip/types'
 
 interface Props {
   pose?: PipPose
   size?: number
   line?: string
-  reaction?: PipReaction
+  /** A gesture (or a brief pose) that plays over the page's pose. */
+  reaction?: PipMood
   reactionId?: number
 }
 

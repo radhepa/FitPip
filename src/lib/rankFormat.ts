@@ -23,13 +23,14 @@ export function beatsText(percentile: number, verb = 'Stronger', who = 'lifters'
 export const rankName = (rank: RankNumber, withNumber = false): string =>
   withNumber ? `${rankInfo(rank).name} (${rank} of 10)` : rankInfo(rank).name
 
-/** A lift performance: "225 lb", "40 lb per dumbbell", "12 reps". */
+/** A lift performance: "225 lb", "40 lb per dumbbell", "50 lb per arm", "12 reps". */
 export function liftValueText(standard: StrengthStandard, value: number, unit: WeightUnit): string {
   if (standard.kind === 'reps') return `${Math.round(value)} ${Math.round(value) === 1 ? 'rep' : 'reps'}`
   // Whole pounds, or half kilos: an estimate doesn't deserve more precision than that.
   const rounded = unit === 'kg' ? Math.round(value * 2) / 2 : Math.round(value)
   const weight = `${formatWeight(rounded)} ${unit}`
-  return standard.kind === 'load' && standard.perHand ? `${weight} per dumbbell` : weight
+  if (standard.kind === 'load' && standard.perHand) return `${weight} per dumbbell`
+  return standard.kind === 'load' && standard.perArm ? `${weight} per arm` : weight
 }
 
 /** What a lift's value means: "Estimated 1-rep max" or "Reps at bodyweight". */

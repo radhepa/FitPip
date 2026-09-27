@@ -91,6 +91,41 @@ describe('findStandard', () => {
     expect(lift('Trap Bar Deadlift', 'barbell')).toBe('trap_bar_deadlift')
   })
 
+  it('ranks single-arm cable lifts only against single-arm standards', () => {
+    expect(lift('Single-Arm Cable Row', 'cable')).toBe('sa_cable_row')
+    expect(lift('One Arm Cable Lat Pulldown', 'cable')).toBe('sa_cable_pulldown')
+    expect(lift('Single Arm Cable Chest Press', 'cable')).toBe('sa_cable_press')
+    expect(lift('Single-Arm Cable Lateral Raise', 'cable')).toBe('cable_lateral_raise')
+    // No fair standard for these, so no rank (never the two-handed one).
+    expect(lift('Single-Arm Cable Upright Row', 'cable')).toBeNull()
+    expect(lift('Single-Arm Machine Row', 'machine')).toBeNull()
+    expect(lift('Single-Leg Leg Press', 'machine')).toBeNull()
+    expect(lift('Single-Leg Dumbbell Romanian Deadlift', 'dumbbell')).toBeNull()
+    // A dumbbell standard is per dumbbell, so it fits a one-arm dumbbell lift; split squats are one-legged by design.
+    expect(lift('One-Arm Dumbbell Row', 'dumbbell')).toBe('db_row')
+    expect(lift('Dumbbell Single Leg Split Squat', 'dumbbell')).toBe('db_split_squat')
+  })
+
+  it('does not compare cable, dumbbell or machine lifts with a barbell standard', () => {
+    expect(lift('Cable Chest Press', 'cable')).toBeNull()
+    expect(lift('Dumbbell Push Press', 'dumbbell')).toBeNull()
+    expect(lift('Cable Hip Abduction', 'cable')).toBeNull()
+    expect(lift('Machine Dip', 'machine')).toBeNull()
+    expect(lift('Incline Push-Up', 'bodyweight')).toBeNull()
+    expect(lift('Cable Straight Bar Pushdown', 'cable')).toBe('pushdown')
+    expect(lift('Clean Pull', 'barbell')).toBeNull()
+    expect(lift('Clean and Jerk', 'barbell')).toBe('clean_jerk')
+    expect(lift('Trap Bar Carry', 'barbell')).toBeNull()
+  })
+
+  it('derives the single-arm anchors from the two-handed ones', () => {
+    const row = STRENGTH_STANDARDS.find((s) => s.key === 'sa_cable_row')!
+    const twoHanded = STRENGTH_STANDARDS.find((s) => s.key === 'cable_row')!
+    expect(row.kind).toBe('load')
+    if (row.kind === 'load') expect(row.perArm).toBe(true)
+    for (let i = 0; i < 5; i += 1) expect(row.men[i]).toBeCloseTo(twoHanded.men[i] * 0.55, 2)
+  })
+
   it('leaves out what it cannot compare fairly', () => {
     expect(lift('Assisted Pull-Up', 'machine')).toBeNull()
     expect(lift('Band Pull Apart', 'band')).toBeNull()

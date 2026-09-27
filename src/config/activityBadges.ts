@@ -115,13 +115,13 @@ export function activityBadgeKey(exercise: Pick<Exercise, 'name' | 'category' | 
       return 'sports'
     case 'cardio':
       if (/walk|hike|hiking|ruck/.test(name)) return 'walking'
-      if (/elliptical|stair|step ?mill|stepper|cross ?trainer/.test(name)) return 'machines'
+      if (/elliptical|stair|step ?mill|stepper|cross ?trainer|arc trainer|\bamt\b|adaptive motion/.test(name)) return 'machines'
       if (/ski/.test(name)) return paced ? 'ski_erg' : 'conditioning'
       if (/row/.test(name)) return paced ? 'rowing' : 'conditioning'
-      if (/stationary|spin|assault|indoor|peloton|air ?bike|echo bike/.test(name)) return 'indoor_cycling'
+      if (/stationary|spin|assault|indoor.*(cycl|bike|ride)|peloton|air ?bike|echo bike|fan bike|upright|recumbent/.test(name)) return 'indoor_cycling'
       if (/cycl|bike|biking|ride/.test(name)) return paced ? 'cycling' : 'indoor_cycling'
       if (/sprint|shuttle|interval/.test(name)) return 'conditioning'
-      if (/\brun|jog|treadmill/.test(name)) return paced ? 'running' : 'conditioning'
+      if (/\brun|jog|treadmill|race|marathon/.test(name)) return paced ? 'running' : 'conditioning'
       return 'conditioning'
     default:
       return 'conditioning'

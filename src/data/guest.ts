@@ -1,4 +1,4 @@
-import type { BegunSession, BodyWeight, Exercise, SetRow } from '../types/db'
+import type { BegunSession, BodyWeight, Category, Exercise, SetRow, WeekPlanItem } from '../types/db'
 import { localDateIso } from '../lib/bodyWeight'
 import { GUEST_USER_ID } from './local/context'
 import { getMeta, setMeta, type FitPipDB } from './local/db'
@@ -98,18 +98,33 @@ function demoData() {
     const at = isoDaysAgo(days, 8)
     return { id: `guest-weight-${days}`, user_id: GUEST_USER_ID, measured_on: localDateIso(new Date(at)), weight, unit: 'lb', note: null, created_at: at, updated_at: at }
   })
-  return { exercises, sessions, sets, weights }
+  // A sample week, so the Plan tab and Today's week strip show how planning works.
+  const planned: [number, Category][] = [[1, 'strength'], [3, 'cardio'], [5, 'strength'], [6, 'yoga']]
+  const now = new Date().toISOString()
+  const plan: WeekPlanItem[] = planned.map(([weekday, category]) => ({
+    id: `guest-plan-${weekday}`,
+    user_id: GUEST_USER_ID,
+    weekday,
+    position: 0,
+    template_id: null,
+    exercise_id: null,
+    category,
+    created_at: now,
+    updated_at: now,
+  }))
+  return { exercises, sessions, sets, weights, plan }
 }
 
 /** Puts the demo data into a brand-new guest database. Never queued for the server. */
 export async function seedGuestIfNew(db: FitPipDB): Promise<void> {
   if (await getMeta<boolean>(db, 'guestSeeded')) return
-  const { exercises, sessions, sets, weights } = demoData()
+  const { exercises, sessions, sets, weights, plan } = demoData()
   await db.transaction('rw', db.tables, async () => {
     await db.exercises.bulkPut(exercises)
     await db.sessions.bulkPut(sessions)
     await db.sets.bulkPut(sets)
     await db.body_weights.bulkPut(weights)
+    await db.week_plan_items.bulkPut(plan)
     await setMeta(db, 'guestSeeded', true)
   })
 }

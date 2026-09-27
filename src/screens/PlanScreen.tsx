@@ -67,6 +67,12 @@ export function PlanScreen() {
       <ErrorBanner error={loadError} onRetry={() => { templates.reload(); exercises.reload(); plan.items.reload() }} />
       {plan.error && <p className="mb-3 text-sm text-danger">{plan.error}</p>}
 
+      {!loading && !loadError && items.length === 0 && (
+        <p className="card card-pad mb-4 text-sm text-muted">
+          <span className="block font-bold text-text">Your week is wide open</span>
+          Tap <strong className="text-text">Add</strong> on a day to plan it. Today then shows what’s up next and ticks it off when it’s done.
+        </p>
+      )}
       {!loading && !loadError && (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start">
           <ul className="stagger m-0 grid list-none grid-cols-1 gap-2.5 p-0">
@@ -93,6 +99,11 @@ export function PlanScreen() {
             {templates.data?.length === 0 ? (
               <EmptyState title="No routines yet">
                 A routine is a saved list of exercises (like “Push day” or “Morning mobility”). Make one, then drop it on any day.
+                <div className="mt-3">
+                  <Button size="sm" onClick={() => setCreatingRoutine(true)}>
+                    <PlusIcon size="size-4" /> Make a routine
+                  </Button>
+                </div>
               </EmptyState>
             ) : (
               <div className="stagger grid grid-cols-1 gap-2.5">

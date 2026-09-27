@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
-import { loadProfileData } from '../data/profile'
+import { loadProfileData, type ProfileData } from '../data/profile'
 import { bodyweightKg, buildProfile, type Profile, type ProfileInput } from '../lib/profile'
 import { fromKg, toKg } from '../lib/strengthRank'
+import type { WeightUnit } from '../types/db'
 import { useAsync } from './useAsync'
 import { useSettings } from './useSettings'
 
@@ -17,18 +18,20 @@ export interface ProfileState {
   reload: () => void
 }
 
+/** What the profile is worked out from: the loaded history plus the settings that affect ranks. */
+export function profileInput(loaded: ProfileData, unit: WeightUnit, sex: ProfileInput['sex']): ProfileInput {
+  const assessment = loaded.assessment?.answers
+  return { exercises: loaded.exercises, sessions: loaded.sessions, sets: loaded.sets, unit, sex,
+    assessment, bodyweightKg: bodyweightKg(loaded.weights) ?? (assessment ? toKg(assessment.bodyweight, assessment.unit) : null) }
+}
+
 /** Loads the whole history and works out ranks, badges and XP from it. */
 export function useProfile(): ProfileState {
   const { unit, compareSex } = useSettings()
   const data = useAsync(loadProfileData, [], { cacheKey: 'profile-data' })
   const loaded = data.data
 
-  const input = useMemo<ProfileInput | null>(() => {
-    if (!loaded) return null
-    const assessment = loaded.assessment?.answers
-    return { exercises: loaded.exercises, sessions: loaded.sessions, sets: loaded.sets, unit, sex: compareSex,
-      assessment, bodyweightKg: bodyweightKg(loaded.weights) ?? (assessment ? toKg(assessment.bodyweight, assessment.unit) : null) }
-  }, [loaded, unit, compareSex])
+  const input = useMemo(() => (loaded ? profileInput(loaded, unit, compareSex) : null), [loaded, unit, compareSex])
   const profile = useMemo(() => (input ? buildProfile(input) : null), [input])
   const bodyweight = input?.bodyweightKg ? Math.round(fromKg(input.bodyweightKg, unit) * 10) / 10 : null
 

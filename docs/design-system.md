@@ -67,8 +67,10 @@ the workout clock and the scale. Set `--tint` on an element to colour `.icon-til
   rows skip rendering with `content-visibility: auto`. A screen with a long list draws the first rows
   with the page and the rest a moment later (`useDeferredValue(SHOWN, FIRST_ROWS)` on Progress and in
   `ExerciseHistoryList`), so it opens as quickly as the others and keeps its fade-in.
-- A detail page reads everything it shows in one `useAsync`, so it arrives in one piece; content that
-  arrives after the page opened fades in (`page-enter`). `Loading` placeholders wait a moment before
+- A detail page reads everything it shows in one `useAsync` (or waits for all its reads, including a
+  workout's rewards), so it arrives in one piece; content that arrives after the page opened fades in
+  (`page-enter`). Back to a list keeps it as long as it was (History remembers how many "Load more" pages
+  were open), so the scroll position can come back. `Loading` placeholders wait a moment before
   showing, so a quick read never flashes them.
 - A card that loads its own data keeps its full size while it loads (the Progress muscle map is drawn
   blank), so nothing below it jumps down when the data arrives.

@@ -1,11 +1,10 @@
-import { useMemo, type CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { rankInfo } from '../config/ranks'
 import { XP_RULES } from '../config/xp'
-import { useProfile } from '../hooks/useProfile'
 import { useSettings } from '../hooks/useSettings'
 import { countOf, formatSeconds, formatWeight } from '../lib/format'
-import { workoutRewards } from '../lib/profile'
+import type { WorkoutRewards as Rewards } from '../lib/profile'
 import { formatDistance, lengthUnitFor } from '../lib/units'
 import type { RecordEvent } from '../lib/xp'
 import type { Exercise } from '../types/db'
@@ -13,12 +12,16 @@ import { RankEmblem } from './RankEmblem'
 
 const SHOWN = 8
 
+interface Props {
+  rewards: Rewards | null
+  exerciseById: Map<string, Exercise>
+  /** Sex or bodyweight isn't set yet: offer to set up the profile. */
+  missingProfile: boolean
+}
+
 /** What a workout earned: XP, a level-up, personal records and every badge it ranked up. */
-export function WorkoutRewards({ sessionId }: { sessionId: string }) {
+export function WorkoutRewards({ rewards, exerciseById, missingProfile }: Props) {
   const { unit, distanceUnit } = useSettings()
-  const { input, profile } = useProfile()
-  const rewards = useMemo(() => (input ? workoutRewards(input, sessionId) : null), [input, sessionId])
-  const exerciseById = useMemo(() => new Map((input?.exercises ?? []).map((e) => [e.id, e])), [input])
   if (!rewards?.xp || rewards.xp.total === 0) return null
 
   const { xp, rankUps } = rewards
@@ -75,7 +78,7 @@ export function WorkoutRewards({ sessionId }: { sessionId: string }) {
         </ul>
       )}
 
-      {profile && (profile.missing.sex || profile.missing.bodyweight) && (
+      {missingProfile && (
         <p className="mt-3 text-xs text-muted">
           <Link to="/profile" className="text-link">
             Set up your profile

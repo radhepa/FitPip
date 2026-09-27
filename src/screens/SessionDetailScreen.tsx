@@ -14,6 +14,7 @@ import { listSetsForSession } from '../data/sets'
 import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
 import { usePipFacts } from '../hooks/usePipFacts'
+import { useWorkoutRewards } from '../hooks/useWorkoutRewards'
 import { useSettings } from '../hooks/useSettings'
 import { formatDate, formatTime, sessionDurationMs, sessionTitle } from '../lib/format'
 import { planFromRows } from '../lib/sessionPlan'
@@ -30,6 +31,13 @@ export function SessionDetailScreen() {
   const session = useAsync(() => getSession(id), [id], { cacheKey: `session:${id}` })
   const setsState = useAsync(() => listSetsForSession(id), [id], { cacheKey: `session-sets:${id}` })
   const exercisesState = useAsync(listExercises, [], { cacheKey: 'exercises' })
+  const rewards = useWorkoutRewards(id)
+  // The rewards come from the whole history and take longest. The page waits for them too, so it arrives in
+  // one piece instead of the rewards card appearing later and pushing everything below it down. (Not right
+  // after finishing: the celebration covers the page, so it opens straight away.)
+  const waitForRewards = rewards.loading && !justFinished
+  // Shown at once when it was already read; otherwise it fades in as it arrives.
+  const [arrives] = useState(() => session.loading || setsState.loading || exercisesState.loading || waitForRewards)
   const [actionError, setActionError] = useState<string | null>(null)
   // Pip only looks at your history for the celebration right after finishing, not on every visit to a past workout.
   const [celebrating] = useState(justFinished)
@@ -54,7 +62,7 @@ export function SessionDetailScreen() {
     }
   }
 
-  if (session.loading || setsState.loading || exercisesState.loading) return <Loading />
+  if (session.loading || setsState.loading || exercisesState.loading || waitForRewards) return <Loading />
   const loadError = session.error ?? setsState.error ?? exercisesState.error
   if (loadError) return <ErrorBanner error={loadError} />
   const s = session.data
@@ -62,7 +70,7 @@ export function SessionDetailScreen() {
   if (!s.ended_at || !s.started_at) return <Navigate to={`/workout/${id}`} replace />
 
   return (
-    <>
+    <div className={arrives ? 'page-enter' : undefined}>
       <PageHeader back backTo="/history" eyebrow={justFinished ? 'Workout saved' : formatDate(s.started_at)} title={sessionTitle(s)} subtitle={`${formatDate(s.started_at)} · ${formatTime(s.started_at)}`} />
       <WorkoutCompletion key={id} justFinished={justFinished} sets={sets.length} pipLine={pipLine} />
       <SessionStats
@@ -73,7 +81,7 @@ export function SessionDetailScreen() {
         activeSeconds={activeSeconds}
         unit={unit}
       />
-      <WorkoutRewards sessionId={id} />
+      <WorkoutRewards rewards={rewards.rewards} exerciseById={exerciseById} missingProfile={rewards.missingProfile} />
       {s.notes && (
         <section className="card card-pad mt-3">
           <h2 className="mb-1 font-display text-lg font-extrabold">Notes</h2>
@@ -107,6 +115,6 @@ export function SessionDetailScreen() {
           Delete
         </Button>
       </div>
-    </>
+    </div>
   )
 }

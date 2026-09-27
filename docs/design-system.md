@@ -64,7 +64,11 @@ the workout clock and the scale. Set `--tint` on an element to colour `.icon-til
 - No `backdrop-filter` over the whole screen (sheet backdrops only dim) and none behind opaque
   surfaces. Small floating glass (tab bar, rest timer, undo toast) is fine.
 - Long lists: memoise rows and keep their callbacks stable (see `ExerciseChooser`), and let off-screen
-  rows skip rendering with `content-visibility: auto`.
+  rows skip rendering with `content-visibility: auto`. A screen with a long list draws the first rows
+  with the page and the rest a moment later (`useDeferredValue(SHOWN, FIRST_ROWS)` on Progress), so it
+  opens as quickly as the others and keeps its fade-in.
+- A card that loads its own data keeps its full size while it loads (the Progress muscle map is drawn
+  blank), so nothing below it jumps down when the data arrives.
 - `touch-action: manipulation` on the page stops double-tap zoom on fast taps; app controls have no
   iOS long-press callout.
 - Reading the on-device database: avoid Dexie's `.filter()` over a whole table (it steps a cursor row

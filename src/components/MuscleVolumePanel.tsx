@@ -22,6 +22,8 @@ interface Props {
   /** Controls in the card header, such as the 7 / 30 day toggle. */
   action?: ReactNode
   emptyText?: string
+  /** Still loading: the map is drawn blank and the muscle list is a placeholder. */
+  pending?: boolean
 }
 
 interface Selection {
@@ -45,6 +47,7 @@ export function MuscleVolumePanel({
   workoutDates,
   action,
   emptyText = 'Nothing logged yet.',
+  pending = false,
 }: Props) {
   const [selection, setSelection] = useState<Selection | null>(null)
   const levels = useMemo(() => regionLevels(volume), [volume])
@@ -75,7 +78,9 @@ export function MuscleVolumePanel({
         <p className="mt-3 text-center text-xs text-plate-ink/70">Tap a region for the sets behind it.</p>
       </div>
 
-      {worked.length === 0 ? (
+      {pending ? (
+        <div role="status" aria-label="Loading your muscle map…" className="skeleton mt-4 h-9" />
+      ) : worked.length === 0 ? (
         <p className="m-0 mt-4 text-center text-sm text-muted">{emptyText}</p>
       ) : (
         <ul className="m-0 mt-4 flex list-none flex-wrap gap-2 p-0" aria-label="Muscles worked, most first">

@@ -5,27 +5,29 @@ import { useSettings } from '../hooks/useSettings'
 import { RANGES, weeklyVolume, type RangeDays } from '../lib/muscleVolume'
 import type { Exercise } from '../types/db'
 import { Chip } from './Chip'
-import { ErrorBanner, Loading } from './feedback'
+import { ErrorBanner } from './feedback'
 import { MuscleVolumePanel } from './MuscleVolumePanel'
 
 /** The Progress screen's muscle map: weekly sets per muscle over the last 7 or 30 days. */
-export function ProgressHeatmap({ exercises }: { exercises: Exercise[] }) {
+export function ProgressHeatmap({ exercises }: { exercises: Exercise[] | null }) {
   const { unit } = useSettings()
   const [days, setDays] = useState<RangeDays>(7)
   // The range travels with its data, so the map never mixes one range's sets with another's label.
   const training = useAsync(async () => ({ days, ...(await loadTrainingWindow(days)) }), [days], { cacheKey: `training:${days}` })
   const loaded = training.data
+  const ready = loaded && exercises
 
+  // Until the sets are in, the map is drawn blank: the card keeps its full size, so nothing below it jumps
+  // down when the shading arrives.
   const volume = useMemo(
-    () => (loaded ? weeklyVolume({ sessions: loaded.sessions, sets: loaded.sets, exercises, days: loaded.days }) : null),
-    [loaded, exercises],
+    () => weeklyVolume(ready ? { sessions: loaded.sessions, sets: loaded.sets, exercises, days: loaded.days } : { sessions: [], sets: [], exercises: [], days }),
+    [ready, loaded, exercises, days],
   )
   const workoutDates = useMemo(() => new Map((loaded?.sessions ?? []).map((s) => [s.id, s.started_at])), [loaded])
 
   if (training.error && !loaded) return <ErrorBanner error={training.error} onRetry={training.reload} />
-  if (!loaded || !volume) return <Loading label="Loading your muscle map…" />
 
-  const shownDays = loaded.days
+  const shownDays = ready ? loaded.days : days
   return (
     <MuscleVolumePanel
       label="Muscle map"
@@ -36,6 +38,7 @@ export function ProgressHeatmap({ exercises }: { exercises: Exercise[] }) {
       periodLabel={`the last ${shownDays} days`}
       weeks={shownDays / 7}
       workoutDates={workoutDates}
+      pending={!ready}
       emptyText={`No sets logged in the last ${shownDays} days.`}
       action={
         <div className="flex shrink-0 gap-2" role="group" aria-label="Time range">

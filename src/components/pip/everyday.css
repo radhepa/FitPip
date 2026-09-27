@@ -1,0 +1,132 @@
+@layer components {
+/* Ambient fidgets are brief moments within a quiet 24-second idle cycle. */
+.pip--idle .pip-arm--right { animation: pip-adjust-band 24s ease-in-out infinite; }
+.pip--idle .pip-foot--left { animation: pip-toe-tap 24s ease-in-out infinite; }
+@keyframes pip-adjust-band {
+  0%, 68%, 88%, 100% { transform: rotate(0); }
+  74%, 82% { transform: rotate(164deg) scaleY(2.25); }
+  76%, 80% { transform: rotate(157deg) scaleY(2.2); }
+}
+@keyframes pip-toe-tap {
+  0%, 43%, 49%, 55%, 100% { transform: none; }
+  46%, 52% { transform: rotate(13deg) translateY(-2px); }
+}
+
+/* Each tap is a complete 2.8-second gesture that settles back into the page's pose. */
+.pip-figure:is(.pip--stretch, .pip--dance, .pip--peekaboo, .pip--flex, .pip--nod, .pip--yawn) {
+  --pip-gesture: 2.8s;
+}
+:is(.pip--stretch, .pip--dance, .pip--peekaboo, .pip--flex, .pip--nod, .pip--yawn) .pip-arrival,
+:is(.pip--stretch, .pip--dance, .pip--peekaboo, .pip--flex, .pip--nod, .pip--yawn) .pip-breathe { animation: none; }
+:is(.pip--stretch, .pip--dance, .pip--peekaboo, .pip--flex, .pip--nod, .pip--yawn) .pip-head-follow,
+:is(.pip--stretch, .pip--dance, .pip--peekaboo, .pip--flex, .pip--nod, .pip--yawn) .pip-gaze { transform: none; }
+
+/* A slow reach, a side stretch, then a soft exhale. */
+.pip--stretch .pip-action { animation: pip-stretch-body var(--pip-gesture) ease-in-out both; }
+.pip--stretch .pip-arm { animation: pip-stretch-paws var(--pip-gesture) ease-in-out both; }
+.pip--stretch .pip-head { animation: pip-stretch-head var(--pip-gesture) ease-in-out both; }
+.pip--stretch .pip-tail { animation: pip-stretch-tail var(--pip-gesture) ease-in-out both; }
+@keyframes pip-stretch-body {
+  0%, 100% { transform: none; }
+  16% { transform: scale(1.03, .96); }
+  38% { transform: scale(.97, 1.055) translateY(-2px); }
+  54% { transform: scale(.97, 1.055) rotate(-5deg); }
+  70% { transform: scale(.97, 1.055) rotate(5deg); }
+  88% { transform: scale(1.02, .98); }
+}
+@keyframes pip-stretch-paws {
+  0%, 100% { transform: none; }
+  16% { transform: rotate(-15deg); }
+  38%, 70% { transform: rotate(153deg) scaleY(1.8); }
+  88% { transform: rotate(30deg); }
+}
+@keyframes pip-stretch-head { 0%, 100% { transform: none; } 38% { transform: translateY(-3px); } 54% { transform: rotate(8deg); } 70% { transform: rotate(-8deg); } }
+@keyframes pip-stretch-tail { 0%, 100% { transform: rotate(-5deg); } 38%, 70% { transform: rotate(-20deg) scaleY(1.08); } }
+
+/* Side steps and alternating paws; the tail and head lag behind the beat. */
+.pip--dance .pip-action { animation: pip-dance-body var(--pip-gesture) ease-in-out both; }
+.pip--dance .pip-head { animation: pip-dance-head var(--pip-gesture) ease-in-out both; }
+.pip--dance .pip-arm--left { animation: pip-dance-left var(--pip-gesture) ease-in-out both; }
+.pip--dance .pip-arm--right { animation: pip-dance-right var(--pip-gesture) ease-in-out both; }
+.pip--dance .pip-foot--left { animation: pip-dance-step var(--pip-gesture) ease-in-out both; }
+.pip--dance .pip-foot--right { animation: pip-dance-step-right var(--pip-gesture) ease-in-out both; }
+.pip--dance .pip-tail { animation: pip-dance-tail var(--pip-gesture) ease-in-out both; }
+.pip--dance .pip-shadow { animation: pip-dance-shadow var(--pip-gesture) ease-in-out both; }
+.pip--dance .pip-band-ties { animation-duration: .45s; }
+.pip-note { opacity: 0; animation: pip-music-note 2s ease-out both; animation-delay: calc(.25s + var(--i) * .3s); }
+@keyframes pip-dance-body {
+  0%, 100% { transform: none; }
+  10% { transform: scale(1.04, .94); }
+  24%, 57% { transform: translate(-7px, -4px) rotate(-8deg); }
+  40%, 73% { transform: translate(7px, -4px) rotate(8deg); }
+  88% { transform: translateY(2px) scale(1.04, .96); }
+}
+@keyframes pip-dance-head { 0%, 100% { transform: none; } 26%, 59% { transform: rotate(10deg); } 42%, 75% { transform: rotate(-10deg); } }
+@keyframes pip-dance-left { 0%, 100% { transform: none; } 24%, 57% { transform: rotate(105deg); } 40%, 73% { transform: rotate(-28deg); } 88% { transform: rotate(50deg); } }
+@keyframes pip-dance-right { 0%, 100% { transform: none; } 24%, 57% { transform: rotate(-28deg); } 40%, 73% { transform: rotate(105deg); } 88% { transform: rotate(50deg); } }
+@keyframes pip-dance-step { 0%, 40%, 73%, 100% { transform: none; } 24%, 57% { transform: rotate(20deg) translateY(-4px); } }
+@keyframes pip-dance-step-right { 0%, 24%, 57%, 100% { transform: none; } 40%, 73% { transform: rotate(-20deg) translateY(-4px); } }
+@keyframes pip-dance-tail { 0%, 100% { transform: none; } 26%, 59% { transform: rotate(15deg); } 42%, 75% { transform: rotate(-18deg); } }
+@keyframes pip-dance-shadow { 0%, 100% { transform: none; } 24%, 57% { transform: translateX(-6px) scaleX(.95); } 40%, 73% { transform: translateX(6px) scaleX(.95); } }
+@keyframes pip-music-note { 0% { opacity: 0; transform: translateY(10px) rotate(-12deg) scale(.7); } 20%, 65% { opacity: .95; } 100% { opacity: 0; transform: translate(var(--drift), -22px) rotate(12deg); } }
+
+/* Hide both eyes, sneak a peek with one paw, then open wide. */
+.pip--peekaboo .pip-action { animation: pip-peek-body var(--pip-gesture) ease-in-out both; }
+.pip--peekaboo .pip-head { animation: pip-peek-head var(--pip-gesture) ease-in-out both; }
+.pip--peekaboo .pip-arm--left { animation: pip-peek-paw var(--pip-gesture) ease-in-out both; }
+.pip--peekaboo .pip-arm--right { animation: pip-peek-right var(--pip-gesture) ease-in-out both; }
+.pip--peekaboo .pip-particle { animation: pip-sparkle 1.4s ease-out 1 1.2s both; }
+@keyframes pip-peek-body { 0%, 100% { transform: none; } 20%, 48% { transform: translateY(4px) scale(.98, .95); } 64% { transform: translateY(-5px) scale(1.035); } 80% { transform: scale(1.02, .98); } }
+@keyframes pip-peek-head { 0%, 100% { transform: none; } 20% { transform: translateY(3px); } 38%, 48% { transform: translateY(3px) rotate(-6deg); } 64%, 78% { transform: rotate(7deg); } }
+@keyframes pip-peek-paw { 0%, 100% { transform: none; } 20%, 50% { transform: rotate(176deg) scaleY(1.6); } 64%, 78% { transform: rotate(82deg); } }
+@keyframes pip-peek-right { 0%, 100% { transform: none; } 20%, 30%, 50% { transform: rotate(176deg) scaleY(1.6); } 38%, 44% { transform: rotate(148deg) scaleY(1.45); } 64%, 78% { transform: rotate(82deg); } }
+
+/* Puff up, hold a tiny strongman pose, then let the shoulders relax. */
+.pip--flex .pip-action { animation: pip-flex-body var(--pip-gesture) ease-in-out both; }
+.pip--flex .pip-arm { animation: pip-flex-paws var(--pip-gesture) ease-in-out both; }
+.pip--flex .pip-head { animation: pip-flex-head var(--pip-gesture) ease-in-out both; }
+.pip--flex .pip-tail { animation: pip-happy-tail .7s ease-in-out 4; }
+.pip-strength-marks { opacity: 0; animation: pip-flex-marks var(--pip-gesture) ease-in-out both; }
+@keyframes pip-flex-body { 0%, 100% { transform: none; } 12% { transform: scale(1.02, .96); } 30%, 67% { transform: translateY(-3px) scale(1.065, 1.025); } 45% { transform: translateY(-4px) scale(1.08, 1.035); } 84% { transform: scale(1.02, .98); } }
+@keyframes pip-flex-paws { 0%, 100% { transform: none; } 12% { transform: rotate(-18deg); } 30%, 67% { transform: rotate(104deg) scale(1.15); } 43%, 55% { transform: rotate(115deg) scale(1.2); } 84% { transform: rotate(30deg); } }
+@keyframes pip-flex-head { 0%, 100% { transform: none; } 30%, 67% { transform: translateY(-4px) rotate(-5deg); } 45% { transform: rotate(4deg); } }
+@keyframes pip-flex-marks { 0%, 22%, 85%, 100% { opacity: 0; } 34%, 68% { opacity: .95; } 48% { opacity: .4; } }
+
+/* Two deliberate nods, with a little paw held to the chest. */
+.pip--nod .pip-action { animation: pip-nod-body var(--pip-gesture) ease-in-out both; }
+.pip--nod .pip-head { animation: pip-nod-head var(--pip-gesture) ease-in-out both; }
+.pip--nod .pip-arm--right { animation: pip-nod-paw var(--pip-gesture) ease-in-out both; }
+.pip--nod .pip-eye-drift { animation: none; }
+@keyframes pip-nod-body { 0%, 100% { transform: none; } 26%, 53% { transform: translateY(2px) scale(1.01, .98); } 40%, 68% { transform: translateY(-2px); } }
+@keyframes pip-nod-head { 0%, 100% { transform: none; } 15% { transform: translateY(-3px) rotate(-5deg); } 26%, 53% { transform: translateY(7px) rotate(4deg) scaleY(.96); } 40%, 68% { transform: translateY(-4px) rotate(-4deg); } 82% { transform: rotate(5deg); } }
+@keyframes pip-nod-paw { 0%, 100% { transform: none; } 20%, 76% { transform: rotate(-65deg); } 40%, 60% { transform: rotate(-73deg); } }
+
+/* A sleepy inhale, paw over mouth, and a little head droop on the exhale. */
+.pip--yawn .pip-action { animation: pip-yawn-body var(--pip-gesture) ease-in-out both; }
+.pip--yawn .pip-head { animation: pip-yawn-head var(--pip-gesture) ease-in-out both; }
+.pip--yawn .pip-arm--right { animation: pip-yawn-paw var(--pip-gesture) ease-in-out both; }
+.pip--yawn .pip-tail { animation: pip-yawn-tail var(--pip-gesture) ease-in-out both; }
+.pip-yawn-mouth { transform-origin: 135px 146px; animation: pip-yawn-mouth var(--pip-gesture) ease-in-out both; }
+@keyframes pip-yawn-body { 0%, 100% { transform: none; } 25%, 56% { transform: scale(1.02, 1.035); } 76% { transform: translateY(3px) scale(1.02, .96); } }
+@keyframes pip-yawn-head { 0%, 100% { transform: none; } 25%, 56% { transform: translateY(-4px) rotate(-7deg); } 76% { transform: translateY(5px) rotate(8deg); } }
+@keyframes pip-yawn-paw { 0%, 100% { transform: none; } 23%, 60% { transform: rotate(-137deg) scaleY(1.2); } 77% { transform: rotate(-30deg); } }
+@keyframes pip-yawn-tail { 0%, 100% { transform: rotate(-5deg); } 40%, 72% { transform: rotate(-18deg); } }
+@keyframes pip-yawn-mouth { 0%, 100% { transform: scale(.7, .16); } 28%, 56% { transform: scale(1, 1); } 76% { transform: scale(.8, .3); } }
+
+/* Each reaction still has a distinct, readable pose when motion is disabled. */
+@media (prefers-reduced-motion: reduce) {
+  .pip--stretch .pip-arm { transform: rotate(153deg) scaleY(1.8); }
+  .pip--stretch .pip-head { transform: rotate(6deg); }
+  .pip--dance .pip-action { transform: rotate(-5deg); }
+  .pip--dance .pip-arm--left { transform: rotate(105deg); }
+  .pip--dance .pip-arm--right { transform: rotate(-28deg); }
+  .pip--peekaboo .pip-arm--left { transform: rotate(176deg) scaleY(1.6); }
+  .pip--peekaboo .pip-arm--right { transform: rotate(100deg); }
+  .pip--flex .pip-arm { transform: rotate(104deg) scale(1.15); }
+  .pip--nod .pip-head { transform: rotate(5deg) translateY(3px); }
+  .pip--nod .pip-arm--right { transform: rotate(-65deg); }
+  .pip--yawn .pip-head { transform: rotate(-7deg); }
+  .pip--yawn .pip-arm--right { transform: rotate(-137deg) scaleY(1.2); }
+  .pip-music, .pip-strength-marks { display: none; }
+}
+}

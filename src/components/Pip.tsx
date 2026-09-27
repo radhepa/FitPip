@@ -5,6 +5,7 @@ import { PipFace } from './pip/PipFace'
 import type { PipPose, PipReaction } from './pip/types'
 import './pip/pip.css'
 import './pip/celebrate.css'
+import './pip/everyday.css'
 
 export type { PipPose, PipReaction } from './pip/types'
 
@@ -25,6 +26,12 @@ const descriptions: Record<PipPose | PipReaction, string> = {
   bounce: 'Pip jumping for joy',
   love: 'Pip sending you love',
   celebrate: 'Pip jumping for joy with both paws raised. Proud of you!',
+  stretch: 'Pip reaching up for a big stretch',
+  dance: 'Pip doing a little happy dance',
+  peekaboo: 'Pip hiding behind his paws, then playing peekaboo',
+  flex: 'Pip flexing his little muscles',
+  nod: 'Pip giving you an encouraging nod',
+  yawn: 'Pip having a sleepy yawn',
 }
 
 /** A layered SVG rig: movement, breathing, head, gaze and limbs have separate pivots. */

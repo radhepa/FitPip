@@ -14,8 +14,9 @@ function Eye({ x, side }: { x: number; side: string }) {
 }
 
 export function PipFace({ id, mood }: { id: string; mood: PipPose | PipReaction }) {
-  const happy = mood === 'cheer' || mood === 'bounce' || mood === 'love' || mood === 'celebrate'
+  const happy = ['cheer', 'bounce', 'love', 'celebrate', 'dance', 'peekaboo'].includes(mood)
   const asleep = mood === 'sleep'
+  const relaxed = asleep || mood === 'stretch' || mood === 'yawn'
   return (
     <>
       <g className="pip-ear pip-ear--left" data-part="ear-left">
@@ -47,7 +48,7 @@ export function PipFace({ id, mood }: { id: string; mood: PipPose | PipReaction 
         <path d="m96 91 12-2" /><path className="pip-brow--right" d="m160 89 12 2" />
       </g>
       <g className="pip-gaze" data-part="eyes">
-        {asleep ? (
+        {relaxed ? (
           <path d="M96 113q9 8 18 0m42 0q9 8 18 0" fill="none" stroke="#172B46" strokeWidth="4" strokeLinecap="round" />
         ) : happy ? (
           <path d="M95 114q10-15 20 0m40 0q10-15 20 0" fill="none" stroke="#172B46" strokeWidth="4.5" strokeLinecap="round" />
@@ -58,7 +59,12 @@ export function PipFace({ id, mood }: { id: string; mood: PipPose | PipReaction 
       <g data-part="mouth">
         <path d="M128 131q7-4 14 0c0 4-4 7-7 7s-7-3-7-7Z" fill="#102039" />
         <path d="m131 131 4-1" stroke="#759ABF" strokeWidth="1.8" strokeLinecap="round" />
-        {happy ? (
+        {mood === 'yawn' ? (
+          <g className="pip-yawn-mouth">
+            <ellipse cx="135" cy="146" rx="7" ry="10" fill="#16253E" />
+            <path d="M130 151q5-4 10 0-5 6-10 0" fill="#F1A8BD" />
+          </g>
+        ) : happy ? (
           <g className="pip-smile">
             <path d="M123 142q12 6 24 0c-1 18-22 18-24 0Z" fill="#16253E" />
             <path d="M127 151q8-7 16 0-8 8-16 0" fill="#F1A8BD" />

@@ -61,7 +61,9 @@ Archivo Variable (display: titles, numbers, the clock) and Atkinson Hyperlegible
 `PipSpeech` shows Pip with a speech bubble. Lines are in `src/config/pipLines.ts` (keep 50-100,
 each under 110 characters). `lib/pipDeck.ts` deals them like a shuffled deck stored in
 localStorage: a new line every launch, no repeats until all have been shown. Successive taps deal
-the next line and cycle through a wave with a wink, a two-hop celebration, and a hug with hearts.
+the next line and cycle through a dance, stretch, peekaboo, flex, encouraging nod, sleepy yawn,
+wave with a wink, two-hop celebration, and hug with hearts. Everyday gestures live in
+`pip/everyday.css`, with coordinated paws, head, feet and tail; the dance adds floating music notes.
 Each reaction lasts 2.8 seconds, then returns to the page's pose; tapping a sleeping Pip briefly
 wakes him. Repeated taps restart the reaction and its settling timer. The speech live region
 stays mounted so assistive technology can announce each new line.
@@ -69,7 +71,8 @@ stays mounted so assistive technology can announce each new line.
 `Pip` is a layered SVG rig. Artwork and motion live in `src/components/pip/`; the head, ears,
 eyes, paws, feet, tail and headband ties have separate pivots. Keep anticipation, landing and
 follow-through coordinated when changing the jump timing. Idle movement includes breathing,
-weight shifts, curious head tilts, glances, double blinks and occasional ear flicks. Thinking
+weight shifts, curious head tilts, glances, double blinks and occasional ear flicks. A quiet
+24-second fidget cycle adds toe taps and a headband adjustment. Thinking
 adds chin taps and thought dots; sleeping lowers the head into a tail blanket with slow breathing.
 
 `usePipMotion` adds gentle pointer tracking and pauses animation when Pip leaves the viewport

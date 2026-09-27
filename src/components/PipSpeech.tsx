@@ -10,7 +10,7 @@ interface Props {
   override?: string
 }
 
-const reactions: PipReaction[] = ['wave', 'bounce', 'love']
+const reactions: PipReaction[] = ['dance', 'stretch', 'peekaboo', 'flex', 'nod', 'yawn', 'wave', 'bounce', 'love']
 
 /** Every tap deals a new line and a brief reaction, then returns to the page's pose. */
 export function PipSpeech({ pose = 'idle', size = 96, override }: Props) {

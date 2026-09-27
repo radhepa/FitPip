@@ -82,7 +82,24 @@ export function PipEffects({ mood }: { mood: PipPose | PipReaction }) {
       {[0, 1, 2].map((i) => <circle key={i} className="pip-thought" cx={208 + i * 9} cy={65 - i * 14} r={3 + i} style={{ '--i': i } as CSSProperties} />)}
     </g>
   )
-  if (mood === 'idle') return null
+  if (mood === 'idle' || mood === 'stretch' || mood === 'yawn' || mood === 'nod') return null
+  if (mood === 'dance') return (
+    <g className="pip-music" fill="#BCE5FF" aria-hidden="true">
+      {[0, 1].map((i) => (
+        <g key={i} transform={`translate(${i ? 218 : 44} ${i ? 96 : 64})`}>
+          <g className="pip-note" style={{ '--i': i, '--drift': `${i ? 6 : -6}px` } as CSSProperties}>
+            <path d="M0 0v-19l13-3v17h-3v-12L3-15V0Z" />
+            <ellipse cx="-2" rx="5" ry="3.5" /><ellipse cx="8" cy="-5" rx="5" ry="3.5" />
+          </g>
+        </g>
+      ))}
+    </g>
+  )
+  if (mood === 'flex') return (
+    <g className="pip-strength-marks" fill="none" stroke="#FFE5A0" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
+      <path d="m48 124-8-4m12-7-4-7m157 14 8-4m-12-7 4-7" />
+    </g>
+  )
   const love = mood === 'love'
   return (
     <g className={`pip-particles${love ? ' pip-particles--hearts' : ''}`} aria-hidden="true">

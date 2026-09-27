@@ -38,6 +38,7 @@
   --color-steel: #9ab7de;
   --color-target: #4ade80;
   --color-danger: #ff5c7a;
+  --color-star: #fbbf24;
   --color-plate: #e4effc;
   --color-plate-ink: #172b46;
 }
@@ -78,6 +79,7 @@ html[data-theme="light"] {
   --color-steel: #3d5f8c;
   --color-target: #15803d;
   --color-danger: #d02750;
+  --color-star: #c27c0e;
   --color-plate: #e6effb;
   --color-plate-ink: #163657;
   --grad-accent: linear-gradient(135deg, #3b6bf6 0%, #6d4df2 100%);
@@ -229,6 +231,8 @@ p { margin: 0; }
 }
 .session-row p { margin-top: .2rem; color: var(--color-muted); font-size: .875rem; }
 .session-arrow { color: var(--color-muted); }
+.favorite-row { display: flex; align-items: center; gap: .5rem; padding: .5rem .75rem .5rem 0; }
+.favorite-row-link { display: flex; min-width: 0; min-height: 3.5rem; flex: 1; align-items: center; gap: .75rem; padding-left: 1rem; }
 
 /* A small rounded tile with an activity icon in the category colour. */
 .icon-tile {
@@ -312,6 +316,10 @@ button:focus-visible,
 }
 .icon-button:active:not(:disabled) { transform: scale(.9); background: var(--color-raised); }
 .icon-button:disabled { opacity: .3; cursor: not-allowed; }
+.favorite-button.is-on { color: var(--color-star); border-color: color-mix(in srgb, var(--color-star) 45%, transparent); }
+.favorite-button.is-on svg { animation: star-pop .32s cubic-bezier(.3,1.6,.5,1) backwards; }
+@keyframes star-pop { from { transform: scale(.5); } }
+.favorite-mark { flex: none; color: var(--color-star); }
 
 /* Segmented control. */
 .segmented { display: flex; gap: .25rem; border-radius: 999px; padding: .25rem; background: var(--color-surface-2); }

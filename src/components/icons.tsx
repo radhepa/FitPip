@@ -150,7 +150,27 @@ export const CopyIcon = ({ size = 'size-5' }: P) => (
   </Icon>
 )
 
-export const ArrowUpIcon = ({ size = 'size-5' }: P) => (
+const STAR = 'M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z'
+
+/** Outline star, or a solid one when `filled` (a favourite workout). */
+export const StarIcon = ({ size = 'size-5', filled = false }: P & { filled?: boolean }) =>
+  filled ? (
+    <svg viewBox="0 0 24 24" className={size} aria-hidden="true">
+      <path d={STAR} fill="currentColor" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round" />
+    </svg>
+  ) : (
+    <Icon size={size}>
+      <path d={STAR} />
+    </Icon>
+  )
+
+export const RepeatIcon = ({ size = 'size-5' }: P) => (
+  <Icon size={size}>
+    <path d="M17 3.5 20 6.5l-3 3M20 6.5H8a4 4 0 0 0-4 4V12M7 20.5 4 17.5l3-3M4 17.5h12a4 4 0 0 0 4-4V12" />
+  </Icon>
+)
+
+export const ArrowUpIcon =({ size = 'size-5' }: P) => (
   <Icon size={size} stroke={2.2}>
     <path d="M12 19V5M6 11l6-6 6 6" />
   </Icon>

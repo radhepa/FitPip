@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { EmptyState, ErrorBanner, Loading } from '../components/feedback'
+import { FavoriteButton } from '../components/FavoriteButton'
+import { RepeatIcon } from '../components/icons'
 import { MuscleVolumePanel } from '../components/MuscleVolumePanel'
 import { PageHeader } from '../components/PageHeader'
 import { SessionExerciseList } from '../components/SessionExerciseList'
@@ -9,10 +11,11 @@ import { SessionStats } from '../components/SessionStats'
 import { WorkoutRewards } from '../components/WorkoutRewards'
 import { WorkoutCompletion } from '../components/WorkoutCompletion'
 import { listExercises } from '../data/exercises'
-import { deleteSession, getSession } from '../data/sessions'
+import { deleteSession, getSession, isFavorite } from '../data/sessions'
 import { listSetsForSession } from '../data/sets'
 import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
+import { useRepeatWorkout } from '../hooks/useRepeatWorkout'
 import { usePipFacts } from '../hooks/usePipFacts'
 import { useWorkoutRewards } from '../hooks/useWorkoutRewards'
 import { useSettings } from '../hooks/useSettings'
@@ -39,6 +42,7 @@ export function SessionDetailScreen() {
   // Shown at once when it was already read; otherwise it fades in as it arrives.
   const [arrives] = useState(() => session.loading || setsState.loading || exercisesState.loading || waitForRewards)
   const [actionError, setActionError] = useState<string | null>(null)
+  const { repeat, repeating, error: repeatError } = useRepeatWorkout()
   // Pip only looks at your history for the celebration right after finishing, not on every visit to a past workout.
   const [celebrating] = useState(justFinished)
   const pipFacts = usePipFacts({ skip: !celebrating })
@@ -71,7 +75,14 @@ export function SessionDetailScreen() {
 
   return (
     <div className={arrives ? 'page-enter' : undefined}>
-      <PageHeader back backTo="/history" eyebrow={justFinished ? 'Workout saved' : formatDate(s.started_at)} title={sessionTitle(s)} subtitle={`${formatDate(s.started_at)} · ${formatTime(s.started_at)}`} />
+      <PageHeader
+        back
+        backTo="/history"
+        eyebrow={justFinished ? 'Workout saved' : formatDate(s.started_at)}
+        title={sessionTitle(s)}
+        subtitle={`${formatDate(s.started_at)} · ${formatTime(s.started_at)}`}
+        action={<FavoriteButton sessionId={id} initial={isFavorite(s)} onError={setActionError} />}
+      />
       <WorkoutCompletion key={id} justFinished={justFinished} sets={sets.length} pipLine={pipLine} />
       <SessionStats
         durationMs={sessionDurationMs(s)}
@@ -99,8 +110,17 @@ export function SessionDetailScreen() {
       />}
       <SessionExerciseList blocks={blocks} exerciseById={exerciseById} unit={unit} distanceUnit={distanceUnit} notes={exerciseNotes} />
 
-      {actionError && <p className="mt-4 text-sm text-danger">{actionError}</p>}
-      <div className="mt-6 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
+      {(actionError ?? repeatError) && <p className="mt-4 text-sm text-danger">{actionError ?? repeatError}</p>}
+      <Button
+        variant="primary"
+        block
+        className="mt-6"
+        disabled={repeating}
+        onClick={() => repeat({ session: s, sets }, exerciseById)}
+      >
+        <RepeatIcon /> {repeating ? 'Setting up…' : 'Repeat workout'}
+      </Button>
+      <div className="mt-2 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
         <Button onClick={() => navigate(`/workout/${id}`)}>Edit workout</Button>
         <Button
           variant="danger"

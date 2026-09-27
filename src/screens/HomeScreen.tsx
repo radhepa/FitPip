@@ -6,6 +6,7 @@ import { PipSpeech } from '../components/PipSpeech'
 import { SessionListItem } from '../components/SessionListItem'
 import { StatTiles } from '../components/StatTiles'
 import { SyncBadge } from '../components/SyncBadge'
+import { TodayFavorites } from '../components/TodayFavorites'
 import { TodayLineup } from '../components/TodayLineup'
 import { WeekStrip } from '../components/WeekStrip'
 import { ChevronIcon, SettingsIcon, SparkIcon } from '../components/icons'
@@ -83,6 +84,7 @@ export function HomeScreen() {
             onCreate={create}
           />
         )}
+        {!open.data && !open.loading && <TodayFavorites exerciseById={exerciseById} />}
 
         {SUGGEST_ENABLED && (
           <Link to="/suggest" className="card pressable mt-4 flex items-center gap-3 p-4">

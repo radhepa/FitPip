@@ -1,11 +1,11 @@
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import type { SessionWithSets } from '../data/sessions'
+import { isFavorite, type SessionWithSets } from '../data/sessions'
 import { formatDate, formatDuration, formatVolume, sessionDurationMs, sessionTitle } from '../lib/format'
 import { totalVolume } from '../lib/sessionStats'
 import type { Category, Exercise, WeightUnit } from '../types/db'
 import { CategoryTile } from './CategoryTile'
-import { ChevronIcon } from './icons'
+import { ChevronIcon, StarIcon } from './icons'
 
 interface Props {
   item: SessionWithSets
@@ -40,7 +40,14 @@ export function SessionListItem({ item, unit, exerciseById, index = 0 }: Props) 
       <CategoryTile category={mainCategory(item, exerciseById)} />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="truncate font-extrabold">{sessionTitle(session)}</span>
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate font-extrabold">{sessionTitle(session)}</span>
+            {isFavorite(session) && (
+              <span className="favorite-mark" role="img" aria-label="Favorite">
+                <StarIcon filled size="size-4" />
+              </span>
+            )}
+          </span>
           <span className="shrink-0 text-xs font-semibold text-muted">{formatDate(session.started_at)}</span>
         </div>
         <p className="truncate">{meta.join(' · ')}</p>

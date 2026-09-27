@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { EmptyState, ErrorBanner, Loading } from '../components/feedback'
@@ -7,8 +7,7 @@ import { PageHeader } from '../components/PageHeader'
 import { SessionExerciseList } from '../components/SessionExerciseList'
 import { SessionStats } from '../components/SessionStats'
 import { WorkoutRewards } from '../components/WorkoutRewards'
-import { confetti } from '../components/fx'
-import { PipSpeech } from '../components/PipSpeech'
+import { WorkoutCompletion } from '../components/WorkoutCompletion'
 import { listExercises } from '../data/exercises'
 import { deleteSession, getSession } from '../data/sessions'
 import { listSetsForSession } from '../data/sets'
@@ -40,10 +39,6 @@ export function SessionDetailScreen() {
   const activeSeconds = sets.reduce((total, s) => total + (s.duration_seconds ?? 0), 0)
   const hasLifts = sets.some((s) => exerciseById.get(s.exercise_id)?.tracking === 'reps')
 
-  useEffect(() => {
-    if (justFinished) confetti()
-  }, [justFinished])
-
   async function run(action: () => Promise<void>) {
     setActionError(null)
     try {
@@ -63,11 +58,7 @@ export function SessionDetailScreen() {
   return (
     <>
       <PageHeader back eyebrow={justFinished ? 'Workout saved' : formatDate(s.started_at)} title={sessionTitle(s)} subtitle={`${formatDate(s.started_at)} · ${formatTime(s.started_at)}`} />
-      {justFinished && (
-        <section className="card card-hero mb-4 p-4">
-          <PipSpeech pose="cheer" size={104} override={`Done! ${sets.length} ${sets.length === 1 ? 'set' : 'sets'} in the books. Proud of you.`} />
-        </section>
-      )}
+      <WorkoutCompletion key={id} justFinished={justFinished} sets={sets.length} />
       <SessionStats
         durationMs={sessionDurationMs(s)}
         exercises={blocks.length}

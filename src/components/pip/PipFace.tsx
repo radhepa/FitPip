@@ -14,7 +14,7 @@ function Eye({ x, side }: { x: number; side: string }) {
 }
 
 export function PipFace({ id, mood }: { id: string; mood: PipPose | PipReaction }) {
-  const happy = mood === 'cheer' || mood === 'bounce' || mood === 'love'
+  const happy = mood === 'cheer' || mood === 'bounce' || mood === 'love' || mood === 'celebrate'
   const asleep = mood === 'sleep'
   return (
     <>

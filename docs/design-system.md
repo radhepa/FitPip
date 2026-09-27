@@ -78,3 +78,11 @@ static poses. New instances use unique gradient IDs and staggered idle timing. T
 in both themes, with rapid taps and keyboard activation; check that each reaction returns to
 idle, sleep or cheer as appropriate. The home companion renders at up to 120px; speech companions
 shrink on narrow cards to keep the tip readable.
+
+Finishing a saved workout opens `WorkoutCompletion`: a focus-trapped native dialog with a
+3.2-second Pip celebration (wind-up, victory leap, rebound, shimmy, proud pose), a synchronized
+sparkle burst, and the saved set count. `pip/celebrate.css` owns the character motion and
+`workoutCompletion.css` owns the scene. View workout or Escape dismisses it immediately;
+replay restarts the scene. The completion navigation flag is consumed after the summary loads,
+so refreshing, history visits, and editing a finished workout never trigger another celebration.
+Reduced motion shows the happy final pose and message immediately, without particles.

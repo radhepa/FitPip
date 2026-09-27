@@ -1,0 +1,97 @@
+@layer components {
+.workout-celebration {
+  position: fixed;
+  inset: 0;
+  width: min(420px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  margin: auto;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 28px;
+  color: var(--color-text);
+  background: var(--grad-hero);
+  box-shadow: 0 24px 90px #0006;
+  animation: completion-enter 300ms ease-out both;
+}
+.workout-celebration::backdrop { background: #030816c9; backdrop-filter: blur(7px); }
+.completion-content { padding: 24px; text-align: center; }
+.completion-eyebrow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-muted);
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.completion-eyebrow svg { color: var(--color-target); }
+.completion-scene { position: relative; display: grid; place-items: center; height: 280px; margin: 6px -8px 0; isolation: isolate; }
+.completion-scene .pip-figure { position: relative; z-index: 1; }
+.completion-halo {
+  position: absolute;
+  width: 226px;
+  height: 226px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #8fc9ff2b, #8fc9ff08 62%, transparent 70%);
+  box-shadow: inset 0 0 0 1px #95caff12;
+  animation: completion-glow 3.2s ease-out both;
+}
+.completion-burst { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+.completion-bit { opacity: 0; animation: completion-burst 1.65s cubic-bezier(.12, .6, .3, 1) var(--burst-delay) both; }
+.completion-praise {
+  position: absolute;
+  z-index: 3;
+  bottom: 3px;
+  padding: 7px 16px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 999px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  font-size: .875rem;
+  font-weight: 800;
+  transform: rotate(-4deg);
+  animation: completion-praise 500ms 1.85s both;
+}
+.completion-title { margin: 18px 0 10px; font: 850 clamp(2.4rem, 10vw, 3.1rem)/1 var(--font-display); letter-spacing: -.045em; }
+.completion-message { margin: 0; color: var(--color-muted); line-height: 1.5; }
+.completion-saved { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 22px 0 16px; color: var(--color-muted); font-size: .8rem; }
+.completion-saved svg { flex-shrink: 0; color: var(--color-target); }
+.completion-replay { margin: 6px auto -8px; }
+@keyframes completion-enter { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes completion-glow { 0% { transform: scale(.85); opacity: .3; } 30%, 50% { transform: scale(1.14); opacity: 1; } 100% { transform: scale(1); opacity: .8; } }
+@keyframes completion-burst {
+  0% { opacity: 0; transform: scale(.3); }
+  8% { opacity: 1; }
+  65% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--burst-x), var(--burst-y)) rotate(var(--burst-turn)) scale(.65); }
+}
+@keyframes completion-praise { from { opacity: 0; transform: translateY(9px) rotate(-8deg) scale(.85); } to { opacity: 1; transform: rotate(-4deg); } }
+@media (max-height: 700px) {
+  .completion-content { padding: 18px 22px; }
+  .completion-scene { height: 205px; }
+  .completion-scene .pip-figure { max-width: 180px; }
+  .completion-halo { width: 175px; height: 175px; }
+  .completion-title { margin-top: 12px; font-size: 2.4rem; }
+  .completion-saved { margin-top: 16px; }
+}
+@media (max-height: 620px) {
+  .completion-content { padding: 14px 16px; }
+  .completion-scene { height: 158px; }
+  .completion-scene .pip-figure { max-width: 140px; }
+  .completion-halo { width: 140px; height: 140px; }
+  .completion-praise { padding: 4px 10px; font-size: .75rem; }
+  .completion-title { margin: 12px 0 8px; font-size: 2rem; }
+  .completion-message { font-size: .875rem; line-height: 1.4; }
+  .completion-saved { margin: 12px 0; font-size: .75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workout-celebration, .workout-celebration * { animation: none !important; transition: none !important; }
+  .completion-burst { display: none; }
+}
+}

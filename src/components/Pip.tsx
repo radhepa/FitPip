@@ -4,6 +4,7 @@ import { PipArms, PipBody, PipDefs, PipEffects, PipTail } from './pip/PipArt'
 import { PipFace } from './pip/PipFace'
 import type { PipPose, PipReaction } from './pip/types'
 import './pip/pip.css'
+import './pip/celebrate.css'
 
 export type { PipPose, PipReaction } from './pip/types'
 
@@ -23,6 +24,7 @@ const descriptions: Record<PipPose | PipReaction, string> = {
   wave: 'Pip waving hello',
   bounce: 'Pip jumping for joy',
   love: 'Pip sending you love',
+  celebrate: 'Pip jumping for joy with both paws raised. Proud of you!',
 }
 
 /** A layered SVG rig: movement, breathing, head, gaze and limbs have separate pivots. */

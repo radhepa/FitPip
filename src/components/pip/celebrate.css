@@ -1,0 +1,79 @@
+@layer components {
+/* One 3.2-second phrase: wind up, leap, rebound, happy shimmy, proud finish. */
+.pip--celebrate { --pip-celebrate-time: 3.2s; }
+.pip--celebrate .pip-arrival { animation: none; }
+.pip--celebrate .pip-action { animation: pip-victory var(--pip-celebrate-time) both; }
+.pip--celebrate .pip-shadow { animation: pip-victory-shadow var(--pip-celebrate-time) both; }
+.pip--celebrate .pip-arm { animation: pip-victory-paws var(--pip-celebrate-time) both; }
+.pip--celebrate .pip-head { animation: pip-victory-head var(--pip-celebrate-time) both; }
+.pip--celebrate .pip-tail { animation: pip-victory-tail var(--pip-celebrate-time) both; }
+.pip--celebrate .pip-foot--left { animation: pip-victory-foot var(--pip-celebrate-time) both; }
+.pip--celebrate .pip-foot--right { animation: pip-victory-foot-right var(--pip-celebrate-time) both; }
+.pip--celebrate .pip-band-ties { animation: pip-victory-ribbon var(--pip-celebrate-time) both; }
+.pip--celebrate .pip-breathe,
+.pip--celebrate .pip-ear { animation: none; }
+.pip--celebrate .pip-head-follow, .pip--celebrate .pip-gaze { transform: none; }
+.pip--celebrate .pip-particle { animation: pip-sparkle 2s ease-out 1 both; animation-delay: calc(.6s + var(--i) * .09s); }
+
+@keyframes pip-victory {
+  0%, 5% { transform: none; animation-timing-function: ease-in; }
+  13% { transform: translateY(5px) scale(1.1, .87); animation-timing-function: cubic-bezier(.16, .8, .3, 1); }
+  27% { transform: translateY(-33px) scale(.96, 1.04) rotate(-7deg); animation-timing-function: ease-in; }
+  39% { transform: translateY(3px) scale(1.1, .9); animation-timing-function: ease-out; }
+  50% { transform: translateY(-17px) scale(.98, 1.03) rotate(6deg); animation-timing-function: ease-in; }
+  60% { transform: translateY(2px) scale(1.06, .95); animation-timing-function: ease-in-out; }
+  69% { transform: translateX(-5px) rotate(-6deg); }
+  78% { transform: translateX(5px) rotate(6deg); }
+  87% { transform: translateX(-2px) rotate(-3deg); }
+  100% { transform: none; }
+}
+@keyframes pip-victory-shadow {
+  0%, 100% { transform: scaleX(1); opacity: .2; }
+  13%, 39%, 60% { transform: scaleX(1.13); opacity: .24; }
+  27% { transform: scaleX(.55); opacity: .08; }
+  50% { transform: scaleX(.75); opacity: .13; }
+}
+@keyframes pip-victory-paws {
+  0%, 5% { transform: rotate(0); }
+  13% { transform: rotate(-20deg); }
+  24%, 32% { transform: rotate(137deg) scaleY(1.2); }
+  39% { transform: rotate(74deg); }
+  50%, 56% { transform: rotate(130deg) scaleY(1.18); }
+  66%, 84% { transform: rotate(85deg); }
+  74% { transform: rotate(116deg); }
+  100% { transform: rotate(112deg) scaleY(1.12); }
+}
+@keyframes pip-victory-head {
+  0%, 100% { transform: none; }
+  13% { transform: translateY(4px) rotate(-5deg); }
+  27% { transform: translateY(-3px) rotate(9deg); }
+  39% { transform: translateY(3px) rotate(-5deg); }
+  50% { transform: rotate(-8deg); }
+  69%, 87% { transform: rotate(8deg); }
+  78% { transform: rotate(-8deg); }
+}
+@keyframes pip-victory-tail {
+  0%, 100% { transform: rotate(-5deg); }
+  13%, 39%, 60%, 78% { transform: rotate(-15deg); }
+  27%, 50%, 69%, 87% { transform: rotate(16deg); }
+}
+@keyframes pip-victory-foot {
+  0%, 13%, 39%, 60%, 100% { transform: none; }
+  27% { transform: rotate(22deg) translateY(-5px); }
+  50% { transform: rotate(-12deg); }
+  69%, 87% { transform: rotate(12deg); }
+}
+@keyframes pip-victory-foot-right {
+  0%, 13%, 39%, 60%, 100% { transform: none; }
+  27% { transform: rotate(-22deg) translateY(-5px); }
+  50%, 78% { transform: rotate(12deg); }
+}
+@keyframes pip-victory-ribbon {
+  0%, 100% { transform: rotate(0); }
+  27%, 50%, 69%, 87% { transform: rotate(-20deg); }
+  39%, 60%, 78% { transform: rotate(18deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pip--celebrate .pip-arm { transform: rotate(112deg) scaleY(1.12); }
+}
+}

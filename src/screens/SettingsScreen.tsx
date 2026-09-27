@@ -7,6 +7,7 @@ import { SyncCard } from '../components/SyncCard'
 import { Toast } from '../components/Toast'
 import { signOut } from '../data/auth'
 import { loadStarterExercises } from '../data/exercises'
+import { exportEverything, exportWeighIns, exportWorkouts, type ExportFile } from '../data/export'
 import { hasUnsyncedChanges } from '../data/sync/actions'
 import { getSyncStatus } from '../data/sync/status'
 import { errorMessage } from '../data/unwrap'
@@ -14,6 +15,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useAppearance, type AppearancePreference } from '../hooks/useAppearance'
 import { useSettings } from '../hooks/useSettings'
 import { countOf } from '../lib/format'
+import { saveFile } from '../lib/saveFile'
 import type { DistanceUnit, WeightUnit } from '../types/db'
 
 const APPEARANCES: { value: AppearancePreference; label: string }[] = [
@@ -50,6 +52,12 @@ export function SettingsScreen() {
   const { unit, setUnit, distanceUnit, setDistanceUnit, restSeconds, setRestSeconds } = useSettings()
   const [message, setMessage] = useState<{ text: string; key: number } | null>(null)
   const [busy, setBusy] = useState(false)
+
+  const exportFile = (make: () => Promise<ExportFile>) =>
+    run(async () => {
+      const file = await make()
+      return (await saveFile(file)) ? `Saved ${file.name}.` : ''
+    })
 
   async function run(action: () => Promise<string>) {
     setBusy(true)
@@ -120,6 +128,20 @@ export function SettingsScreen() {
           >
             Load starter exercises
           </Button>
+        </Card>
+
+        <Card title="Your data" hint="Spreadsheet files (CSV) of every set and weigh-in, or a full copy of everything to keep.">
+          <div className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
+            <Button disabled={busy} onClick={() => exportFile(() => exportWorkouts(unit))}>
+              Workouts (CSV)
+            </Button>
+            <Button disabled={busy} onClick={() => exportFile(exportWeighIns)}>
+              Weigh-ins (CSV)
+            </Button>
+            <Button className="min-[400px]:col-span-2" disabled={busy} onClick={() => exportFile(exportEverything)}>
+              Full backup (JSON)
+            </Button>
+          </div>
         </Card>
 
         <Card title="Account">

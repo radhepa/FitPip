@@ -1,4 +1,4 @@
-import { lazy, type ComponentType } from 'react'
+import { createElement, lazy, useState, type ComponentType } from 'react'
 
 /**
  * Screens other than Today and sign-in load as separate chunks, so the app opens with less code to
@@ -7,9 +7,28 @@ import { lazy, type ComponentType } from 'react'
  */
 const loaders: (() => Promise<unknown>)[] = []
 
-function screen<K extends string, M extends Record<K, ComponentType>>(load: () => Promise<M>, name: K) {
-  loaders.push(load)
-  return lazy(() => load().then((m) => ({ default: m[name] })))
+/**
+ * A screen from its own chunk. Once the chunk is in, the screen renders straight away. (A plain
+ * React.lazy suspends on its first render even when the code is already loaded, and React then holds
+ * the page blank for ~300 ms: that was the empty flash on the first visit to every tab.)
+ */
+function screen<K extends string, M extends Record<K, ComponentType>>(load: () => Promise<M>, name: K): ComponentType {
+  let loaded: ComponentType | null = null
+  const fetchScreen = () =>
+    load().then((m) => {
+      loaded = m[name]
+      return m
+    })
+  const Lazy: ComponentType = lazy(() => fetchScreen().then((m) => ({ default: m[name] as ComponentType })))
+  loaders.push(fetchScreen)
+
+  function Screen() {
+    // Chosen once per visit, so a screen that started out lazy is never swapped (and reset) mid-visit.
+    const [ready] = useState(() => loaded)
+    return createElement(ready ?? Lazy)
+  }
+  Screen.displayName = name
+  return Screen
 }
 
 export const ExerciseDetailScreen = screen(() => import('./ExerciseDetailScreen'), 'ExerciseDetailScreen')

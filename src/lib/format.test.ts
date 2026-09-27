@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatClock, formatDuration, formatSet, formatSetCount, formatSetList, sessionDurationMs } from './format'
+import { countOf, formatClock, formatDuration, formatSet, formatSetCount, formatSetList, sessionDurationMs } from './format'
 
 describe('formatSet', () => {
   it('shows bodyweight sets as BW and adds the unit when given', () => {
@@ -82,5 +82,15 @@ describe('formatSetCount', () => {
     expect(formatSetCount(6.5)).toBe('6.5')
     expect(formatSetCount(2.8571)).toBe('2.9')
     expect(formatSetCount(0)).toBe('0')
+  })
+})
+
+describe('countOf', () => {
+  it('is singular only for exactly one', () => {
+    expect(countOf(1, 'set')).toBe('1 set')
+    expect(countOf(0, 'set')).toBe('0 sets')
+    expect(countOf(2.5, 'set')).toBe('2.5 sets')
+    expect(countOf(3, 'more workout')).toBe('3 more workouts')
+    expect(countOf(2, 'day', 'days in a row')).toBe('2 days in a row')
   })
 })

@@ -2,6 +2,7 @@ import { ASSESSMENT_EXERCISES } from '../../config/assessment'
 import { rankInfo } from '../../config/ranks'
 import { assessStrength, type Assessment } from '../../lib/assessment'
 import { RankEmblem } from '../RankEmblem'
+import { countOf } from '../../lib/format'
 
 export function AssessmentResult({ assessment }: { assessment: Assessment }) {
   const result = assessStrength(assessment)
@@ -18,7 +19,7 @@ export function AssessmentResult({ assessment }: { assessment: Assessment }) {
         const lift = result.lifts.find((l) => l.key === exercise.key)
         return <li key={exercise.key} className="flex items-center gap-3 rounded-xl bg-surface-2 px-3 py-2">
           <RankEmblem rank={lift?.rank ?? null} size={36} />
-          <span className="min-w-0 flex-1 text-sm font-bold">{exercise.name}<span className="block text-xs font-normal text-muted">{lift ? `${lift.kind === 'load' ? `${lift.weight} ${assessment.unit} × ` : ''}${lift.reps} reps` : 'Not included'}</span></span>
+          <span className="min-w-0 flex-1 text-sm font-bold">{exercise.name}<span className="block text-xs font-normal text-muted">{lift ? `${lift.kind === 'load' ? `${lift.weight} ${assessment.unit} × ` : ''}${countOf(lift.reps, 'rep')}` : 'Not included'}</span></span>
           <span className="text-sm font-bold">{lift ? rankInfo(lift.rank).name : 'Skipped'}</span>
         </li>
       })}

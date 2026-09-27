@@ -17,6 +17,7 @@ import { useSettings } from '../hooks/useSettings'
 import { dateMs, goalProgress, toWeighIns } from '../lib/bodyWeight'
 import { weightNotes } from '../lib/pip/notes'
 import { convertWeight } from '../lib/units'
+import { countOf } from '../lib/format'
 
 const RANGES = [
   { days: 30, label: '30d' },
@@ -103,7 +104,7 @@ export function WeighInScreen() {
               <section>
                 <div className="section-heading">
                   <h2>History</h2>
-                  <span className="text-sm font-semibold text-muted">{weighIns.length} weigh-ins</span>
+                  <span className="text-sm font-semibold text-muted">{countOf(weighIns.length, 'weigh-in')}</span>
                 </div>
                 <WeightHistory weighIns={weighIns} unit={unit} onDelete={remove} />
               </section>

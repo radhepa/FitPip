@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from './Button'
 import { ElapsedClock } from './ElapsedClock'
-import { formatClock } from '../lib/format'
+import { countOf, formatClock } from '../lib/format'
 import { CheckIcon } from './icons'
 import { ProgressRing } from './ProgressRing'
 
@@ -57,7 +57,7 @@ export function WorkoutHeader({ name, startedAt, endedAt = null, progress, onRen
           )}
         </div>
         {progress && progress.target > 0 && (
-          <ProgressRing value={progress.done / progress.target} size={76} stroke={8} label={`${progress.done} of ${progress.target} sets`}>
+          <ProgressRing value={progress.done / progress.target} size={76} stroke={8} label={`${progress.done} of ${countOf(progress.target, 'set')}`}>
             <span className="text-sm leading-tight font-extrabold">
               {progress.done}
               <span className="text-muted">/{progress.target}</span>

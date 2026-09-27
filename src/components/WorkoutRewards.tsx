@@ -4,7 +4,7 @@ import { rankInfo } from '../config/ranks'
 import { XP_RULES } from '../config/xp'
 import { useProfile } from '../hooks/useProfile'
 import { useSettings } from '../hooks/useSettings'
-import { formatSeconds, formatWeight } from '../lib/format'
+import { countOf, formatSeconds, formatWeight } from '../lib/format'
 import { workoutRewards } from '../lib/profile'
 import { formatDistance, lengthUnitFor } from '../lib/units'
 import type { RecordEvent } from '../lib/xp'
@@ -24,7 +24,7 @@ export function WorkoutRewards({ sessionId }: { sessionId: string }) {
   const { xp, rankUps } = rewards
   const recordText = (r: RecordEvent, exercise: Exercise | undefined) => {
     if (r.kind === 'e1rm') return `${formatWeight(r.value)} ${unit} est. 1RM (was ${formatWeight(r.previous)})`
-    if (r.kind === 'reps') return `${r.value} reps (was ${r.previous})`
+    if (r.kind === 'reps') return `${countOf(r.value, 'rep')} (was ${r.previous})`
     if (r.kind === 'seconds') return `${formatSeconds(r.value)} (was ${formatSeconds(r.previous)})`
     const lengthUnit = lengthUnitFor(exercise?.category ?? 'cardio', distanceUnit)
     return `${formatDistance(r.value, lengthUnit)} (was ${formatDistance(r.previous, lengthUnit)})`

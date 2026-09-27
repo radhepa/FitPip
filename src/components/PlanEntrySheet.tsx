@@ -6,6 +6,7 @@ import { Button } from './Button'
 import { CategoryTile } from './CategoryTile'
 import { ArrowDownIcon, ArrowUpIcon, PlayIcon, TrashIcon } from './icons'
 import { Sheet } from './Sheet'
+import { countOf } from '../lib/format'
 
 interface Props {
   entry: PlanEntry | null
@@ -23,7 +24,7 @@ interface Props {
 function kindLine(entry: PlanEntry, category: Category): string {
   if (entry.kind === 'category') return 'Kind of workout'
   if (entry.kind === 'activity') return CATEGORY_INFO[category].label
-  return entry.routine.items.length === 0 ? 'Lift · exercises optional' : `Routine · ${entry.routine.items.length} exercises`
+  return entry.routine.items.length === 0 ? 'Lift · exercises optional' : `Routine · ${countOf(entry.routine.items.length, 'exercise')}`
 }
 
 /** What you can do with one planned item: start it, reorder it, open its routine or take it off the day. */

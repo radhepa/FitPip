@@ -76,6 +76,11 @@ export function muscleLabel(muscle: string): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1)
 }
 
+/** "1 set", "3 sets", "0.5 sets": a count with its noun, singular only for exactly one. */
+export function countOf(count: number, singular: string, plural = `${singular}s`): string {
+  return `${count} ${count === 1 ? singular : plural}`
+}
+
 /** Set counts can be halves (secondary muscles) or averages: "12", "6.5", "2.8". */
 export function formatSetCount(count: number): string {
   return Number.isInteger(count) ? String(count) : count.toFixed(1)

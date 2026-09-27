@@ -1,3 +1,5 @@
+import { countOf } from '../lib/format'
+
 interface Props {
   completed: number
   target?: number
@@ -18,7 +20,7 @@ export function TallyMarks({ completed, target }: Props) {
     return { count, done }
   })
   const met = target !== undefined && completed >= target
-  const label = target === undefined ? `${completed} sets done` : `${completed} of ${target} sets done`
+  const label = target === undefined ? `${countOf(completed, 'set')} done` : `${completed} of ${countOf(target, 'set')} done`
 
   return (
     <span className={`tally ${met ? 'tally--met' : ''}`} role="img" aria-label={label}>

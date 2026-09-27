@@ -56,9 +56,9 @@ export function MuscleSheet({ open, title, muscles, volume, unit, periodLabel, w
           const v = volume[muscle]
           return (
             <li key={muscle} className="flex items-baseline justify-between gap-3 text-sm">
-              <span className="font-bold">{muscles.length > 1 ? muscleLabel(muscle) : `${formatSetCount(v.weighted)} sets`}</span>
+              <span className="font-bold">{muscles.length > 1 ? muscleLabel(muscle) : `${formatSetCount(v.weighted)} ${v.weighted === 1 ? 'set' : 'sets'}`}</span>
               <span className="text-muted">
-                {muscles.length > 1 && `${formatSetCount(v.weighted)} sets · `}
+                {muscles.length > 1 && `${formatSetCount(v.weighted)} ${v.weighted === 1 ? 'set' : 'sets'} · `}
                 {weeks !== 1 && `${formatSetCount(v.perWeek)} a week · `}
                 level {levelFor(v.perWeek)} ({LEVEL_LABELS[levelFor(v.perWeek)]})
               </span>

@@ -8,6 +8,7 @@ import { CheckIcon } from './icons'
 import { Sheet } from './Sheet'
 import { NameLiftForm } from './NameLiftForm'
 import { PlanCategoryPicker } from './PlanCategoryPicker'
+import { countOf } from '../lib/format'
 
 interface Props {
   weekday: number | null
@@ -111,7 +112,7 @@ export function AddToDaySheet({ weekday, routines, exercises, existing, onClose,
                 <CategoryTile category="strength" size={2.5} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-bold">{r.template.name}</span>
-                  <span className="block text-sm text-muted">{added ? 'Already on this day' : r.items.length === 0 ? 'Lift name · exercises optional' : `${r.items.length} exercises`}</span>
+                  <span className="block text-sm text-muted">{added ? 'Already on this day' : r.items.length === 0 ? 'Lift name · exercises optional' : countOf(r.items.length, 'exercise')}</span>
                 </span>
                 {selected && (
                   <span className="check-pop grid size-7 place-items-center rounded-full text-on-accent" style={{ background: 'var(--grad-accent)' }}>

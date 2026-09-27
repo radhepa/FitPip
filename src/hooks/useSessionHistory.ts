@@ -7,7 +7,7 @@ const PAGE_SIZE = 15
 
 /** Finished workouts, newest first: the first page loads on mount, more on demand. */
 export function useSessionHistory() {
-  const first = useAsync(() => listSessionSummaries(PAGE_SIZE), [])
+  const first = useAsync(() => listSessionSummaries(PAGE_SIZE), [], { cacheKey: 'history:first-page' })
   const [more, setMore] = useState<SessionWithSets[]>([])
   const [exhausted, setExhausted] = useState(false)
   const [busy, setBusy] = useState(false)

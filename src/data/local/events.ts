@@ -4,6 +4,8 @@
 type Listener = () => void
 
 let dataVersion = 0
+/** Counts every change to the data on this device, from any source (screens can cache reads by it). */
+let generation = 0
 const dataListeners = new Set<Listener>()
 const writeListeners = new Set<Listener>()
 
@@ -32,13 +34,21 @@ export function subscribeDataVersion(listener: Listener): () => void {
   return () => dataListeners.delete(listener)
 }
 
+/**
+ * Changes whenever anything on this device changed: a local write, a sync, another tab. A read taken
+ * at one generation is still exact while the generation stays the same.
+ */
+export const getDataGeneration = () => generation
+
 export function bumpDataVersion(): void {
   dataVersion += 1
+  generation += 1
   dataListeners.forEach((listener) => listener())
 }
 
 /** Called after every local write so a sync can be scheduled and the pending count refreshed. */
 export function emitLocalWrite(broadcast = true): void {
+  generation += 1
   writeListeners.forEach((listener) => listener())
   if (broadcast) tabChannel()?.postMessage('write')
 }

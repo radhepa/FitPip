@@ -25,9 +25,9 @@ export function WorkoutScreen() {
   const [search] = useSearchParams()
   const pickParam = search.get('add')
   const initialPick = (CATEGORIES as readonly string[]).includes(pickParam ?? '') ? (pickParam as Category) : null
-  const session = useAsync(() => getSession(id), [id])
-  const setsState = useAsync(() => listSetsForSession(id), [id])
-  const exercisesState = useAsync(listExercises, [])
+  const session = useAsync(() => getSession(id), [id], { cacheKey: `session:${id}` })
+  const setsState = useAsync(() => listSetsForSession(id), [id], { cacheKey: `session-sets:${id}` })
+  const exercisesState = useAsync(listExercises, [], { cacheKey: 'exercises' })
   const pending = usePendingExercises(id)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<'beginning' | 'finishing' | null>(null)

@@ -28,7 +28,7 @@ const RANGES = [
 export function WeighInScreen() {
   const { session } = useAuth()
   const { unit, goal, setGoal } = useSettings()
-  const rows = useAsync(listBodyWeights, [])
+  const rows = useAsync(listBodyWeights, [], { cacheKey: 'body-weights' })
   const [range, setRange] = useState<number>(30)
   const [error, setError] = useState<string | null>(null)
   const [openedAt] = useState(() => Date.now())

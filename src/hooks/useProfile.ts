@@ -20,7 +20,7 @@ export interface ProfileState {
 /** Loads the whole history and works out ranks, badges and XP from it. */
 export function useProfile(): ProfileState {
   const { unit, compareSex } = useSettings()
-  const data = useAsync(loadProfileData, [])
+  const data = useAsync(loadProfileData, [], { cacheKey: 'profile-data' })
   const loaded = data.data
 
   const input = useMemo<ProfileInput | null>(() => {

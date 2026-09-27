@@ -18,7 +18,7 @@ import type { Category } from '../types/db'
 const SHOWN = 80
 
 export function ProgressScreen() {
-  const exercises = useAsync(listExercises, [])
+  const exercises = useAsync(listExercises, [], { cacheKey: 'exercises' })
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<Category | 'all'>('all')
   const [creating, setCreating] = useState(false)

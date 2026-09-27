@@ -27,9 +27,9 @@ export function SessionDetailScreen() {
   const navigate = useNavigate()
   const { unit, distanceUnit } = useSettings()
   const justFinished = (useLocation().state as { justFinished?: boolean } | null)?.justFinished === true
-  const session = useAsync(() => getSession(id), [id])
-  const setsState = useAsync(() => listSetsForSession(id), [id])
-  const exercisesState = useAsync(listExercises, [])
+  const session = useAsync(() => getSession(id), [id], { cacheKey: `session:${id}` })
+  const setsState = useAsync(() => listSetsForSession(id), [id], { cacheKey: `session-sets:${id}` })
+  const exercisesState = useAsync(listExercises, [], { cacheKey: 'exercises' })
   const [actionError, setActionError] = useState<string | null>(null)
   // Pip only looks at your history for the celebration right after finishing, not on every visit to a past workout.
   const [celebrating] = useState(justFinished)

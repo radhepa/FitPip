@@ -11,7 +11,7 @@ import { useSettings } from '../hooks/useSettings'
 export function HistoryScreen() {
   const { unit } = useSettings()
   const { items, hasMore, loading, loadingMore, error, loadMore, retry } = useSessionHistory()
-  const exercises = useAsync(listExercises, [])
+  const exercises = useAsync(listExercises, [], { cacheKey: 'exercises' })
   const exerciseById = useMemo(() => new Map((exercises.data ?? []).map((e) => [e.id, e])), [exercises.data])
 
   return (

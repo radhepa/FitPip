@@ -6,7 +6,7 @@ import { useAsync } from './useAsync'
 
 /** The weekly plan and every change you can make to it (optimistic where it is safe). */
 export function useWeekPlan() {
-  const items = useAsync(listWeekPlan, [])
+  const items = useAsync(listWeekPlan, [], { cacheKey: 'week-plan' })
   const [error, setError] = useState<string | null>(null)
   const current = () => items.data ?? []
 

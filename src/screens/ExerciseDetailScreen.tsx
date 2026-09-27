@@ -24,8 +24,8 @@ export function ExerciseDetailScreen() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const { unit, distanceUnit } = useSettings()
-  const exercise = useAsync(() => getExercise(id), [id])
-  const sets = useAsync(() => listSetsForExercise(id), [id])
+  const exercise = useAsync(() => getExercise(id), [id], { cacheKey: `exercise:${id}` })
+  const sets = useAsync(() => listSetsForExercise(id), [id], { cacheKey: `exercise-sets:${id}` })
   const [editing, setEditing] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 

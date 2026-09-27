@@ -20,7 +20,7 @@ interface Options {
 /** What Pip knows about you, worked out from your whole history. Null until it has loaded. */
 export function usePipFacts({ plan = null, weights = null, skip = false, ready = true }: Options = {}): PipFacts | null {
   const { unit, distanceUnit, goal, displayName } = useSettings()
-  const data = useAsync(() => (skip ? Promise.resolve(null) : loadProfileData()), [skip])
+  const data = useAsync(() => (skip ? Promise.resolve(null) : loadProfileData()), [skip], { cacheKey: skip ? undefined : 'profile-data' })
   const loaded = data.data
   const goalWeight = goal?.weight ?? null
   const goalUnit = goal?.unit ?? null

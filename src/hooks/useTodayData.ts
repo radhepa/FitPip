@@ -20,8 +20,8 @@ const orElse = async <T,>(load: Promise<T>, fallback: T): Promise<T> => {
 
 /** Everything the Today screen shows, loaded in parallel. Parts that fail just show less. */
 export function useTodayData() {
-  const open = useAsync(getOpenSession, [])
-  const recent = useAsync(() => listSessionSummaries(4), [])
+  const open = useAsync(getOpenSession, [], { cacheKey: 'today:open' })
+  const recent = useAsync(() => listSessionSummaries(4), [], { cacheKey: 'today:recent' })
   const plan = useAsync(async () => {
     const [items, routines, exercises] = await Promise.all([
       orElse<WeekPlanItem[]>(listWeekPlan(), []),
@@ -29,7 +29,7 @@ export function useTodayData() {
       orElse<Exercise[]>(listExercises(), []),
     ])
     return { items, routines, exercises }
-  }, [])
+  }, [], { cacheKey: 'today:plan' })
   const history = useAsync(async () => {
     const since = new Date()
     since.setHours(0, 0, 0, 0)
@@ -40,7 +40,7 @@ export function useTodayData() {
     const todays = sessions.filter((s) => new Date(s.started_at) >= today)
     const sets = await listSetsForSessions(todays.map((s) => s.id))
     return { sessions, todays: todays.map((session) => ({ session, sets: sets.filter((set) => set.session_id === session.id) })) }
-  }, [])
-  const weights = useAsync(() => orElse<BodyWeight[]>(listBodyWeights(), []), [])
+  }, [], { cacheKey: 'today:history' })
+  const weights = useAsync(() => orElse<BodyWeight[]>(listBodyWeights(), []), [], { cacheKey: 'today:weights' })
   return { open, recent, plan, history, weights }
 }

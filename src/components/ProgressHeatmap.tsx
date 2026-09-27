@@ -13,7 +13,7 @@ export function ProgressHeatmap({ exercises }: { exercises: Exercise[] }) {
   const { unit } = useSettings()
   const [days, setDays] = useState<RangeDays>(7)
   // The range travels with its data, so the map never mixes one range's sets with another's label.
-  const training = useAsync(async () => ({ days, ...(await loadTrainingWindow(days)) }), [days])
+  const training = useAsync(async () => ({ days, ...(await loadTrainingWindow(days)) }), [days], { cacheKey: `training:${days}` })
   const loaded = training.data
 
   const volume = useMemo(

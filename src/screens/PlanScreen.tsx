@@ -22,8 +22,8 @@ import { dayTargets, entriesForDay, entryName, entryPlan, WEEK_ORDER, type PlanE
 /** The week at a glance (any number of routines and activities per day) and the saved routines. */
 export function PlanScreen() {
   const navigate = useNavigate()
-  const templates = useAsync(listTemplates, [])
-  const exercises = useAsync(listExercises, [])
+  const templates = useAsync(listTemplates, [], { cacheKey: 'templates' })
+  const exercises = useAsync(listExercises, [], { cacheKey: 'exercises' })
   const plan = useWeekPlan()
   const { create, creating } = useNewWorkout()
   const [creatingRoutine, setCreatingRoutine] = useState(false)

@@ -32,8 +32,8 @@ import { PlayIcon, PlusIcon } from '../components/icons'
 export function TemplateScreen() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
-  const data = useAsync(() => getTemplate(id), [id])
-  const exercisesState = useAsync(listExercises, [])
+  const data = useAsync(() => getTemplate(id), [id], { cacheKey: `template:${id}` })
+  const exercisesState = useAsync(listExercises, [], { cacheKey: 'exercises' })
   const { create, creating, error: startError } = useNewWorkout()
   const [pickerOpen, setPickerOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)

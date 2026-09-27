@@ -24,16 +24,27 @@ interface Props {
 /** The workout's hero card: its name, the big clock, how far through the plan you are, and Finish. */
 export function WorkoutHeader({ name, startedAt, endedAt = null, progress, onRename, onFinish, finishing, onDone }: Props) {
   const editing = endedAt !== null && startedAt !== null
-  const [draft, setDraft] = useState(name)
+  // Null until something is typed, so the saved name shows (and a rename from elsewhere is never undone).
+  const [draft, setDraft] = useState<string | null>(null)
+  const rename = () => {
+    if (draft === null) return undefined
+    const next = draft.trim()
+    if (next === name) {
+      setDraft(null)
+      return undefined
+    }
+    // Keep showing what was typed until the save lands, then follow the saved name again.
+    return Promise.resolve(onRename(next)).then(() => setDraft((current) => (current === draft ? null : current)))
+  }
   // Finish can come before the name field loses focus (iPhone): it saves the typed name first.
-  usePendingEdit(() => (draft.trim() !== name ? onRename(draft.trim()) : undefined))
+  usePendingEdit(rename)
 
   return (
     <header className="card card-hero mb-2 p-4">
       <input
-        value={draft}
+        value={draft ?? name}
         onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => draft.trim() !== name && onRename(draft.trim())}
+        onBlur={() => void rename()}
         placeholder="Name this workout"
         maxLength={80}
         aria-label="Workout name"

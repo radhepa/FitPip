@@ -9,24 +9,28 @@ interface Props {
 
 /** The template's name as an always-editable field; saves when it loses focus. */
 export function TemplateNameField({ name, onRename }: Props) {
-  const [draft, setDraft] = useState(name)
-  // Start can come before the field loses focus (iPhone): it saves the typed name first.
-  usePendingEdit(() => {
+  // Null until something is typed, so the saved name shows (and a rename from elsewhere is never undone).
+  const [draft, setDraft] = useState<string | null>(null)
+  const rename = () => {
+    if (draft === null) return undefined
     const next = draft.trim()
-    return next && next !== name ? onRename(next) : undefined
-  })
+    if (!next || next === name) {
+      setDraft(null) // an empty name goes back to the saved one: a routine needs a name
+      return undefined
+    }
+    // Keep showing what was typed until the save lands, then follow the saved name again.
+    return Promise.resolve(onRename(next)).then(() => setDraft((current) => (current === draft ? null : current)))
+  }
+  // Start can come before the field loses focus (iPhone): it saves the typed name first.
+  usePendingEdit(rename)
 
   return (
     <label className="mb-5 block">
       <span className="mb-1.5 block text-sm font-semibold text-muted">Name</span>
       <input
-        value={draft}
+        value={draft ?? name}
         onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => {
-          const next = draft.trim()
-          if (!next) return setDraft(name) // a routine needs a name
-          if (next !== name) onRename(next)
-        }}
+        onBlur={() => void rename()}
         maxLength={80}
         aria-label="Routine name"
         className={inputClass}

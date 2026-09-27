@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { brand } from '../config/brand'
+import { reduceMotion } from './fx'
 import { CalendarIcon, ChartIcon, HistoryIcon, HomeIcon, MedalIcon, PipHeadIcon, ScaleIcon } from './icons'
 
 const TABS: { to: string; label: string; icon: ReactNode; end?: boolean; match: RegExp }[] = [
@@ -33,6 +34,10 @@ export function TabBar() {
               end={tab.end}
               className={() => `tab-link ${TABS[active]?.to === tab.to ? 'tab-link--active' : ''}`}
               aria-current={TABS[active]?.to === tab.to ? 'page' : undefined}
+              onClick={() => {
+                // Tapping the tab you are already on takes you back to the top, like a native app.
+                if (pathname === tab.to) window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' })
+              }}
             >
               <span className="tab-icon">{tab.icon}</span>
               <span>{tab.label}</span>

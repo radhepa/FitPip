@@ -33,6 +33,8 @@ interface Props {
   distanceUnit: DistanceUnit
   /** Sets from the last earlier workout that included this exercise (empty if never done). */
   lastSessionSets: SetRow[]
+  /** Ids of this workout's sets that are personal records. */
+  records?: Set<string>
   index: number
   onLog: (entry: NewEntry) => Promise<void>
   onEditSet: (id: string, patch: Partial<SetPatch>) => Promise<void>
@@ -47,7 +49,7 @@ interface Props {
 const NOUN = { combat: 'Round', cardio: 'Round', yoga: 'Hold', stretch: 'Hold', swim: 'Set', strength: 'Set', sport: 'Round' } as const
 
 /** One exercise or activity in the workout: what was logged, and the right way to log the next one. */
-export function ExerciseBlock({ exercise, sets, plan, unit, distanceUnit, lastSessionSets, index, onLog, onEditSet, onDeleteSet, note, onNote, onRemove }: Props) {
+export function ExerciseBlock({ exercise, sets, plan, unit, distanceUnit, lastSessionSets, records, index, onLog, onEditSet, onDeleteSet, note, onNote, onRemove }: Props) {
   const color = CATEGORY_INFO[exercise.category].color
   const lengthUnit = lengthUnitFor(exercise.category, distanceUnit)
   const target = plan ? { targetSets: plan.targetSets, targetReps: plan.targetReps, targetSeconds: plan.targetSeconds ?? null } : null
@@ -88,7 +90,7 @@ export function ExerciseBlock({ exercise, sets, plan, unit, distanceUnit, lastSe
       {sets.length > 0 && (
         <div className="mt-2">
           {sets.map((set, i) => (
-            <LoggedSet key={set.id} index={i + 1} set={set} tracking={exercise.tracking} unit={unit} lengthUnit={lengthUnit} onSave={(patch) => onEditSet(set.id, patch)} onDelete={() => onDeleteSet(set.id)} />
+            <LoggedSet key={set.id} index={i + 1} set={set} record={records?.has(set.id) ?? false} tracking={exercise.tracking} unit={unit} lengthUnit={lengthUnit} onSave={(patch) => onEditSet(set.id, patch)} onDelete={() => onDeleteSet(set.id)} />
           ))}
         </div>
       )}

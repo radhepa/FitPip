@@ -6,11 +6,13 @@ import { clockText } from '../lib/steps'
 import { distanceInput, toMetres, type LengthUnit } from '../lib/units'
 import type { SetRow, Tracking, WeightUnit } from '../types/db'
 import { Button } from './Button'
-import { CheckIcon } from './icons'
+import { CheckIcon, TrophyIcon } from './icons'
 
 interface Props {
   index: number
   set: SetRow
+  /** A personal record: beats every earlier workout. */
+  record?: boolean
   tracking: Tracking
   unit: WeightUnit
   lengthUnit: LengthUnit
@@ -21,7 +23,7 @@ interface Props {
 const inputClass = 'field !min-h-11 text-center font-bold'
 
 /** One logged set, hold or effort. Tap to edit or delete it. */
-export function LoggedSet({ index, set, tracking, unit, lengthUnit, onSave, onDelete }: Props) {
+export function LoggedSet({ index, set, record = false, tracking, unit, lengthUnit, onSave, onDelete }: Props) {
   const [editing, setEditing] = useState(false)
   const [a, setA] = useState('')
   const [b, setB] = useState('')
@@ -77,6 +79,11 @@ export function LoggedSet({ index, set, tracking, unit, lengthUnit, onSave, onDe
         </span>
         <span className="w-5 text-sm font-bold text-muted">{index}</span>
         <span className="min-w-0 flex-1 truncate font-bold">{formatEntry(set, unit, lengthUnit)}</span>
+        {record && (
+          <span className="check-pop inline-flex shrink-0 items-center gap-1 rounded-full bg-target/15 px-2 py-0.5 text-xs font-extrabold text-target" title="Personal record">
+            <TrophyIcon size="size-3.5" /> PR
+          </span>
+        )}
         <span className="text-xs font-semibold text-muted">Edit</span>
       </button>
     )

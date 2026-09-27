@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import { deleteSet, logSet, restoreSet, updateSet, type SetPatch } from '../data/sets'
+import { useEarlierSets } from '../hooks/useEarlierSets'
 import type { usePendingExercises } from '../hooks/usePendingExercises'
 import { useLastSessionSets } from '../hooks/useLastSessionSets'
 import { useRestTimer } from '../hooks/useRestTimer'
 import { defaultTarget, SECTION_INFO, sectionOf, type Section } from '../lib/activity'
+import { bestsOf, recordSetIds } from '../lib/liveRecords'
 import { addManyToPlan, removeFromPlan, setPlanNote } from '../lib/sessionPlan'
 import { buildBlocks, bySection, type PlanItem } from '../lib/workoutBlocks'
 import type { Category, DistanceUnit, Exercise, SetRow, WeightUnit } from '../types/db'
@@ -11,13 +13,15 @@ import { Button } from './Button'
 import { CardioQuickAdd } from './CardioQuickAdd'
 import { ExerciseBlock, type NewEntry } from './ExerciseBlock'
 import { ExercisePicker } from './ExercisePicker'
-import { buzz } from './fx'
+import { buzz, confetti } from './fx'
 import { RestTimer } from './RestTimer'
 import { SectionHeader } from './SectionHeader'
 import { UndoToast } from './UndoToast'
 
 interface Props {
   sessionId: string
+  /** When this workout began (records are measured against earlier workouts). */
+  startedAt: string | null
   plan: PlanItem[]
   sets: SetRow[]
   exercises: Exercise[]
@@ -35,7 +39,7 @@ interface Props {
 }
 
 /** A workout under way, in sections (strength, cardio, yoga & stretching), each exercise logged its own way. */
-export function ActiveWorkout({ sessionId, plan, sets, exercises, unit, distanceUnit, pending, guard, onSetsChange, onPlanChange, onExerciseAdded, editing = false, onDiscard }: Props) {
+export function ActiveWorkout({ sessionId, startedAt, plan, sets, exercises, unit, distanceUnit, pending, guard, onSetsChange, onPlanChange, onExerciseAdded, editing = false, onDiscard }: Props) {
   const [picking, setPicking] = useState<Category | 'all' | null>(null)
   const restTimer = useRestTimer()
   const [undo, setUndo] = useState<{ set: SetRow; key: number } | null>(null)
@@ -47,6 +51,18 @@ export function ActiveWorkout({ sessionId, plan, sets, exercises, unit, distance
   const sections = useMemo(() => bySection(blocks, (b) => sectionOf(exerciseById.get(b.exerciseId)!)), [blocks, exerciseById])
   const present = useMemo(() => new Set(blocks.map((b) => b.exerciseId)), [blocks])
   const lastSessionSets = useLastSessionSets(blocks.map((b) => b.exerciseId), sessionId)
+  const earlierSets = useEarlierSets(blocks.map((b) => b.exerciseId), sessionId, startedAt)
+  /** Sets in this workout that are personal records. */
+  const records = useMemo(() => {
+    const ids = new Set<string>()
+    for (const block of blocks) {
+      const exercise = exerciseById.get(block.exerciseId)
+      const earlier = earlierSets[block.exerciseId]
+      if (!exercise || !earlier) continue
+      for (const id of recordSetIds(bestsOf(earlier, exercise), block.sets, exercise)) ids.add(id)
+    }
+    return ids
+  }, [blocks, earlierSets, exerciseById])
 
   const add = (picked: Exercise[]) => onPlanChange(addManyToPlan(plan, picked.map((e) => ({ exerciseId: e.id, target: defaultTarget(e) }))))
 
@@ -56,7 +72,12 @@ export function ActiveWorkout({ sessionId, plan, sets, exercises, unit, distance
       const row = await logSet({ sessionId, exerciseId: exercise.id, setOrder, ...entry })
       onSetsChange((prev) => [...prev, row])
       pending.remove(exercise.id)
-      buzz(15)
+      const earlier = earlierSets[exercise.id]
+      const isRecord = !!earlier && recordSetIds(bestsOf(earlier, exercise), [...sets.filter((s) => s.exercise_id === exercise.id), row], exercise).has(row.id)
+      if (isRecord) {
+        buzz([20, 60, 40])
+        confetti(70)
+      } else buzz(15)
       if (exercise.tracking === 'reps' && !editing) restTimer.start()
     })
 
@@ -109,6 +130,7 @@ export function ActiveWorkout({ sessionId, plan, sets, exercises, unit, distance
                     unit={unit}
                     distanceUnit={distanceUnit}
                     lastSessionSets={lastSessionSets[block.exerciseId] ?? []}
+                    records={records}
                     onLog={(entry) => onLog(exercise, entry)}
                     onEditSet={onEditSet}
                     onDeleteSet={onDeleteSet}

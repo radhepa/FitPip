@@ -41,7 +41,7 @@ export function setXp(set: Pick<SetRow, 'reps' | 'duration_seconds' | 'distance_
 }
 
 /** The measures a set can set a record in, with its value in each. */
-function measures(set: SetRow, exercise: Kind): [RecordKind, number][] {
+export function measures(set: Pick<SetRow, 'weight' | 'reps' | 'duration_seconds' | 'distance_m'>, exercise: Kind): [RecordKind, number][] {
   if (exercise.tracking === 'reps') {
     if (set.reps < 1) return []
     return set.weight > 0 ? [['e1rm', estimate1RM(set.weight, set.reps)]] : [['reps', set.reps]]

@@ -148,6 +148,7 @@ export function WorkoutScreen() {
       {begun ? (
         <ActiveWorkout
           sessionId={id}
+          startedAt={session.data.started_at}
           plan={plan}
           sets={sets}
           exercises={exercises}

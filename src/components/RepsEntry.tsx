@@ -25,6 +25,15 @@ export function RepsEntry({ unit, initialWeight, initialReps, setNumber, onLog }
   const parsedWeight = parseWeight(weight)
   const parsedReps = parseReps(reps)
   const valid = parsedWeight !== null && parsedReps !== null
+  // Why "Log set" is greyed out, so it never just sits there disabled.
+  const problem =
+    parsedWeight === null
+      ? { text: 'Weight needs to be a number, like 135 or 42.5.', error: true }
+      : reps.trim() === ''
+        ? { text: 'Add your reps to log this set.', error: false }
+        : parsedReps === null
+          ? { text: 'Reps need to be a whole number, 1 or more.', error: true }
+          : null
   const plateStep = unit === 'kg' ? 2.5 : 5
 
   async function log() {
@@ -67,6 +76,11 @@ export function RepsEntry({ unit, initialWeight, initialReps, setNumber, onLog }
       <Button variant="primary" block className="mt-2 min-h-14 text-lg" disabled={!valid || busy} onClick={log}>
         <CheckIcon /> {busy ? 'Saving…' : `Log set ${setNumber}`}
       </Button>
+      {problem && (
+        <p role="status" className={`mt-1.5 text-center text-sm font-semibold ${problem.error ? 'text-danger' : 'text-muted'}`}>
+          {problem.text}
+        </p>
+      )}
     </div>
   )
 }

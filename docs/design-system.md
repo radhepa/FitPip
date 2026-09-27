@@ -41,7 +41,11 @@ the workout clock and the scale. Set `--tint` on an element to colour `.icon-til
 - `Button` (primary gradient, secondary, tint, ghost, danger; `size="sm"`), `.icon-button`,
   `.segmented`, `.chip-row` + `.filter-chip`, `.field`.
 - `CategoryTile` / `CategoryIcon` (one icon per activity kind), `ProgressRing`, `CountUp`,
-  `Stepper`, `Sheet` (springs up, rendered in a portal above the tab bar).
+  `Stepper` and `RepeatButton` (tap to step, hold to keep stepping), `Sheet` (springs up, rendered in
+  a portal above the tab bar, slides away on close via `sheetExit.ts`, pull the handle down to close).
+- `WeightRuler` (weigh-in dial): follows the finger 1:1, coasts after a flick and lands on a tenth,
+  tap a number to glide there. The motion is in `hooks/useRulerMotion.ts` (maths in `lib/fling.ts`) and
+  writes the transform straight to the DOM each frame instead of re-rendering.
 - `fx.ts`: `buzz()` for haptics, `confetti()` for finished workouts and weight goals.
 - `.stagger` animates children in one after another (set `--i` on each).
 - CSS lives in layers: element defaults in `@layer base`, the classes above in

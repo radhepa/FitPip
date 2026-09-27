@@ -32,6 +32,10 @@ Stack: Vite, React, TypeScript, Tailwind, vite-plugin-pwa, Supabase (Auth + Post
    14. `20260927000200_rest_seconds.sql` (the rest timer length setting)
    15. `20260928000100_profile.sql` (your name on the profile, and whether your lifts are ranked
        against men's or women's standards)
+   16. `20260928000200_expanded_catalog.sql` (373 more exercises: single-arm cable work, plate-loaded
+       and pin-loaded machines, barbell and Olympic lifts, dumbbells and kettlebells, bodyweight and
+       TRX, carries and sleds, cardio, conditioning, track running, swimming, boxing, sports and
+       classes; existing accounts get them straight away)
 3. **Create your user.** *Authentication → Users → Add user → Create new user*: enter your email
    and a password and tick *Auto Confirm User*. Creating the user also fills your exercise bank.
 4. **Lock sign-ups** (it's a one-person app): *Authentication → Sign In / Providers* → turn off
@@ -180,6 +184,15 @@ your own database, so the app keeps working if that service is down.
 
 - The starter bank is generated from `scripts/starter-picks.json`:
   `node scripts/build-starter-seed.ts` (add `--refresh` to re-download the records).
+- The 373-exercise expansion is hand-written data in `src/config/catalog/` (one file per family:
+  single-arm cable, machines, barbell, dumbbell, bodyweight, cardio...). Edit or add exercises there,
+  then run `node scripts/build-catalog-migration.ts` and commit both; a test fails if the migration
+  is out of date or a name repeats an earlier one. It leans on the Purdue CoRec floor (plate-loaded
+  stations, cable stacks everywhere, Olympic platforms, slam wall, battle ropes, TRX, atrium track,
+  spin studio) and on cutting weight without losing strength.
+- Single-arm cable lifts have their own strength standards (`sa_cable_*` in
+  `src/config/strengthStandards.ts`). No one publishes tables for them, so they are the two-handed
+  standards scaled to one arm; a single-arm or single-leg lift is never ranked against a two-handed one.
 - In the app, *Add exercise → Find in ExerciseDB* searches the API and saves what you pick.
 - ExerciseDB's muscle and equipment names are translated to this app's normalized names in one
   file: `src/config/exerciseDbMap.ts`.

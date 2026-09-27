@@ -2,11 +2,12 @@ import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ActiveWorkout } from '../components/ActiveWorkout'
 import { EmptyState, ErrorBanner, Loading } from '../components/feedback'
+import { ForgottenWorkout } from '../components/ForgottenWorkout'
 import { NoteField } from '../components/NoteField'
 import { WorkoutBuilder } from '../components/WorkoutBuilder'
 import { WorkoutHeader } from '../components/WorkoutHeader'
 import { listExercises } from '../data/exercises'
-import { beginSession, deleteSession, finishSession, getSession, MAX_WORKOUT_NOTE, setSessionPlan, updateSession } from '../data/sessions'
+import { beginSession, deleteSession, finishSession, finishSessionAt, getSession, MAX_WORKOUT_NOTE, setSessionPlan, updateSession } from '../data/sessions'
 import { listSetsForSession } from '../data/sets'
 import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
@@ -14,6 +15,7 @@ import { usePendingExercises } from '../hooks/usePendingExercises'
 import { useSettings } from '../hooks/useSettings'
 import { withExercise } from '../lib/exerciseList'
 import { planFromRows, planToRows } from '../lib/sessionPlan'
+import { forgottenSince } from '../lib/staleWorkout'
 import type { PlanItem } from '../lib/workoutBlocks'
 import { CATEGORIES, type Category, type Exercise } from '../types/db'
 
@@ -31,6 +33,7 @@ export function WorkoutScreen() {
   const pending = usePendingExercises(id)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<'beginning' | 'finishing' | null>(null)
+  const [keepGoing, setKeepGoing] = useState(false)
 
   const sets = useMemo(() => setsState.data ?? [], [setsState.data])
   const exercises = useMemo(() => exercisesState.data ?? [], [exercisesState.data])
@@ -76,11 +79,12 @@ export function WorkoutScreen() {
     setBusy(null)
   }
 
-  async function finish() {
+  /** Finishes now, or at `at` (the last set, for a workout that was left running). */
+  async function finish(at?: string) {
     if (sets.length === 0) return discard('No sets were logged. Discard this workout?')
     setBusy('finishing')
     await guard(async () => {
-      await finishSession(id)
+      await (at ? finishSessionAt(id, at) : finishSession(id))
       pending.clear()
       navigate(`/session/${id}`, { replace: true, state: { justFinished: true } })
     })
@@ -105,16 +109,27 @@ export function WorkoutScreen() {
   const targetSets = plan.reduce((total, p) => total + p.targetSets, 0)
   const doneSets = plan.reduce((total, p) => total + Math.min(p.targetSets, sets.filter((s) => s.exercise_id === p.exerciseId).length), 0)
   const onExerciseAdded = (exercise: Exercise) => exercisesState.setData((prev) => withExercise(prev ?? [], exercise))
+  const forgotten = keepGoing ? null : forgottenSince(session.data, sets)
 
   return (
     <>
+      {forgotten && (
+        <ForgottenWorkout
+          lastAt={forgotten}
+          hasSets={sets.length > 0}
+          busy={busy !== null}
+          onFinishAtLast={() => void finish(forgotten)}
+          onDiscard={() => void discard('Discard this workout?')}
+          onKeepGoing={() => setKeepGoing(true)}
+        />
+      )}
       <WorkoutHeader
         name={session.data.name ?? ''}
         startedAt={session.data.started_at}
         endedAt={session.data.ended_at}
         progress={editing || targetSets === 0 ? null : { done: doneSets, target: targetSets }}
         finishing={busy === 'finishing'}
-        onFinish={finish}
+        onFinish={() => void finish()}
         onDone={() => {
           pending.clear()
           navigate(`/session/${id}`, { replace: true })

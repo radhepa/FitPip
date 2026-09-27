@@ -12,7 +12,9 @@
   margin: 0;
   isolation: isolate;
 }
-.pip-figure svg { display: block; width: 100%; height: auto; overflow: visible; }
+/* Pip moves every frame. On his own layer that only repaints Pip, not the page around him (which
+   otherwise had to be redrawn on every frame of a scroll past him). */
+.pip-figure svg { display: block; width: 100%; height: auto; overflow: visible; will-change: transform; }
 .pip-figure figcaption { margin-top: .4rem; color: var(--color-muted); font-size: .875rem; text-align: center; }
 .pip-figure svg * { transform-box: view-box; }
 .pip-arrival { animation: pip-arrive 380ms ease-out both; transform-origin: 135px 232px; }

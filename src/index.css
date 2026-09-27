@@ -98,7 +98,9 @@ html[data-theme="light"] {
 @layer base {
 * { box-sizing: border-box; }
 html, body, #root { min-height: 100%; }
-html { background: var(--color-bg); }
+/* `manipulation` turns off double-tap-to-zoom (a quick double tap on + / − zoomed the page on iPhone)
+   and the tap delay that comes with it; pinch zoom still works. */
+html { background: var(--color-bg); touch-action: manipulation; }
 body {
   margin: 0;
   overflow-x: hidden;
@@ -121,7 +123,8 @@ body::before {
   background: radial-gradient(90rem 38rem at 50% -14rem, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 70%);
 }
 button, input, select, textarea { font: inherit; }
-button, a { -webkit-tap-highlight-color: transparent; }
+/* No iOS long-press callout (link preview, "Open in Safari") on tabs and buttons: they are app controls. */
+button, a { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
 input, select, textarea { font-size: 16px; }
 input[type="number"] { -moz-appearance: textfield; }
 a { color: inherit; text-decoration: none; }
@@ -145,11 +148,13 @@ p { margin: 0; }
   margin: 0 auto;
   padding: calc(env(safe-area-inset-top) + 1.25rem) 1rem calc(env(safe-area-inset-bottom) + 7.5rem);
 }
-.page-enter { animation: page-in 320ms var(--ease-standard) both; }
+/* Entrance animations fill `backwards` only: once done, the element is back to plain static styles
+   instead of keeping an animated transform (and the extra layer and stacking context that come with it). */
+.page-enter { animation: page-in 320ms var(--ease-standard) backwards; }
 @keyframes page-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
 /* Children animate in one after another: give each a --i. */
-.stagger > * { animation: rise-in 420ms var(--ease-standard) both; animation-delay: calc(var(--i, 0) * 45ms); }
+.stagger > * { animation: rise-in 420ms var(--ease-standard) backwards; animation-delay: calc(var(--i, 0) * 45ms); }
 @keyframes rise-in { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: none; } }
 
 .page-header {
@@ -342,7 +347,7 @@ button:focus-visible,
   font-size: .875rem;
   font-weight: 750;
   cursor: pointer;
-  transition: all 180ms var(--ease-standard);
+  transition: color 180ms var(--ease-standard), background-color 180ms var(--ease-standard), border-color 180ms var(--ease-standard);
 }
 .filter-chip[aria-pressed="true"] {
   border-color: color-mix(in srgb, var(--tint, var(--color-accent)) 60%, transparent);
@@ -374,9 +379,9 @@ button:focus-visible,
 .tally--met { color: var(--color-target); opacity: 1; }
 @keyframes tally-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
 
-.logged-set-row { animation: set-row-in 360ms var(--ease-spring) both; }
+.logged-set-row { animation: set-row-in 360ms var(--ease-spring) backwards; }
 @keyframes set-row-in { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
-.check-pop { animation: check-pop 420ms var(--ease-spring) both; }
+.check-pop { animation: check-pop 420ms var(--ease-spring) backwards; }
 @keyframes check-pop { 0% { transform: scale(0); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
 
 .live-dot { position: relative; display: inline-block; width: .6rem; height: .6rem; border-radius: 999px; background: var(--color-target); }
@@ -409,16 +414,17 @@ button:focus-visible,
 .ruler-needle { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-accent) 70%, transparent)); }
 
 /* ------------------------------------------------------------------------------------------
-   Sheets
+   Sheets. The backdrop only dims: a full-screen backdrop blur has to be redrawn on every frame of
+   the slide in and out, which is what made opening and closing sheets stutter on phones.
    ------------------------------------------------------------------------------------------ */
-.sheet-backdrop { animation: fade-in 200ms var(--ease-standard) both; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
-.sheet-panel { box-shadow: 0 -24px 60px rgba(0, 0, 0, .45); animation: sheet-up 340ms var(--ease-spring) both; }
+.sheet-backdrop { animation: fade-in 200ms var(--ease-standard) backwards; }
+.sheet-panel { box-shadow: 0 -24px 60px rgba(0, 0, 0, .45); animation: sheet-up 340ms var(--ease-spring) backwards; }
 @keyframes sheet-up { from { transform: translateY(40%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 /* The copy left behind when a sheet closes (see sheetExit.ts): it slides off and the dimming lifts. */
 .sheet-backdrop.sheet-leaving { pointer-events: none; animation: backdrop-out 240ms var(--ease-standard) both; }
 .sheet-leaving .sheet-panel { animation: sheet-down 240ms cubic-bezier(.4, 0, 1, 1) both; }
-@keyframes backdrop-out { to { background-color: transparent; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); } }
+@keyframes backdrop-out { to { background-color: transparent; } }
 @keyframes sheet-down { to { transform: translateY(105%); } }
 
 .speech {
@@ -442,7 +448,7 @@ button:focus-visible,
   background: inherit;
   transform: rotate(45deg);
 }
-.speech-in { animation: speech-in 420ms var(--ease-spring) both; }
+.speech-in { animation: speech-in 420ms var(--ease-spring) backwards; }
 @keyframes speech-in { from { opacity: 0; transform: translateY(6px) scale(.94); transform-origin: left bottom; } to { opacity: 1; transform: none; } }
 
 /* ------------------------------------------------------------------------------------------
@@ -550,7 +556,6 @@ button:focus-visible,
     color: var(--color-text);
     font-size: .875rem;
     line-height: 1.3;
-    backdrop-filter: blur(10px);
   }
   .sync-banner[data-tone="wait"] { --tone: var(--cat-combat); }
   .sync-banner[data-tone="warn"] { --tone: var(--color-danger); }
@@ -577,7 +582,7 @@ button:focus-visible,
     -webkit-backdrop-filter: blur(16px);
     box-shadow: var(--shadow-card);
     font-size: .95rem;
-    animation: rise-in 240ms var(--ease-standard) both;
+    animation: rise-in 240ms var(--ease-standard) backwards;
   }
   .undo-toast[data-raised="true"] { bottom: calc(env(safe-area-inset-bottom) + 10.6rem); }
   .undo-toast-button {
@@ -619,7 +624,8 @@ button:focus-visible,
     background: var(--color-bg);
     color: var(--color-text);
     font: inherit;
-    font-size: .95rem;
+    /* 16px or more, or iPhones zoom the page in when the note is tapped (and stay zoomed). */
+    font-size: 1rem;
     line-height: 1.4;
   }
   .note-field:focus { outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent); outline-offset: 1px; }
@@ -652,7 +658,7 @@ button:focus-visible,
     text-align: center;
     border-top: 3px solid var(--rank, var(--color-line));
   }
-  .badge-pop { animation: badge-pop 560ms var(--ease-spring) both; animation-delay: calc(var(--i, 0) * 70ms); }
+  .badge-pop { animation: badge-pop 560ms var(--ease-spring) backwards; animation-delay: calc(var(--i, 0) * 70ms); }
   @keyframes badge-pop { from { opacity: 0; transform: scale(.6) rotate(-8deg); } to { opacity: 1; transform: none; } }
   .xp-bar { height: .65rem; overflow: hidden; border-radius: 999px; background: color-mix(in srgb, var(--color-text) 12%, transparent); }
   .xp-bar > span { display: block; width: var(--fill); height: 100%; border-radius: inherit; background: var(--grad-accent); transition: width 900ms var(--ease-spring); }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { usePendingEdit } from '../hooks/usePendingEdit'
 
 interface Props {
   /** Screen-reader label for the text box. */
@@ -39,16 +40,18 @@ export function NoteField({ value, label, addText = 'Add a note', placeholder, m
 
   const saveIfChanged = () => {
     const { draft: text, value: saved, onSave: save } = latest.current
-    if (text.trim() !== saved.trim()) void save(text.trim())
+    return text.trim() !== saved.trim() ? save(text.trim()) : undefined
   }
+  // Finish right after typing a note: the note is saved (and on the summary) before the workout closes.
+  usePendingEdit(saveIfChanged)
 
   useEffect(() => {
     if (draft.trim() === value.trim()) return
-    const timer = setTimeout(saveIfChanged, SAVE_AFTER_MS)
+    const timer = setTimeout(() => void saveIfChanged(), SAVE_AFTER_MS)
     return () => clearTimeout(timer)
   }, [draft, value])
 
-  useEffect(() => () => saveIfChanged(), [])
+  useEffect(() => () => void saveIfChanged(), [])
 
   if (!value && !open && !draft) {
     return (
@@ -71,7 +74,7 @@ export function NoteField({ value, label, addText = 'Add a note', placeholder, m
         onFocus={() => setOpen(true)}
         onBlur={() => {
           setOpen(false)
-          saveIfChanged()
+          void saveIfChanged()
         }}
         className="note-field"
       />

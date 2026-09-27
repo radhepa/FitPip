@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useScrollMemory } from '../hooks/useScrollMemory'
+import { ErrorBoundary } from './ErrorBoundary'
 import { SyncBanner } from './SyncBadge'
 import { TabBar } from './TabBar'
 
@@ -12,10 +13,12 @@ export function AppShell() {
     <div className="app-shell">
       <main key={pathname} className="app-content page-enter">
         <SyncBanner />
-        {/* Keeps the tab bar up if a screen's code is still loading on a cold start. */}
-        <Suspense fallback={null}>
-          <Outlet />
-        </Suspense>
+        {/* Keeps the tab bar up if a screen's code is still loading on a cold start, or if it crashes. */}
+        <ErrorBoundary>
+          <Suspense fallback={null}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </main>
       <TabBar />
     </div>

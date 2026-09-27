@@ -1,7 +1,7 @@
 # FitPip design system
 
 FitPip should feel alive in your hand: quick to read mid-set, satisfying to tap, and a little bit
-fun. Pip, the red-panda mascot, is part of that.
+fun. Pip, the blue-panda mascot, is part of that.
 
 ## Principles
 

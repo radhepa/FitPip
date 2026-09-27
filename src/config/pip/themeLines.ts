@@ -146,7 +146,7 @@ export const THEMES: Record<ThemeKey, Theme> = {
   swim: {
     gesture: 'bounce',
     lines: [
-      'Swim day! I’ll hold your towel. I can’t swim. Red pandas climb.',
+      'Swim day! I’ll hold your towel. I can’t swim. I was built for climbing.',
       'Long strokes, slow breaths. Glide like a sleepy otter.',
       'Pool rule number one: never skip leg day in the water either.',
       'Freestyle is free. The lane rental is not. Make it count.',
@@ -343,7 +343,7 @@ export const THEMES: Record<ThemeKey, Theme> = {
       "Let's go! Or, you know, let's stretch and then go.",
       "Muscles don't grow in the gym. They grow on the couch afterwards. Earn the couch.",
       "You're not behind. You're exactly where you started, plus everything you did since.",
-      'Fun fact: red pandas train by climbing trees. You have a gym. Lucky.',
+      'Fun fact: I train by climbing curtains. You have a gym. Lucky.',
       "Deep breath. Shoulders down. You've got this.",
       'Be the kind of tired that feels good.',
       "Personal record day? I've got my party hat on.",

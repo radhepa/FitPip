@@ -5,6 +5,7 @@ import { BathroomScale } from './BathroomScale'
 import { Button } from './Button'
 import { buzz } from './fx'
 import { CheckIcon } from './icons'
+import { RepeatButton } from './RepeatButton'
 import { WeightRuler } from './WeightRuler'
 
 interface Props {
@@ -50,11 +51,11 @@ export function WeighInPanel({ unit, startWeight, takenDates, onSave }: Props) {
 
   return (
     <section className="card card-hero p-4">
-      <BathroomScale reading={weight.toFixed(1)} unit={unit} stepKey={steps} />
+      <BathroomScale weight={weight} unit={unit} stepKey={steps} />
 
       <div className="mt-3 flex items-center justify-center gap-2">
-        <button type="button" className="icon-button" onClick={() => nudge(-1)} aria-label={`1 ${unit} less`}>−1</button>
-        <button type="button" className="icon-button" onClick={() => nudge(-0.1)} aria-label={`0.1 ${unit} less`}>−.1</button>
+        <RepeatButton className="icon-button" onStep={() => nudge(-1)} aria-label={`1 ${unit} less`}>−1</RepeatButton>
+        <RepeatButton className="icon-button" onStep={() => nudge(-0.1)} aria-label={`0.1 ${unit} less`}>−.1</RepeatButton>
         <input
           inputMode="decimal"
           value={text ?? weight.toFixed(1)}
@@ -68,13 +69,13 @@ export function WeighInPanel({ unit, startWeight, takenDates, onSave }: Props) {
           aria-label={`Weight in ${unit}`}
           className="w-28 rounded-2xl border border-line bg-bg py-1 text-center font-display text-4xl font-extrabold outline-none focus:border-accent"
         />
-        <button type="button" className="icon-button" onClick={() => nudge(0.1)} aria-label={`0.1 ${unit} more`}>+.1</button>
-        <button type="button" className="icon-button" onClick={() => nudge(1)} aria-label={`1 ${unit} more`}>+1</button>
+        <RepeatButton className="icon-button" onStep={() => nudge(0.1)} aria-label={`0.1 ${unit} more`}>+.1</RepeatButton>
+        <RepeatButton className="icon-button" onStep={() => nudge(1)} aria-label={`1 ${unit} more`}>+1</RepeatButton>
       </div>
 
       <div className="mt-3">
         <WeightRuler value={weight} unit={unit} onChange={(v) => { setText(null); setWeight(v) }} />
-        <p className="mt-1 text-center text-xs font-semibold text-muted">Drag the ruler, tap the buttons or type</p>
+        <p className="mt-1 text-center text-xs font-semibold text-muted">Drag or flick the ruler, hold a button, or type</p>
       </div>
 
       <div className="mt-4 flex items-center gap-2">

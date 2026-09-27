@@ -1,6 +1,6 @@
 /** Small bits of physical feedback: a buzz on phones that support it, and a confetti burst. */
 
-const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+export const reduceMotion = () => (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) || false
 
 /** A short vibration (Android; iOS Safari ignores it). */
 export function buzz(pattern: number | number[] = 12): void {
@@ -8,6 +8,15 @@ export function buzz(pattern: number | number[] = 12): void {
     navigator.vibrate?.(pattern)
   } catch {
     // not supported: nothing to do
+  }
+}
+
+/** Keeps a drag's pointer events coming to this element even when the finger strays off it. */
+export function capture(e: { currentTarget: Element; pointerId: number }): void {
+  try {
+    e.currentTarget.setPointerCapture(e.pointerId)
+  } catch {
+    // the pointer already lifted: the drag just ends normally
   }
 }
 

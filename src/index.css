@@ -392,6 +392,15 @@ button:focus-visible,
 
 .scale-step { animation: scale-squish 620ms var(--ease-spring) both; transform-origin: 50% 90%; }
 @keyframes scale-squish { 0% { transform: none; } 30% { transform: scale(1.03, .94); } 60% { transform: scale(.99, 1.02); } 100% { transform: none; } }
+/* Feet press into the pads, then the display locks with two blinks and a glow around the screen. */
+.scale-step .scale-foot { animation: foot-press 700ms var(--ease-standard) both; }
+@keyframes foot-press { 0%, 100% { fill: #b8c5da; } 20%, 60% { fill: #93a5c2; } }
+.scale-lock { animation: lcd-blink 260ms steps(1, end) 2; }
+@keyframes lcd-blink { 0% { opacity: .15; } 50% { opacity: 1; } }
+.scale-step .scale-screen-edge { animation: screen-glow 1300ms var(--ease-standard) both; }
+@keyframes screen-glow { 0%, 35% { stroke-opacity: .5; stroke-width: 1; } 55% { stroke-opacity: 1; stroke-width: 3; } 100% { stroke-opacity: .5; stroke-width: 1; } }
+.ruler-label { transition: font-size 160ms var(--ease-standard), fill 160ms var(--ease-standard); }
+.ruler-needle { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-accent) 70%, transparent)); }
 
 /* ------------------------------------------------------------------------------------------
    Sheets

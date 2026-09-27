@@ -4,6 +4,7 @@ import { Button } from '../components/Button'
 import { PageHeader } from '../components/PageHeader'
 import { RestSetting } from '../components/RestSetting'
 import { SyncCard } from '../components/SyncCard'
+import { Toast } from '../components/Toast'
 import { signOut } from '../data/auth'
 import { loadStarterExercises } from '../data/exercises'
 import { hasUnsyncedChanges } from '../data/sync/actions'
@@ -12,6 +13,7 @@ import { errorMessage } from '../data/unwrap'
 import { useAuth } from '../hooks/useAuth'
 import { useAppearance, type AppearancePreference } from '../hooks/useAppearance'
 import { useSettings } from '../hooks/useSettings'
+import { countOf } from '../lib/format'
 import type { DistanceUnit, WeightUnit } from '../types/db'
 
 const APPEARANCES: { value: AppearancePreference; label: string }[] = [
@@ -46,16 +48,17 @@ export function SettingsScreen() {
   const { session } = useAuth()
   const { preference, setPreference } = useAppearance()
   const { unit, setUnit, distanceUnit, setDistanceUnit, restSeconds, setRestSeconds } = useSettings()
-  const [message, setMessage] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ text: string; key: number } | null>(null)
   const [busy, setBusy] = useState(false)
 
   async function run(action: () => Promise<string>) {
     setBusy(true)
     setMessage(null)
     try {
-      setMessage(await action())
+      const text = await action()
+      if (text) setMessage({ text, key: Date.now() })
     } catch (e) {
-      setMessage(errorMessage(e))
+      setMessage({ text: errorMessage(e), key: Date.now() })
     } finally {
       setBusy(false)
     }
@@ -64,7 +67,7 @@ export function SettingsScreen() {
   return (
     <>
       <PageHeader back title="Settings" />
-      {message && <p className="card card-pad mb-3 text-sm">{message}</p>}
+      {message && <Toast key={message.key} message={message.text} onDone={() => setMessage(null)} />}
       <div className="stagger grid grid-cols-1 gap-3 lg:grid-cols-2">
         <SyncCard />
 
@@ -111,7 +114,7 @@ export function SettingsScreen() {
             onClick={() =>
               run(async () => {
                 const added = await loadStarterExercises()
-                return added === 0 ? 'You already have every starter exercise.' : `Added ${added} starter exercises and activities.`
+                return added === 0 ? 'You already have every starter exercise.' : `Added ${countOf(added, 'starter exercise or activity', 'starter exercises and activities')}.`
               })
             }
           >
@@ -125,7 +128,7 @@ export function SettingsScreen() {
               run(async () => {
                 const { pending, failed } = getSyncStatus()
                 const waiting = pending + failed
-                if (hasUnsyncedChanges() && !window.confirm(`${waiting} change${waiting === 1 ? '' : 's'} haven't synced yet. They stay on this device and sync the next time you sign in here. Sign out anyway?`)) return ''
+                if (hasUnsyncedChanges() && !window.confirm(`${countOf(waiting, 'change')} ${waiting === 1 ? "hasn't" : "haven't"} synced yet. ${waiting === 1 ? 'It stays' : 'They stay'} on this device and sync the next time you sign in here. Sign out anyway?`)) return ''
                 await signOut()
                 return ''
               })

@@ -1,0 +1,98 @@
+@layer components {
+/* Four complete phrases with their own anticipation, accent and held finishing pose. */
+.pip--finish-variation { --pip-finish-time: 3.2s; }
+.pip--finish-variation :is(.pip-arrival, .pip-action, .pip-breathe, .pip-ear, .pip-arm, .pip-head, .pip-tail, .pip-band-ties) { animation: none; }
+.pip--finish-variation .pip-head-follow, .pip--finish-variation .pip-gaze { transform: none; }
+.pip-paw-pad { display: none; }
+.pip--high-five .pip-paw-pad { display: block; }
+
+/* Wind up, meet the viewer's hand, recoil gently, then hold out the paw. */
+.pip--high-five .pip-action { animation: pip-five-body var(--pip-finish-time) both; }
+.pip--high-five .pip-arm--right { animation: pip-five-paw var(--pip-finish-time) both; }
+.pip--high-five .pip-arm--left { animation: pip-five-balance var(--pip-finish-time) both; }
+.pip--high-five .pip-head { animation: pip-five-head var(--pip-finish-time) both; }
+.pip--high-five .pip-tail { animation: pip-finish-wag var(--pip-finish-time) ease-in-out both; }
+.pip--high-five .pip-foot--left { animation: pip-five-toe var(--pip-finish-time) both; }
+@keyframes pip-five-body {
+  0% { transform: none; animation-timing-function: ease-in-out; }
+  16% { transform: translate(-4px, 3px) rotate(-5deg) scale(1.03, .96); }
+  33% { transform: translate(5px, -5px) rotate(4deg) scale(1.045); animation-timing-function: ease-out; }
+  40% { transform: translate(2px, -2px) rotate(-2deg); }
+  54% { transform: translate(4px, -3px) rotate(2deg); }
+  75%, 100% { transform: translateY(-2px) rotate(-2deg); }
+}
+@keyframes pip-five-paw {
+  0% { transform: none; }
+  16% { transform: rotate(70deg); animation-timing-function: cubic-bezier(.16, .85, .3, 1); }
+  33% { transform: rotate(145deg) scale(1.8); }
+  40% { transform: rotate(130deg) scale(1.45); }
+  54% { transform: rotate(145deg) scale(1.65); }
+  75%, 100% { transform: rotate(136deg) scale(1.45); }
+}
+@keyframes pip-five-balance { 0% { transform: none; } 16% { transform: rotate(-20deg); } 33%, 54% { transform: rotate(36deg); } 100% { transform: rotate(20deg); } }
+@keyframes pip-five-head { 0% { transform: none; } 16% { transform: rotate(6deg); } 33% { transform: rotate(-9deg); } 40% { transform: rotate(4deg); } 60%, 100% { transform: rotate(-7deg); } }
+@keyframes pip-five-toe { 0%, 100% { transform: none; } 33%, 54% { transform: rotate(12deg) translateY(-3px); } }
+
+/* A side-to-side shuffle, a heel kick, and a bow for the person who did the work. */
+.pip--victory-dance .pip-action { animation: pip-shuffle-body var(--pip-finish-time) ease-in-out both; }
+.pip--victory-dance .pip-head { animation: pip-shuffle-head var(--pip-finish-time) ease-in-out both; }
+.pip--victory-dance .pip-arm--left { animation: pip-shuffle-left var(--pip-finish-time) ease-in-out both; }
+.pip--victory-dance .pip-arm--right { animation: pip-shuffle-right var(--pip-finish-time) ease-in-out both; }
+.pip--victory-dance .pip-foot--left { animation: pip-shuffle-foot var(--pip-finish-time) ease-in-out both; }
+.pip--victory-dance .pip-foot--right { animation: pip-shuffle-foot-right var(--pip-finish-time) ease-in-out both; }
+.pip--victory-dance .pip-tail { animation: pip-finish-wag var(--pip-finish-time) ease-in-out both; }
+.pip--victory-dance .pip-shadow { animation: pip-shuffle-shadow var(--pip-finish-time) ease-in-out both; }
+.pip--victory-dance .pip-band-ties { animation: pip-victory-ribbon var(--pip-finish-time) both; }
+@keyframes pip-shuffle-body {
+  0% { transform: none; }
+  12% { transform: scale(1.06, .93); }
+  24%, 48% { transform: translate(-10px, -8px) rotate(-10deg); }
+  36%, 60% { transform: translate(10px, -8px) rotate(10deg); }
+  72% { transform: translateY(-6px) rotate(-5deg); }
+  84% { transform: translateY(4px) scale(1.03, .94); }
+  100% { transform: rotate(-3deg); }
+}
+@keyframes pip-shuffle-head { 0% { transform: none; } 24%, 48% { transform: rotate(12deg); } 36%, 60% { transform: rotate(-12deg); } 84% { transform: translateY(9px) rotate(7deg); } 100% { transform: rotate(6deg); } }
+@keyframes pip-shuffle-left { 0% { transform: none; } 24%, 48% { transform: rotate(120deg); } 36%, 60% { transform: rotate(-25deg); } 84% { transform: rotate(-65deg); } 100% { transform: rotate(88deg); } }
+@keyframes pip-shuffle-right { 0% { transform: none; } 24%, 48% { transform: rotate(-25deg); } 36%, 60% { transform: rotate(120deg); } 84% { transform: rotate(65deg); } 100% { transform: rotate(88deg); } }
+@keyframes pip-shuffle-foot { 0%, 36%, 60%, 84%, 100% { transform: none; } 24%, 48%, 72% { transform: rotate(23deg) translateY(-5px); } }
+@keyframes pip-shuffle-foot-right { 0%, 24%, 48%, 84%, 100% { transform: none; } 36%, 60%, 72% { transform: rotate(-23deg) translateY(-5px); } }
+@keyframes pip-shuffle-shadow { 0%, 84%, 100% { transform: none; opacity: .2; } 24%, 48% { transform: translateX(-7px) scaleX(.8); opacity: .12; } 36%, 60% { transform: translateX(7px) scaleX(.8); opacity: .12; } }
+
+/* One paw, the other, then a big double flex and proud little nod. */
+.pip--strong-finish .pip-action { animation: pip-strong-body var(--pip-finish-time) ease-in-out both; }
+.pip--strong-finish .pip-arm--left { animation: pip-strong-left var(--pip-finish-time) ease-in-out both; }
+.pip--strong-finish .pip-arm--right { animation: pip-strong-right var(--pip-finish-time) ease-in-out both; }
+.pip--strong-finish .pip-head { animation: pip-strong-head var(--pip-finish-time) ease-in-out both; }
+.pip--strong-finish .pip-tail { animation: pip-finish-wag var(--pip-finish-time) ease-in-out both; }
+@keyframes pip-strong-body { 0% { transform: none; } 10% { transform: scale(1.05, .94); } 23% { transform: rotate(-5deg); } 35% { transform: rotate(5deg); } 48%, 62% { transform: translateY(-4px) scale(1.08, 1.04); } 75% { transform: translateY(2px) scale(1.05, .98); } 100% { transform: scale(1.04, 1.02); } }
+@keyframes pip-strong-left { 0% { transform: none; } 23% { transform: rotate(115deg) scale(1.16); } 35% { transform: rotate(65deg); } 48%, 62% { transform: rotate(120deg) scale(1.24); } 75% { transform: rotate(96deg) scale(1.12); } 100% { transform: rotate(112deg) scale(1.15); } }
+@keyframes pip-strong-right { 0%, 12% { transform: none; } 23% { transform: rotate(65deg); } 35% { transform: rotate(115deg) scale(1.16); } 48%, 62% { transform: rotate(120deg) scale(1.24); } 75% { transform: rotate(96deg) scale(1.12); } 100% { transform: rotate(112deg) scale(1.15); } }
+@keyframes pip-strong-head { 0% { transform: none; } 23% { transform: rotate(-9deg); } 35% { transform: rotate(9deg); } 48%, 62% { transform: translateY(-3px); } 75% { transform: translateY(5px); } 87%, 100% { transform: translateY(-2px) rotate(-4deg); } }
+
+/* Open arms, gather the heart, squeeze, and rock into a held hug. */
+.pip--heart-hug .pip-action { animation: pip-proud-hug-body var(--pip-finish-time) ease-in-out both; }
+.pip--heart-hug .pip-arm { animation: pip-proud-hug-paws var(--pip-finish-time) ease-in-out both; }
+.pip--heart-hug .pip-head { animation: pip-proud-hug-head var(--pip-finish-time) ease-in-out both; }
+.pip--heart-hug .pip-tail { animation: pip-finish-wag var(--pip-finish-time) ease-in-out both; }
+.pip--heart-hug .pip-blush { opacity: .95; }
+.pip-hug-heart { transform-origin: 135px 180px; animation: pip-hug-heart var(--pip-finish-time) ease-in-out both; }
+@keyframes pip-proud-hug-body { 0% { transform: none; } 20% { transform: translateY(-3px) scale(1.02); } 43% { transform: translateY(-5px) scale(1.06); } 58% { transform: rotate(-7deg) scale(1.03); } 73% { transform: rotate(7deg) scale(1.03); } 100% { transform: rotate(-3deg) scale(1.015); } }
+@keyframes pip-proud-hug-paws { 0% { transform: none; } 20% { transform: rotate(78deg); } 43% { transform: rotate(-72deg); } 58% { transform: rotate(-79deg); } 73% { transform: rotate(-70deg); } 100% { transform: rotate(-74deg); } }
+@keyframes pip-proud-hug-head { 0% { transform: none; } 20% { transform: rotate(-5deg); } 43% { transform: translateY(3px); } 58% { transform: rotate(10deg); } 73% { transform: rotate(-8deg); } 100% { transform: rotate(8deg) translateY(2px); } }
+@keyframes pip-hug-heart { 0%, 18% { opacity: 0; transform: scale(.15); } 36% { opacity: 1; transform: scale(1.1); } 43%, 73% { opacity: 1; transform: scale(.9); } 58% { opacity: 1; transform: scale(1.05); } 100% { opacity: 1; transform: scale(.96); } }
+@keyframes pip-finish-wag { 0%, 100% { transform: rotate(-5deg); } 20%, 43%, 67%, 87% { transform: rotate(13deg); } 32%, 55%, 78% { transform: rotate(-15deg); } }
+
+/* Freeze on the meaningful finish when reduced motion is requested. */
+@media (prefers-reduced-motion: reduce) {
+  .pip--high-five .pip-arm--right { transform: rotate(136deg) scale(1.45); }
+  .pip--high-five .pip-head { transform: rotate(-7deg); }
+  .pip--victory-dance .pip-arm { transform: rotate(88deg); }
+  .pip--victory-dance .pip-head { transform: rotate(6deg); }
+  .pip--strong-finish .pip-arm { transform: rotate(112deg) scale(1.15); }
+  .pip--strong-finish .pip-action { transform: scale(1.04, 1.02); }
+  .pip--heart-hug .pip-arm { transform: rotate(-74deg); }
+  .pip--heart-hug .pip-head { transform: rotate(8deg); }
+  .pip-hug-heart { opacity: 1; transform: scale(.96); }
+}
+}

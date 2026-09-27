@@ -1,11 +1,12 @@
 import { useId, type CSSProperties } from 'react'
 import { usePipMotion } from '../hooks/usePipMotion'
-import { PipArms, PipBody, PipDefs, PipEffects, PipTail } from './pip/PipArt'
+import { PipArms, PipBody, PipDefs, PipEffects, PipFinishAccent, PipTail } from './pip/PipArt'
 import { PipFace } from './pip/PipFace'
-import type { PipMood, PipPose, PipReaction } from './pip/types'
+import type { PipPose, PipVisualMood } from './pip/types'
 import './pip/pip.css'
 import './pip/celebrate.css'
 import './pip/everyday.css'
+import './pip/finishVariations.css'
 
 export type { PipMood, PipPose, PipReaction } from './pip/types'
 
@@ -14,11 +15,11 @@ interface Props {
   size?: number
   line?: string
   /** A gesture (or a brief pose) that plays over the page's pose. */
-  reaction?: PipMood
+  reaction?: PipVisualMood
   reactionId?: number
 }
 
-const descriptions: Record<PipPose | PipReaction, string> = {
+const descriptions: Record<PipVisualMood, string> = {
   idle: 'Pip, your blue panda companion',
   cheer: 'Pip celebrating',
   sleep: 'Pip curled up asleep',
@@ -27,6 +28,10 @@ const descriptions: Record<PipPose | PipReaction, string> = {
   bounce: 'Pip jumping for joy',
   love: 'Pip sending you love',
   celebrate: 'Pip jumping for joy with both paws raised. Proud of you!',
+  'high-five': 'Pip leaning in with a big paw for a high-five',
+  'victory-dance': 'Pip doing a victory shuffle and taking a little bow',
+  'strong-finish': 'Pip showing off a tiny double flex for your big effort',
+  'heart-hug': 'Pip opening his paws and squeezing a heart in a proud panda hug',
   stretch: 'Pip reaching up for a big stretch',
   dance: 'Pip doing a little happy dance',
   peekaboo: 'Pip hiding behind his paws, then playing peekaboo',
@@ -40,13 +45,14 @@ export function Pip({ pose = 'idle', size = 140, line, reaction, reactionId = 0 
   const id = useId().replace(/:/g, '')
   const { ref, paused, onPointerMove, resetGaze } = usePipMotion()
   const mood = reaction ?? pose
+  const finishVariation = ['high-five', 'victory-dance', 'strong-finish', 'heart-hug'].includes(mood)
   const phase = [...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 29
   const style = { width: size, '--pip-phase': `${-phase / 7}s` } as CSSProperties
 
   return (
     <figure
       ref={ref}
-      className={`pip-figure pip--${mood}${paused ? ' pip--paused' : ''}`}
+      className={`pip-figure pip--${mood}${finishVariation ? ' pip--finish-variation' : ''}${paused ? ' pip--paused' : ''}`}
       style={style}
       onPointerMove={onPointerMove}
       onPointerLeave={resetGaze}
@@ -69,6 +75,7 @@ export function Pip({ pose = 'idle', size = 140, line, reaction, reactionId = 0 
                     </g>
                   </g>
                 </g>
+                <PipFinishAccent mood={mood} />
                 <PipArms id={id} />
                 <path className="pip-sleep-tail" d="M72 209c22 25 71 29 109 7" fill="none" stroke={`url(#${id}-tail)`} strokeWidth="29" strokeLinecap="round" />
                 <path className="pip-sleep-tail" d="m97 225 4-24m26 30 1-24m26 23-4-22" fill="none" stroke="#D0E9FF" strokeWidth="12" />

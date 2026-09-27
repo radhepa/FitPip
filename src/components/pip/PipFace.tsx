@@ -1,4 +1,4 @@
-import type { PipPose, PipReaction } from './types'
+import type { PipVisualMood } from './types'
 
 function Eye({ x, side }: { x: number; side: string }) {
   return (
@@ -13,8 +13,8 @@ function Eye({ x, side }: { x: number; side: string }) {
   )
 }
 
-export function PipFace({ id, mood }: { id: string; mood: PipPose | PipReaction }) {
-  const happy = ['cheer', 'bounce', 'love', 'celebrate', 'dance', 'peekaboo'].includes(mood)
+export function PipFace({ id, mood }: { id: string; mood: PipVisualMood }) {
+  const happy = ['cheer', 'bounce', 'love', 'celebrate', 'dance', 'peekaboo', 'high-five', 'victory-dance', 'strong-finish', 'heart-hug'].includes(mood)
   const asleep = mood === 'sleep'
   const relaxed = asleep || mood === 'stretch' || mood === 'yawn'
   return (

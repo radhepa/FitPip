@@ -51,6 +51,25 @@ the workout clock and the scale. Set `--tint` on an element to colour `.icon-til
 - CSS lives in layers: element defaults in `@layer base`, the classes above in
   `@layer components`, so Tailwind utilities always win.
 
+## Speed and feel on phones
+
+- Moving between screens should never show an empty page. Screen data goes through `useAsync` with a
+  `cacheKey` (include any id the load depends on), so a revisit shows the last read at once while
+  nothing on the device has changed. Screens outside Today load as chunks through `screen()` in
+  `screens/lazy.ts`, which renders a preloaded screen straight away.
+- A new page opens at the top; Back returns to where you were; tapping the current tab scrolls up
+  (`hooks/useScrollMemory.ts`, `TabBar`).
+- Entrance animations use `animation-fill-mode: backwards`, so a finished animation leaves no
+  transform behind (and `position: fixed` children stay pinned to the screen).
+- No `backdrop-filter` over the whole screen (sheet backdrops only dim) and none behind opaque
+  surfaces. Small floating glass (tab bar, rest timer, undo toast) is fine.
+- Long lists: memoise rows and keep their callbacks stable (see `ExerciseChooser`), and let off-screen
+  rows skip rendering with `content-visibility: auto`.
+- `touch-action: manipulation` on the page stops double-tap zoom on fast taps; app controls have no
+  iOS long-press callout.
+- Reading the on-device database: avoid Dexie's `.filter()` over a whole table (it steps a cursor row
+  by row); read through an index or `toArray()` and filter in JavaScript.
+
 ## Type
 
 Archivo Variable (display: titles, numbers, the clock) and Atkinson Hyperlegible Next Variable

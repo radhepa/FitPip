@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { SyncBanner } from './SyncBadge'
 import { TabBar } from './TabBar'
@@ -9,7 +10,10 @@ export function AppShell() {
     <div className="app-shell">
       <main key={pathname} className="app-content page-enter">
         <SyncBanner />
-        <Outlet />
+        {/* Keeps the tab bar up if a screen's code is still loading on a cold start. */}
+        <Suspense fallback={null}>
+          <Outlet />
+        </Suspense>
       </main>
       <TabBar />
     </div>

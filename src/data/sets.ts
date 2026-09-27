@@ -106,7 +106,9 @@ export async function deleteSet(id: string): Promise<void> {
 /** Every logged set of one exercise, newest first, with its session's date. */
 export async function listSetsForExercise(exerciseId: string): Promise<ExerciseSetRow[]> {
   const sets = await rowsOf('sets').where('exercise_id').equals(exerciseId).toArray()
-  const sessions = new Map((await rowsOf('sessions').where('id').anyOf([...new Set(sets.map((set) => set.session_id))]).toArray()).map((s) => [s.id, s]))
+  // bulkGet reads by key; anyOf would step a cursor through the index.
+  const ids = [...new Set(sets.map((set) => set.session_id))]
+  const sessions = new Map((await rowsOf('sessions').bulkGet(ids)).flatMap((s) => (s ? [[s.id, s] as const] : [])))
   return sets
     .flatMap((set) => {
       const session = sessions.get(set.session_id)

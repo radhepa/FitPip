@@ -24,12 +24,22 @@ export function ExerciseDetailScreen() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const { unit, distanceUnit } = useSettings()
-  const exercise = useAsync(() => getExercise(id), [id], { cacheKey: `exercise:${id}` })
-  const sets = useAsync(() => listSetsForExercise(id), [id], { cacheKey: `exercise-sets:${id}` })
+  // One read for the whole page, so it arrives in one piece instead of the chart and history popping in
+  // (and pushing things around) after the header.
+  const page = useAsync(
+    async () => {
+      const [exercise, sets] = await Promise.all([getExercise(id), listSetsForExercise(id)])
+      return { exercise, sets }
+    },
+    [id],
+    { cacheKey: `exercise-page:${id}` },
+  )
+  // Shown at once when it was already read; otherwise it fades in as it arrives.
+  const [arrives] = useState(() => !page.data)
   const [editing, setEditing] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  const history = useMemo(() => buildHistory(sets.data ?? []), [sets.data])
+  const history = useMemo(() => buildHistory(page.data?.sets ?? []), [page.data])
 
   async function remove() {
     if (!window.confirm('Delete this exercise? This cannot be undone.')) return
@@ -42,13 +52,13 @@ export function ExerciseDetailScreen() {
     }
   }
 
-  if (exercise.loading) return <Loading />
-  if (exercise.error) return <ErrorBanner error={exercise.error} onRetry={exercise.reload} />
-  const ex = exercise.data
+  if (page.error && !page.data) return <ErrorBanner error={page.error} onRetry={page.reload} />
+  if (!page.data) return <Loading />
+  const ex = page.data.exercise
   if (!ex) return <EmptyState title="Exercise not found" />
 
   return (
-    <>
+    <div className={arrives ? 'page-enter' : undefined}>
       <PageHeader
         back
         backTo="/progress"
@@ -73,10 +83,7 @@ export function ExerciseDetailScreen() {
 
       <ExerciseGuide exercise={ex} />
 
-      <ErrorBanner error={sets.error} onRetry={sets.reload} />
-      {sets.loading && !sets.data ? (
-        <Loading />
-      ) : history.length === 0 ? (
+      {history.length === 0 ? (
         <EmptyState title="No history yet">Sets you log for this exercise will show up here.</EmptyState>
       ) : (
         <>
@@ -101,11 +108,12 @@ export function ExerciseDetailScreen() {
           submitLabel="Save"
           onCancel={() => setEditing(false)}
           onSubmit={async (input) => {
-            exercise.setData(await updateExercise(id, input))
+            const updated = await updateExercise(id, input)
+            page.setData((prev) => prev && { ...prev, exercise: updated })
             setEditing(false)
           }}
         />
       </Sheet>
-    </>
+    </div>
   )
 }

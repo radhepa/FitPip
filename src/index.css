@@ -421,6 +421,8 @@ button:focus-visible,
 .sheet-panel { box-shadow: 0 -24px 60px rgba(0, 0, 0, .45); animation: sheet-up 340ms var(--ease-spring) backwards; }
 @keyframes sheet-up { from { transform: translateY(40%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* Loading placeholders wait a moment before showing (see Loading in feedback.tsx). */
+.loading-reveal { animation: fade-in 200ms var(--ease-standard) 180ms backwards; }
 /* The copy left behind when a sheet closes (see sheetExit.ts): it slides off and the dimming lifts. */
 .sheet-backdrop.sheet-leaving { pointer-events: none; animation: backdrop-out 240ms var(--ease-standard) both; }
 .sheet-leaving .sheet-panel { animation: sheet-down 240ms cubic-bezier(.4, 0, 1, 1) both; }

@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react'
 import { errorMessage } from '../data/unwrap'
 
-/** Shimmering placeholders shaped like the cards that are coming. */
+/**
+ * Shimmering placeholders shaped like the cards that are coming. They fade in after a short pause, so a
+ * quick read never flashes them for a frame before the real content.
+ */
 export function Loading({ label = 'Loading…', rows = 3 }: { label?: string; rows?: number }) {
   return (
-    <div role="status" aria-label={label} className="grid grid-cols-1 gap-3 py-2">
+    <div role="status" aria-label={label} className="loading-reveal grid grid-cols-1 gap-3 py-2">
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="skeleton h-20" style={{ opacity: 1 - i * 0.2 }} />
       ))}

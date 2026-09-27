@@ -65,8 +65,11 @@ the workout clock and the scale. Set `--tint` on an element to colour `.icon-til
   surfaces. Small floating glass (tab bar, rest timer, undo toast) is fine.
 - Long lists: memoise rows and keep their callbacks stable (see `ExerciseChooser`), and let off-screen
   rows skip rendering with `content-visibility: auto`. A screen with a long list draws the first rows
-  with the page and the rest a moment later (`useDeferredValue(SHOWN, FIRST_ROWS)` on Progress), so it
-  opens as quickly as the others and keeps its fade-in.
+  with the page and the rest a moment later (`useDeferredValue(SHOWN, FIRST_ROWS)` on Progress and in
+  `ExerciseHistoryList`), so it opens as quickly as the others and keeps its fade-in.
+- A detail page reads everything it shows in one `useAsync`, so it arrives in one piece; content that
+  arrives after the page opened fades in (`page-enter`). `Loading` placeholders wait a moment before
+  showing, so a quick read never flashes them.
 - A card that loads its own data keeps its full size while it loads (the Progress muscle map is drawn
   blank), so nothing below it jumps down when the data arrives.
 - `touch-action: manipulation` on the page stops double-tap zoom on fast taps; app controls have no

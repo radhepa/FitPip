@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useTicker } from '../hooks/useTicker'
+import { useWakeLock } from '../hooks/useWakeLock'
 import { formatClock } from '../lib/format'
 import { buzz } from './fx'
 import { ProgressRing } from './ProgressRing'
@@ -15,6 +16,7 @@ interface Props {
 /** A floating rest countdown after a lifting set: add or take 15 s, or skip it. */
 export function RestTimer({ endsAt, total, onChange, onDone }: Props) {
   const now = useTicker(true)
+  useWakeLock(true)
   const left = Math.max(0, endsAt - now)
   const finished = useRef(false)
   const done = useRef(onDone)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStoredState } from '../hooks/useStoredState'
 import { useTicker } from '../hooks/useTicker'
+import { useWakeLock } from '../hooks/useWakeLock'
 import { formatClock } from '../lib/format'
 import { parseDistance, parseDuration } from '../lib/parse'
 import { clockText, stepClock, stepNumber } from '../lib/steps'
@@ -32,6 +33,7 @@ export function DistanceEntry({ initialSeconds, initialDistance, lengthUnit, tim
   const [startedAt, setStartedAt] = useStoredState<number | null>(timerKey && `stopwatch:${timerKey}`, null, isStart)
   const [busy, setBusy] = useState(false)
   const now = useTicker(startedAt !== null, 500)
+  useWakeLock(startedAt !== null)
 
   // A bare number of minutes ("30") is what people type for a run; "26:10" works too.
   const seconds = parseDuration(time, 'minutes')

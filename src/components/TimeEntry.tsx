@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStoredState } from '../hooks/useStoredState'
 import { useTicker } from '../hooks/useTicker'
+import { useWakeLock } from '../hooks/useWakeLock'
 import { formatClock } from '../lib/format'
 import { parseDuration } from '../lib/parse'
 import { clockText, stepClock } from '../lib/steps'
@@ -42,6 +43,7 @@ export function TimeEntry({ initialSeconds, noun, setNumber, color, timerKey, on
   const [timer, setTimer] = useStoredState<Timer>(timerKey && `countdown:${timerKey}`, IDLE, isTimer)
   const [busy, setBusy] = useState(false)
   const now = useTicker(timer.state === 'running')
+  useWakeLock(timer.state === 'running')
   const logged = useRef(false)
 
   const seconds = parseDuration(text)

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { PipPose, PipReaction } from './types'
+import type { PipVisualMood } from './types'
 
 export function PipDefs({ id }: { id: string }) {
   return (
@@ -42,6 +42,10 @@ function Paw({ id, side }: { id: string; side: 'left' | 'right' }) {
       <path d="M99 161c-9-3-15 4-17 16l-4 16c-2 13 4 20 13 18 11-2 15-19 18-31 2-10-2-17-10-19Z" fill={`url(#${id}-coat)`} />
       <path d="M79 189c7-5 19-2 23 4 0 11-5 20-13 21-9 1-14-10-10-25Z" fill={`url(#${id}-dark)`} />
       <path d="m84 201 1 5m5-5v6m5-6-1 5" stroke="#89B2DC" strokeWidth="1.8" strokeLinecap="round" />
+      {side === 'right' && <g className="pip-paw-pad" fill="#C2E7FF">
+        <ellipse cx="89" cy="202" rx="5" ry="4" />
+        <ellipse cx="82" cy="196" rx="2" ry="2.5" /><ellipse cx="88" cy="194" rx="2" ry="2.5" /><ellipse cx="94" cy="196" rx="2" ry="2.5" />
+      </g>}
     </g>
   )
 }
@@ -71,7 +75,9 @@ export function PipArms({ id }: { id: string }) {
   return <><Paw id={id} side="left" /><g transform="translate(269 0) scale(-1 1)"><Paw id={id} side="right" /></g></>
 }
 
-export function PipEffects({ mood }: { mood: PipPose | PipReaction }) {
+export function PipEffects({ mood }: { mood: PipVisualMood }) {
+  // Completion variations have their own burst, timed by PipCelebrationScene.
+  if (['high-five', 'victory-dance', 'strong-finish', 'heart-hug'].includes(mood)) return null
   if (mood === 'sleep') return (
     <g className="pip-dreams" fill="#A4D8FF" aria-hidden="true">
       {[0, 1, 2].map((i) => <path key={i} className="pip-dream" style={{ '--i': i } as CSSProperties} d="M192 97h11l-11 12h11" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />)}
@@ -112,4 +118,9 @@ export function PipEffects({ mood }: { mood: PipPose | PipReaction }) {
       ))}
     </g>
   )
+}
+
+export function PipFinishAccent({ mood }: { mood: PipVisualMood }) {
+  if (mood !== 'heart-hug') return null
+  return <path className="pip-hug-heart" d="M135 208C74 172 109 143 135 166c26-23 61 6 0 42Z" fill="#FF9BC1" stroke="#FFDCEC" strokeWidth="2" />
 }

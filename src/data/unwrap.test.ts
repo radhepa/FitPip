@@ -12,6 +12,13 @@ describe('errorMessage', () => {
     expect(errorMessage(new DataError({ code: '23503', message: 'fk' }))).toMatch(/no longer exists/)
   })
 
+  it('says the server is out of reach instead of the browser wording', () => {
+    for (const raw of ['Failed to fetch', 'Load failed', 'NetworkError when attempting to fetch resource.']) {
+      expect(errorMessage(new TypeError(raw))).toBe("Can't reach the server. Check your connection and try again.")
+    }
+    expect(errorMessage(new Error('Failed to fetch the moon'))).toBe('Failed to fetch the moon')
+  })
+
   it('passes other messages through and survives odd values', () => {
     expect(errorMessage(new DataError({ code: '99999', message: 'boom' }))).toBe('boom')
     expect(errorMessage(new Error('plain'))).toBe('plain')

@@ -29,9 +29,13 @@ const FRIENDLY: Record<string, string> = {
   '23503': 'That refers to something that no longer exists.',
 }
 
+/** What browsers say when a request never reached the server (Chrome, Firefox, Safari). */
+const NETWORK_FAILURE = /^(Failed to fetch|NetworkError when attempting to fetch resource\.?|Load failed|The Internet connection appears to be offline\.?)$/i
+
 /** Turns any thrown value into a message that is safe to show. */
 export function errorMessage(error: unknown): string {
   if (error instanceof DataError && error.code && FRIENDLY[error.code]) return FRIENDLY[error.code]
+  if (error instanceof Error && NETWORK_FAILURE.test(error.message.trim())) return "Can't reach the server. Check your connection and try again."
   if (error instanceof Error) return error.message
   return 'Something went wrong.'
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { errorMessage } from '../data/unwrap'
 
 /** Shimmering placeholders shaped like the cards that are coming. */
 export function Loading({ label = 'Loading…', rows = 3 }: { label?: string; rows?: number }) {
@@ -13,7 +14,7 @@ export function Loading({ label = 'Loading…', rows = 3 }: { label?: string; ro
 
 export function ErrorBanner({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   if (!error) return null
-  const message = error instanceof Error ? error.message : String(error)
+  const message = error instanceof Error ? errorMessage(error) : String(error)
   return (
     <div role="alert" className="card my-3 border-danger/40 p-4 text-sm text-danger">
       <p>{message}</p>

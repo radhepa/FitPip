@@ -58,7 +58,7 @@ export async function getOpenSession(): Promise<Session | null> {
   return open.sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ?? null
 }
 
-type SessionPatch = Partial<Pick<Session, 'name' | 'notes' | 'started_at' | 'ended_at' | 'plan'>>
+type SessionPatch = Partial<Pick<Session, 'name' | 'notes' | 'started_at' | 'ended_at' | 'plan' | 'favorite'>>
 
 export async function updateSession(id: string, patch: SessionPatch): Promise<Session> {
   return writeTx(async () => {
@@ -82,6 +82,11 @@ export const beginSession = (id: string) => updateSession(id, { started_at: nowI
 export const finishSession = (id: string) => updateSession(id, { ended_at: nowIso() })
 /** Finishes a workout at an earlier moment (one that was left running: its last set). */
 export const finishSessionAt = (id: string, endedAt: string) => updateSession(id, { ended_at: endedAt })
+
+/** Stars (or unstars) a workout, so it shows up under Favorites to repeat. */
+export const setFavorite = (id: string, favorite: boolean) => updateSession(id, { favorite })
+
+export const isFavorite = (session: Pick<Session, 'favorite'>): boolean => session.favorite === true
 
 export async function deleteSession(id: string): Promise<void> {
   await writeTx(async () => {
@@ -109,6 +114,16 @@ export async function listSessionSummaries(limit: number, before?: string): Prom
     .filter((session) => isBegun(session) && !!session.ended_at)
     .limit(limit)
     .toArray()) as BegunSession[]
+  const sets = await listSetsForSessions(sessions.map((session) => session.id))
+  return sessions.map((session) => ({ session, sets: sets.filter((set) => set.session_id === session.id) }))
+}
+
+/** Starred finished workouts, newest first, each with its sets. */
+export async function listFavoriteSessions(): Promise<SessionWithSets[]> {
+  // Few workouts are starred, and the table is read in one go (see above), so no index is needed.
+  const sessions = (await rowsOf('sessions').toArray())
+    .filter((session): session is BegunSession => isFavorite(session) && isBegun(session) && !!session.ended_at)
+    .sort((a, b) => b.started_at.localeCompare(a.started_at))
   const sets = await listSetsForSessions(sessions.map((session) => session.id))
   return sessions.map((session) => ({ session, sets: sets.filter((set) => set.session_id === session.id) }))
 }

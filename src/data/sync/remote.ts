@@ -80,6 +80,9 @@ export function failureFrom(reply: Reply): SyncFailure {
   if (code === 'PGRST204' && /rest_seconds/.test(message)) {
     return new SyncFailure('permanent', 'The rest timer setting needs a database update. Run supabase/migrations/20260927000200_rest_seconds.sql in the Supabase SQL Editor.', code)
   }
+  if (code === 'PGRST204' && /favorite/.test(message)) {
+    return new SyncFailure('permanent', 'Favorite workouts need a database update. Run supabase/migrations/20260929000100_favorite_workouts.sql in the Supabase SQL Editor.', code)
+  }
   if (code === 'PGRST204' && /compare_sex|display_name/.test(message)) {
     return new SyncFailure('permanent', 'Your profile settings need a database update. Run supabase/migrations/20260928000100_profile.sql in the Supabase SQL Editor.', code)
   }

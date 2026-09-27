@@ -93,6 +93,11 @@ export interface Session {
   template_id: string | null
   /** The exercises set up for this workout, with target sets and reps. */
   plan: PlanRow[] | null
+  /**
+   * Starred, to be repeated from Favorites. Absent on rows saved before the column existed (and on new
+   * workouts, which leave it to the database default), so read it with `isFavorite`.
+   */
+  favorite?: boolean
   created_at: string
   updated_at: string
 }

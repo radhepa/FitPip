@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { createExercise } from '../exercises'
 import { setActiveDbForTests } from './context'
 import { FitPipDB } from './db'
-import { createWorkout } from '../sessions'
+import { beginSession, createWorkout, finishSession, listFavoriteSessions, setFavorite } from '../sessions'
+import { logSet } from '../sets'
 import { getSettings, saveCompareSex, saveDisplayName, saveDistanceUnit, saveGoalWeight, saveRestSeconds, saveWeightUnit } from '../settings'
 import { addTemplateExercises, createTemplate, deleteTemplate, getTemplate, listTemplates, renameTemplate, updateTemplateExercise } from '../templates'
 import { addWeekPlanItems, clearWeekday, listWeekPlan, removeWeekPlanItem, saveWeekPlanOrder } from '../weekPlan'
@@ -194,3 +195,31 @@ describe('rest timer length', () => {
   })
 })
 
+
+describe('favorite workouts', () => {
+  it('lists starred finished workouts with their sets, newest first, and queues the star for sync', async () => {
+    const db = device()
+    const bench = await createExercise(lift('Bench'))
+    const finished = async (name: string) => {
+      const session = await createWorkout({ name, plan: [] })
+      await beginSession(session.id)
+      await logSet({ sessionId: session.id, exerciseId: bench.id, setOrder: 0, reps: 5, weight: 100, rpe: null })
+      await finishSession(session.id)
+      return session.id
+    }
+    const older = await finished('Push A')
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    const newer = await finished('Push B')
+    const open = await createWorkout({ name: 'Not done', plan: [] })
+    await db.pending.clear()
+
+    for (const id of [older, newer, open.id]) await setFavorite(id, true)
+    expect(await db.pending.count()).toBe(3)
+    const list = await listFavoriteSessions()
+    expect(list.map((item) => item.session.name)).toEqual(['Push B', 'Push A'])
+    expect(list[0].sets).toHaveLength(1)
+
+    await setFavorite(newer, false)
+    expect((await listFavoriteSessions()).map((item) => item.session.id)).toEqual([older])
+  })
+})

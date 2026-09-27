@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useStoredState } from '../hooks/useStoredState'
 import { useTicker } from '../hooks/useTicker'
 import { formatClock } from '../lib/format'
 import { parseDuration } from '../lib/parse'
@@ -16,15 +17,29 @@ interface Props {
   noun: string
   setNumber: number
   color: string
+  /** Keeps a running countdown through leaving the screen or the app closing (one per workout + activity). */
+  timerKey?: string
   onLog: (seconds: number) => Promise<void>
 }
 
 type Timer = { state: 'idle' } | { state: 'running'; endsAt: number; total: number } | { state: 'paused'; left: number; total: number }
 
+const IDLE: Timer = { state: 'idle' }
+
+const isTimer = (value: unknown): value is Timer => {
+  if (typeof value !== 'object' || value === null) return false
+  const t = value as Record<string, unknown>
+  if (t.state === 'idle') return true
+  if (typeof t.total !== 'number' || t.total <= 0) return false
+  // A countdown that ended more than an hour ago is stale, not a hold to log now.
+  if (t.state === 'running') return typeof t.endsAt === 'number' && Date.now() - t.endsAt < 60 * 60 * 1000
+  return t.state === 'paused' && typeof t.left === 'number'
+}
+
 /** A timed hold or round: set the length, then run a countdown that logs itself when it ends. */
-export function TimeEntry({ initialSeconds, noun, setNumber, color, onLog }: Props) {
+export function TimeEntry({ initialSeconds, noun, setNumber, color, timerKey, onLog }: Props) {
   const [text, setText] = useState(clockText(initialSeconds))
-  const [timer, setTimer] = useState<Timer>({ state: 'idle' })
+  const [timer, setTimer] = useStoredState<Timer>(timerKey && `countdown:${timerKey}`, IDLE, isTimer)
   const [busy, setBusy] = useState(false)
   const now = useTicker(timer.state === 'running')
   const logged = useRef(false)
@@ -35,6 +50,8 @@ export function TimeEntry({ initialSeconds, noun, setNumber, color, onLog }: Pro
 
   async function log(value: number) {
     if (busy) return
+    // Forget the countdown first, so the next entry (mounted after the log) never picks it up again.
+    setTimer(IDLE)
     setBusy(true)
     try {
       await onLog(value)

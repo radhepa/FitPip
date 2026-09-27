@@ -35,6 +35,8 @@ interface Props {
   lastSessionSets: SetRow[]
   /** Ids of this workout's sets that are personal records. */
   records?: Set<string>
+  /** Identifies this exercise in this workout, so a running stopwatch or countdown survives leaving. */
+  timerKey?: string
   index: number
   onLog: (entry: NewEntry) => Promise<void>
   onEditSet: (id: string, patch: Partial<SetPatch>) => Promise<void>
@@ -49,7 +51,7 @@ interface Props {
 const NOUN = { combat: 'Round', cardio: 'Round', yoga: 'Hold', stretch: 'Hold', swim: 'Set', strength: 'Set', sport: 'Round' } as const
 
 /** One exercise or activity in the workout: what was logged, and the right way to log the next one. */
-export function ExerciseBlock({ exercise, sets, plan, unit, distanceUnit, lastSessionSets, records, index, onLog, onEditSet, onDeleteSet, note, onNote, onRemove }: Props) {
+export function ExerciseBlock({ exercise, sets, plan, unit, distanceUnit, lastSessionSets, records, timerKey, index, onLog, onEditSet, onDeleteSet, note, onNote, onRemove }: Props) {
   const color = CATEGORY_INFO[exercise.category].color
   const lengthUnit = lengthUnitFor(exercise.category, distanceUnit)
   const target = plan ? { targetSets: plan.targetSets, targetReps: plan.targetReps, targetSeconds: plan.targetSeconds ?? null } : null
@@ -113,6 +115,7 @@ export function ExerciseBlock({ exercise, sets, plan, unit, distanceUnit, lastSe
           noun={NOUN[exercise.category]}
           setNumber={setNumber}
           color={color}
+          timerKey={timerKey}
           onLog={(seconds) => onLog({ weight: 0, reps: 0, rpe: null, durationSeconds: seconds, distanceM: null })}
         />
       )}
@@ -122,6 +125,7 @@ export function ExerciseBlock({ exercise, sets, plan, unit, distanceUnit, lastSe
           initialSeconds={sets.length === 0 ? (plan?.targetSeconds ?? null) : null}
           initialDistance={sets.length === 0 && lastSessionSets[0]?.distance_m ? distanceInput(lastSessionSets[0].distance_m, lengthUnit) : ''}
           lengthUnit={lengthUnit}
+          timerKey={timerKey}
           onLog={(seconds, metres) => onLog({ weight: 0, reps: 0, rpe: null, durationSeconds: seconds, distanceM: metres })}
         />
       )}

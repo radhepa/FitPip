@@ -41,7 +41,7 @@ interface Props {
 /** A workout under way, in sections (strength, cardio, yoga & stretching), each exercise logged its own way. */
 export function ActiveWorkout({ sessionId, startedAt, plan, sets, exercises, unit, distanceUnit, pending, guard, onSetsChange, onPlanChange, onExerciseAdded, editing = false, onDiscard }: Props) {
   const [picking, setPicking] = useState<Category | 'all' | null>(null)
-  const restTimer = useRestTimer()
+  const restTimer = useRestTimer(editing ? undefined : sessionId)
   const [undo, setUndo] = useState<{ set: SetRow; key: number } | null>(null)
   const exerciseById = useMemo(() => new Map(exercises.map((e) => [e.id, e])), [exercises])
   const blocks = useMemo(
@@ -131,6 +131,7 @@ export function ActiveWorkout({ sessionId, startedAt, plan, sets, exercises, uni
                     distanceUnit={distanceUnit}
                     lastSessionSets={lastSessionSets[block.exerciseId] ?? []}
                     records={records}
+                    timerKey={`${sessionId}:${block.exerciseId}`}
                     onLog={(entry) => onLog(exercise, entry)}
                     onEditSet={onEditSet}
                     onDeleteSet={onDeleteSet}

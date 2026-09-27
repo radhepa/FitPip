@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useStoredState } from '../hooks/useStoredState'
 import { useTicker } from '../hooks/useTicker'
 import { formatClock } from '../lib/format'
 import { parseDistance, parseDuration } from '../lib/parse'
@@ -13,16 +14,22 @@ interface Props {
   initialSeconds: number | null
   initialDistance: string
   lengthUnit: LengthUnit
+  /** Keeps a running stopwatch through leaving the screen or the app closing (one per workout + activity). */
+  timerKey?: string
   onLog: (seconds: number | null, metres: number | null) => Promise<void>
 }
+
+/** A stopwatch start time worth restoring: a number, and not left running for more than a day. */
+const isStart = (value: unknown): value is number | null =>
+  value === null || (typeof value === 'number' && value <= Date.now() && Date.now() - value < 24 * 60 * 60 * 1000)
 
 const DISTANCE_STEP: Record<LengthUnit, number> = { km: 0.5, mi: 0.25, m: 50, yd: 25 }
 
 /** A run, ride, swim or game: time (typed or from the stopwatch) and distance, with live pace. */
-export function DistanceEntry({ initialSeconds, initialDistance, lengthUnit, onLog }: Props) {
+export function DistanceEntry({ initialSeconds, initialDistance, lengthUnit, timerKey, onLog }: Props) {
   const [time, setTime] = useState(initialSeconds ? clockText(initialSeconds) : '')
   const [distance, setDistance] = useState(initialDistance)
-  const [startedAt, setStartedAt] = useState<number | null>(null)
+  const [startedAt, setStartedAt] = useStoredState<number | null>(timerKey && `stopwatch:${timerKey}`, null, isStart)
   const [busy, setBusy] = useState(false)
   const now = useTicker(startedAt !== null, 500)
 

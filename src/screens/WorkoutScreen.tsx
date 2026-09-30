@@ -6,8 +6,9 @@ import { ForgottenWorkout } from '../components/ForgottenWorkout'
 import { NoteField } from '../components/NoteField'
 import { WorkoutBuilder } from '../components/WorkoutBuilder'
 import { WorkoutHeader } from '../components/WorkoutHeader'
+import { WorkoutTimeSheet } from '../components/WorkoutTimeSheet'
 import { listExercises } from '../data/exercises'
-import { beginSession, deleteSession, finishSession, finishSessionAt, getSession, MAX_WORKOUT_NOTE, setSessionPlan, updateSession } from '../data/sessions'
+import { beginSession, deleteSession, finishSession, finishSessionAt, getSession, MAX_WORKOUT_NOTE, setSessionPlan, setSessionTimes, updateSession } from '../data/sessions'
 import { listSetsForSession } from '../data/sets'
 import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
@@ -16,7 +17,7 @@ import { usePendingExercises } from '../hooks/usePendingExercises'
 import { useSettings } from '../hooks/useSettings'
 import { withExercise } from '../lib/exerciseList'
 import { planFromRows, planToRows } from '../lib/sessionPlan'
-import { forgottenSince } from '../lib/staleWorkout'
+import { forgottenSince, lastSetLogged } from '../lib/staleWorkout'
 import type { PlanItem } from '../lib/workoutBlocks'
 import { CATEGORIES, type Category, type Exercise } from '../types/db'
 
@@ -35,6 +36,7 @@ export function WorkoutScreen() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<'beginning' | 'finishing' | null>(null)
   const [keepGoing, setKeepGoing] = useState(false)
+  const [editingTime, setEditingTime] = useState(false)
 
   const sets = useMemo(() => setsState.data ?? [], [setsState.data])
   const exercises = useMemo(() => exercisesState.data ?? [], [exercisesState.data])
@@ -105,7 +107,7 @@ export function WorkoutScreen() {
   if (loadError) return <ErrorBanner error={loadError} onRetry={reloadAll} />
   if (!session.data) return <EmptyState title="Workout not found" />
 
-  // A finished workout can be edited in place. It is never re-opened, so its recorded time can't change.
+  // A finished workout can be edited in place. It is never re-opened, so its recorded time only changes on purpose.
   const editing = session.data.ended_at !== null
   const begun = session.data.started_at !== null
   // Sets done against the sets planned (only exercises with a target count).
@@ -138,12 +140,23 @@ export function WorkoutScreen() {
           pending.clear()
           navigate(`/session/${id}`, { replace: true })
         }}
+        onEditTime={begun ? () => setEditingTime(true) : undefined}
         onRename={(name) =>
           guard(async () => {
             session.setData(await updateSession(id, { name: name || null }))
           })
         }
       />
+      {session.data.started_at && (
+        <WorkoutTimeSheet
+          open={editingTime}
+          startedAt={session.data.started_at}
+          endedAt={session.data.ended_at}
+          lastSetAt={lastSetLogged(session.data, sets)}
+          onSave={async (startedAt, endedAt) => session.setData(await setSessionTimes(id, startedAt, endedAt))}
+          onClose={() => setEditingTime(false)}
+        />
+      )}
       <div className="mb-3">
         <NoteField
           label="Workout note"

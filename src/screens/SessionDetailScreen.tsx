@@ -3,6 +3,7 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { EmptyState, ErrorBanner, Loading } from '../components/feedback'
 import { FavoriteButton } from '../components/FavoriteButton'
+import { FinishedLateNotice } from '../components/FinishedLateNotice'
 import { RepeatIcon } from '../components/icons'
 import { MuscleVolumePanel } from '../components/MuscleVolumePanel'
 import { PageHeader } from '../components/PageHeader'
@@ -10,8 +11,9 @@ import { SessionExerciseList } from '../components/SessionExerciseList'
 import { SessionStats } from '../components/SessionStats'
 import { WorkoutRewards } from '../components/WorkoutRewards'
 import { WorkoutCompletion } from '../components/WorkoutCompletion'
+import { WorkoutTimeSheet } from '../components/WorkoutTimeSheet'
 import { listExercises } from '../data/exercises'
-import { deleteSession, getSession, isFavorite } from '../data/sessions'
+import { deleteSession, getSession, isFavorite, setSessionTimes } from '../data/sessions'
 import { listSetsForSession } from '../data/sets'
 import { errorMessage } from '../data/unwrap'
 import { useAsync } from '../hooks/useAsync'
@@ -24,6 +26,7 @@ import { planFromRows } from '../lib/sessionPlan'
 import { computeVolume, workFromSets } from '../lib/muscleVolume'
 import { wrapUpNote } from '../lib/pip/notes'
 import { groupByExercise, totalVolume } from '../lib/sessionStats'
+import { finishedLate, lastSetLogged } from '../lib/staleWorkout'
 
 /** Summary of a finished workout (also where you land right after finishing one). */
 export function SessionDetailScreen() {
@@ -43,6 +46,8 @@ export function SessionDetailScreen() {
   // Shown at once when it was already read; otherwise it fades in as it arrives.
   const [arrives] = useState(() => session.loading || setsState.loading || exercisesState.loading || waitForRewards)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [editingTime, setEditingTime] = useState(false)
+  const [savingTime, setSavingTime] = useState(false)
   const { repeat, repeating, error: repeatError } = useRepeatWorkout()
   // Pip only looks at your history for the celebration right after finishing, not on every visit to a past workout.
   const pipFacts = usePipFacts({ skip: !celebrating })
@@ -72,6 +77,9 @@ export function SessionDetailScreen() {
   const s = session.data
   if (!s) return <EmptyState title="Workout not found" />
   if (!s.ended_at || !s.started_at) return <Navigate to={`/workout/${id}`} replace />
+  const begunAt = s.started_at
+  const lateFrom = finishedLate(s, sets)
+  const saveTimes = async (startedAt: string, endedAt?: string) => session.setData(await setSessionTimes(id, startedAt, endedAt))
 
   return (
     <div className={arrives ? 'page-enter' : undefined}>
@@ -84,13 +92,41 @@ export function SessionDetailScreen() {
         action={<FavoriteButton sessionId={id} initial={isFavorite(s)} onError={setActionError} />}
       />
       <WorkoutCompletion key={id} sessionId={id} justFinished={justFinished} sets={sets.length} pipLine={pipLine} />
+      {lateFrom && (
+        <FinishedLateNotice
+          sessionId={id}
+          durationMs={sessionDurationMs(s) ?? 0}
+          lastSetAt={lateFrom}
+          busy={savingTime}
+          onFinishAtLastSet={() =>
+            run(async () => {
+              setSavingTime(true)
+              try {
+                await saveTimes(begunAt, lateFrom)
+              } finally {
+                setSavingTime(false)
+              }
+            })
+          }
+          onChangeTime={() => setEditingTime(true)}
+        />
+      )}
       <SessionStats
         durationMs={sessionDurationMs(s)}
+        onEditDuration={() => setEditingTime(true)}
         exercises={blocks.length}
         sets={sets.length}
         volume={totalVolume(sets)}
         activeSeconds={activeSeconds}
         unit={unit}
+      />
+      <WorkoutTimeSheet
+        open={editingTime}
+        startedAt={s.started_at}
+        endedAt={s.ended_at}
+        lastSetAt={lastSetLogged(s, sets)}
+        onSave={saveTimes}
+        onClose={() => setEditingTime(false)}
       />
       <WorkoutRewards rewards={rewards.rewards} exerciseById={exerciseById} missingProfile={rewards.missingProfile} />
       {s.notes && (

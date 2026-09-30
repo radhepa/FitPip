@@ -1,16 +1,16 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { usePendingEdit } from '../hooks/usePendingEdit'
 import { Button } from './Button'
 import { ElapsedClock } from './ElapsedClock'
-import { countOf, formatClock } from '../lib/format'
-import { CheckIcon } from './icons'
+import { countOf, formatClock, formatTime } from '../lib/format'
+import { CheckIcon, PencilIcon } from './icons'
 import { ProgressRing } from './ProgressRing'
 
 interface Props {
   name: string
   /** Null while the workout is being set up: no clock runs until it begins. */
   startedAt: string | null
-  /** Set when a finished workout is being edited: its recorded time is shown and never changes. */
+  /** Set when a finished workout is being edited: its recorded time is shown (it only changes through onEditTime). */
   endedAt?: string | null
   /** Sets done out of the sets planned (null when nothing has a target). */
   progress: { done: number; target: number } | null
@@ -19,10 +19,12 @@ interface Props {
   finishing: boolean
   /** Editing a finished workout: leaves the edit screen (nothing is "finished" again). */
   onDone?: () => void
+  /** Opens the sheet that corrects when it started (and finished). */
+  onEditTime?: () => void
 }
 
 /** The workout's hero card: its name, the big clock, how far through the plan you are, and Finish. */
-export function WorkoutHeader({ name, startedAt, endedAt = null, progress, onRename, onFinish, finishing, onDone }: Props) {
+export function WorkoutHeader({ name, startedAt, endedAt = null, progress, onRename, onFinish, finishing, onDone, onEditTime }: Props) {
   const editing = endedAt !== null && startedAt !== null
   // Null until something is typed, so the saved name shows (and a rename from elsewhere is never undone).
   const [draft, setDraft] = useState<string | null>(null)
@@ -57,12 +59,17 @@ export function WorkoutHeader({ name, startedAt, endedAt = null, progress, onRen
               <p className="font-display text-[3.75rem] leading-none font-extrabold text-muted" aria-label="Recorded time">
                 {formatClock(new Date(endedAt).getTime() - new Date(startedAt).getTime())}
               </p>
-              <p className="mt-1 text-sm font-semibold text-muted">Editing a finished workout. Its time stays as recorded.</p>
+              <TimeLink onClick={onEditTime}>
+                {formatTime(startedAt)} to {formatTime(endedAt)} · Change time
+              </TimeLink>
             </>
           ) : startedAt ? (
-            <p className="gradient-text font-display text-[3.75rem] leading-none font-extrabold">
-              <ElapsedClock startedAt={startedAt} />
-            </p>
+            <>
+              <p className="gradient-text font-display text-[3.75rem] leading-none font-extrabold">
+                <ElapsedClock startedAt={startedAt} />
+              </p>
+              <TimeLink onClick={onEditTime}>Started {formatTime(startedAt)} · Change</TimeLink>
+            </>
           ) : (
             <>
               <p className="font-display text-[3.75rem] leading-none font-extrabold text-muted/60">0:00</p>
@@ -85,5 +92,15 @@ export function WorkoutHeader({ name, startedAt, endedAt = null, progress, onRen
         </Button>
       )}
     </header>
+  )
+}
+
+/** The small "change time" line under the clock (just text when there is nothing to open). */
+function TimeLink({ onClick, children }: { onClick?: () => void; children: ReactNode }) {
+  if (!onClick) return <p className="mt-1 text-sm font-semibold text-muted">{children}</p>
+  return (
+    <button type="button" onClick={onClick} className="mt-1 inline-flex min-h-9 items-center gap-1.5 text-left text-sm font-bold text-muted underline-offset-2 hover:underline">
+      <PencilIcon size="size-4" /> {children}
+    </button>
   )
 }

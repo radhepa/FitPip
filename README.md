@@ -87,12 +87,16 @@ History, Progress or suggestions until you begin it.
   *Settings → Rest timer*; it follows you between devices. You can still add or trim 15 s on a single
   rest without changing the setting.
 - **Editing a finished workout.** *Edit workout* on the summary changes sets, notes and the name in
-  place. The recorded time never changes, and the workout doesn't come back as "open" on Home.
+  place, and the workout doesn't come back as "open" on Home. Its time only changes when you change it.
 - **Personal records.** A set that beats every earlier workout gets a *PR* pill (and a little confetti).
 - **Timers keep going.** A running rest, stopwatch or countdown survives switching tabs or the phone
   closing the app, and the screen stays on while one runs.
 - **Forgot to finish?** A workout with nothing logged for 3 hours offers to finish at the time of its
-  last set, so its time isn't counted up to the next day.
+  last set, so its time isn't counted up to the next day. If it was already finished hours late, its
+  summary offers to end it at the last set instead.
+- **Changing a workout's time.** Tap *Duration* on a workout's summary (or *Change time* under the
+  clock while editing it) to set when it started and finished. While a workout is running, *Change*
+  under the clock moves its start.
 
 ## Your data
 

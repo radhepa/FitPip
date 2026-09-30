@@ -82,6 +82,9 @@ export const beginSession = (id: string) => updateSession(id, { started_at: nowI
 export const finishSession = (id: string) => updateSession(id, { ended_at: nowIso() })
 /** Finishes a workout at an earlier moment (one that was left running: its last set). */
 export const finishSessionAt = (id: string, endedAt: string) => updateSession(id, { ended_at: endedAt })
+/** Corrects when a workout started and, once it is finished (`endedAt` given), when it ended. */
+export const setSessionTimes = (id: string, startedAt: string, endedAt?: string) =>
+  updateSession(id, endedAt === undefined ? { started_at: startedAt } : { started_at: startedAt, ended_at: endedAt })
 
 /** Stars (or unstars) a workout, so it shows up under Favorites to repeat. */
 export const setFavorite = (id: string, favorite: boolean) => updateSession(id, { favorite })

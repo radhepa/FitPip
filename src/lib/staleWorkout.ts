@@ -23,3 +23,29 @@ export function lastActivityLabel(iso: string, now: Date = new Date()): string {
   if (daysAgo === 1) return `yesterday ${time}`
   return `${at.toLocaleDateString(undefined, { weekday: 'short' })} ${time}`
 }
+
+/**
+ * When the last set logged during a workout was logged (between its start and its end, when it has one), or
+ * null. Sets added later while editing a finished workout are after its end, so they don't count.
+ */
+export function lastSetLogged(session: Pick<Session, 'started_at' | 'ended_at'>, sets: Pick<SetRow, 'created_at'>[]): string | null {
+  if (!session.started_at) return null
+  const start = Date.parse(session.started_at)
+  const end = session.ended_at ? Date.parse(session.ended_at) : Infinity
+  let last: string | null = null
+  for (const set of sets) {
+    const at = Date.parse(set.created_at)
+    if (at >= start && at <= end && (last === null || at > Date.parse(last))) last = set.created_at
+  }
+  return last
+}
+
+/**
+ * A finished workout that looks like it was left running before it was finished: its end came more than
+ * STALE_AFTER_MS after the last set logged in it. Returns that set's time (the likely real end), else null.
+ */
+export function finishedLate(session: Pick<Session, 'started_at' | 'ended_at'>, sets: Pick<SetRow, 'created_at'>[]): string | null {
+  if (!session.ended_at) return null
+  const last = lastSetLogged(session, sets)
+  return last !== null && Date.parse(session.ended_at) - Date.parse(last) > STALE_AFTER_MS ? last : null
+}

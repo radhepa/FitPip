@@ -84,23 +84,23 @@ describe('strength standards for the new lifts', () => {
   it('compares each one with the right standard, or with none when a fair comparison is not possible', () => {
     const expected: [string, string | null][] = [
       // Single-arm cable: their own standards
-      ['Single-Arm Cable Chest Press', 'sa_cable_press'],
-      ['Single-Arm Incline Cable Press', 'sa_cable_press'],
-      ['Single-Arm Cable Shoulder Press', 'sa_cable_shoulder_press'],
-      ['Single-Arm Cable Row', 'sa_cable_row'],
-      ['Single-Arm Cable High Row', 'sa_cable_row'],
-      ['Single-Arm Cable Lat Pulldown', 'sa_cable_pulldown'],
-      ['Single-Arm Half-Kneeling Cable Pulldown', 'sa_cable_pulldown'],
-      ['Single-Arm Cable Straight-Arm Pulldown', 'sa_cable_straight_arm'],
+      ['Single-Arm Cable Chest Press', null],
+      ['Single-Arm Incline Cable Press', null],
+      ['Single-Arm Cable Shoulder Press', null],
+      ['Single-Arm Cable Row', null],
+      ['Single-Arm Cable High Row', null],
+      ['Single-Arm Cable Lat Pulldown', null],
+      ['Single-Arm Half-Kneeling Cable Pulldown', null],
+      ['Single-Arm Cable Straight-Arm Pulldown', null],
       ['Single-Arm Cable Fly', 'sa_cable_fly'],
       ['Single-Arm Low-to-High Cable Fly', 'sa_cable_fly'],
       ['Single-Arm Cable Rear Delt Fly', 'sa_cable_rear_fly'],
-      ['Single-Arm Cable Face Pull', 'sa_cable_face_pull'],
-      ['Single-Arm Cable Curl', 'sa_cable_curl'],
-      ['Single-Arm Cable Hammer Curl', 'sa_cable_curl'],
-      ['Single-Arm Cable Triceps Pushdown', 'sa_cable_pushdown'],
-      ['Single-Arm Reverse-Grip Cable Pushdown', 'sa_cable_pushdown'],
-      ['Single-Arm Overhead Cable Triceps Extension', 'sa_cable_triceps_extension'],
+      ['Single-Arm Cable Face Pull', null],
+      ['Single-Arm Cable Curl', null],
+      ['Single-Arm Cable Hammer Curl', null],
+      ['Single-Arm Cable Triceps Pushdown', null],
+      ['Single-Arm Reverse-Grip Cable Pushdown', null],
+      ['Single-Arm Overhead Cable Triceps Extension', null],
       ['Single-Arm Cable Lateral Raise (Cross-Body)', 'cable_lateral_raise'],
       // Single-arm, no fair standard
       ['Single-Arm Cable Upright Row', null],
@@ -130,32 +130,32 @@ describe('strength standards for the new lifts', () => {
       // Machines
       ['Plate-Loaded Chest Press', 'machine_chest_press'],
       ['Plate-Loaded Chest-Supported Row', 'machine_row'],
-      ['Plate-Loaded Leg Press (Horizontal)', 'leg_press'],
-      ['Plate-Loaded Hip Thrust', 'hip_thrust'],
+      ['Plate-Loaded Leg Press (Horizontal)', 'horizontal_leg_press'],
+      ['Plate-Loaded Hip Thrust', null],
       ['Plate-Loaded Dip', null],
       ['Machine Triceps Dip', null],
       ['Assisted Pull-Up (Machine)', null],
-      ['Smith Machine Bench Press', 'bench'],
-      ['Smith Machine Squat', 'squat'],
+      ['Smith Machine Bench Press', 'smith_bench'],
+      ['Smith Machine Squat', 'smith_squat'],
       // Barbell and Olympic
       ['Barbell Back Squat (Low Bar)', 'squat'],
       ['Barbell Zercher Squat', null],
       ['Overhead Squat', null],
       ['Barbell Bulgarian Split Squat', 'split_squat'],
-      ['Barbell Sumo Deadlift', 'deadlift'],
+      ['Barbell Sumo Deadlift', 'sumo_deadlift'],
       ['Trap Bar Deadlift', 'trap_bar_deadlift'],
       ['Trap Bar Carry', null],
-      ['Barbell Push Press', 'overhead_press'],
+      ['Barbell Push Press', 'push_press'],
       ['Dumbbell Push Press', null],
-      ['Barbell Pendlay Row', 'barbell_row'],
+      ['Barbell Pendlay Row', null],
       ['EZ-Bar Curl', 'barbell_curl'],
       ['EZ-Bar Skull Crusher', 'skull_crusher'],
-      ['Dumbbell Lying Triceps Extension', 'db_triceps_extension'],
+      ['Dumbbell Lying Triceps Extension', null],
       ['Power Clean', 'power_clean'],
-      ['Hang Power Clean', 'power_clean'],
+      ['Hang Power Clean', null],
       ['Clean and Jerk', 'clean_jerk'],
       ['Clean Pull', null],
-      ['Power Snatch', 'snatch'],
+      ['Power Snatch', null],
       ['Snatch Pull', null],
       ['Snatch Balance', null],
       ['Dumbbell Upright Row', null],
@@ -164,7 +164,7 @@ describe('strength standards for the new lifts', () => {
       ['Weighted Pull-Up', 'pull_up'],
       ['Weighted Chin-Up', 'chin_up'],
       ['Weighted Dip', 'dip'],
-      ['Decline Push-Up', 'push_up'],
+      ['Decline Push-Up', null],
       ['Incline Push-Up', null],
       ['Pike Push-Up', null],
       ['Bodyweight Squat', 'bw_squat'],
@@ -173,7 +173,7 @@ describe('strength standards for the new lifts', () => {
       ['Glute Bridge', null],
       ['Bench Dip', 'bench_dip'],
       ['Inverted Row', 'inverted_row'],
-      ['Hanging Knee Raise', 'leg_raise'],
+      ['Hanging Knee Raise', null],
     ]
     for (const [name, key] of expected) expect([name, standardOf(name)]).toEqual([name, key])
   })
@@ -189,10 +189,15 @@ describe('strength standards for the new lifts', () => {
     }
   })
 
-  it('finds a standard for most of the lifts, so ranks fill in as you train', () => {
-    const lifts = EXTRA_CATALOG.filter(isLift)
-    const ranked = lifts.filter((e) => findStandard(e))
-    expect(ranked.length / lifts.length).toBeGreaterThan(0.6)
+  it('backs every ranked catalog lift with both comparison sexes and a compatible table', () => {
+    for (const exercise of EXTRA_CATALOG.filter(isLift)) {
+      const standard = findStandard(exercise)
+      if (!standard) continue
+      expect(standard.reference.kind, exercise.name).toBe(standard.kind)
+      expect(standard.reference.maleResults, exercise.name).toBeGreaterThan(0)
+      expect(standard.reference.femaleResults, exercise.name).toBeGreaterThan(0)
+      expect(standard.reference.slug, exercise.name).toBeTruthy()
+    }
   })
 })
 

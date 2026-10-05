@@ -4,25 +4,21 @@
 import { RANKS, type RankNumber } from '../config/ranks'
 import {
   ANCHOR_PERCENTILES,
-  REFERENCE_KG,
-  WOMEN_FACTOR,
   findStandard,
-  type RepsStandard,
   type Sex,
   type StrengthStandard,
 } from '../config/strengthStandards'
+import type { ReferenceRow } from '../config/strengthReferenceData'
 import { MUSCLES, type BegunSession, type Exercise, type Muscle, type SetRow, type WeightUnit } from '../types/db'
-import { percentileOf, rankForPercentile, valueAtPercentile } from './percentile'
+import { MIN_PERCENTILE, percentileOf, rankForPercentile, valueAtPercentile } from './percentile'
 
 /**
- * Strength grows more slowly than bodyweight (roughly with bodyweight to the 2/3), so a lighter
- * lifter is expected to lift more per kilo. The standards are for REFERENCE_KG and are scaled.
+ * Conservative fallback only outside published load-table bodyweights. Within the tables,
+ * interpolate the exercise's actual sex/bodyweight anchors instead of imposing one exponent.
  */
 export const BODYWEIGHT_EXPONENT = 0.67
 /** Reps above this don't raise a one-rep-max estimate any further (Epley gets unreliable). */
-export const MAX_COUNTED_REPS = 15
-/** The same cap for bodyweight moves, where long sets are normal. */
-export const MAX_BODYWEIGHT_REPS = 60
+export const MAX_COUNTED_REPS = 10
 /** A lift counts this much towards a muscle it only helps with (its secondary muscles). */
 export const SECONDARY_SHARE = 0.8
 
@@ -36,37 +32,68 @@ export function roundLoad(weight: number, unit: WeightUnit): number {
   return Math.round(weight / step) * step
 }
 
-/** Epley one-rep max with the reps capped. */
+/** Source-compatible Brzycki/Epley blend, limited to 10 reps. Longer sets give a lower estimate. */
 export function cappedE1rm(weight: number, reps: number, cap = MAX_COUNTED_REPS): number {
-  if (reps < 1 || weight <= 0) return 0
-  return reps === 1 ? weight : weight * (1 + Math.min(reps, cap) / 30)
+  if (!Number.isFinite(weight) || weight <= 0 || !Number.isInteger(reps) || reps < 1 || !(cap >= 1)) return 0
+  const n = Math.min(reps, cap, MAX_COUNTED_REPS)
+  const brzycki = weight * 36 / (37 - n)
+  const epley = weight * (1 + n / 30)
+  const blend = Math.max(0, Math.min(1, (n - 8) / 2))
+  return brzycki * (1 - blend) + epley * blend
 }
 
-const repsRatio = (reps: number) => 1 + reps / 30
+// A +1 offset allows log interpolation at zero reps without treating endurance as a 1RM.
+const repsRatio = (reps: number) => 1 + reps
 
 /**
- * The standard's five reference points on the scale performances are measured in: one-rep max ÷
- * bodyweight for load lifts (adjusted to this bodyweight), 1 + reps/30 for bodyweight moves.
+ * Published performances at this bodyweight. Loads outside the table use an explicit allometric
+ * approximation; rep counts outside it stay at the nearest published bodyweight.
  */
+export function referenceAnchors(rows: readonly ReferenceRow[], bodyweightKg: number, kind: 'load' | 'reps'): number[] {
+  if (!Number.isFinite(bodyweightKg) || bodyweightKg <= 0 || rows.length < 2) return []
+  const first = rows[0]
+  const last = rows[rows.length - 1]
+  if (bodyweightKg < first[0] || bodyweightKg > last[0]) {
+    const edge = bodyweightKg < first[0] ? first : last
+    const factor = kind === 'load' ? (bodyweightKg / edge[0]) ** BODYWEIGHT_EXPONENT : 1
+    return edge.slice(1).map((v) => v * factor)
+  }
+  const upper = rows.findIndex((row) => row[0] >= bodyweightKg)
+  if (rows[upper][0] === bodyweightKg) return rows[upper].slice(1)
+  const lo = rows[upper - 1]
+  const hi = rows[upper]
+  const fraction = (bodyweightKg - lo[0]) / (hi[0] - lo[0])
+  return lo.slice(1).map((v, i) => v + fraction * (hi[i + 1] - v))
+}
+
+/** A monotone display scale: load 1RM/bodyweight or 1 + observed bodyweight reps. */
 export function anchorRatios(standard: StrengthStandard, sex: Sex, bodyweightKg: number): number[] {
-  if (standard.kind === 'reps') return (sex === 'male' ? standard.men : standard.women).map(repsRatio)
-  const base = sex === 'male' ? standard.men : (standard.women ?? standard.men.map((r) => r * WOMEN_FACTOR[standard.family]))
-  const scale = (bodyweightKg / REFERENCE_KG[sex]) ** (BODYWEIGHT_EXPONENT - 1)
-  return base.map((r) => r * scale)
+  const anchors = referenceAnchors(standard.reference[sex], bodyweightKg, standard.kind)
+  return anchors.map((v) => standard.kind === 'reps' ? repsRatio(v) : v / bodyweightKg)
 }
 
 /** One set on the same scale as anchorRatios. Set weights are in the unit the app is set to. */
-export function setRatio(standard: StrengthStandard, set: Pick<SetRow, 'weight' | 'reps'>, unit: WeightUnit, bodyweightKg: number): number {
+export function setRatio(standard: StrengthStandard, set: Pick<SetRow, 'weight' | 'reps'>, unit: WeightUnit, bodyweightKg: number, sex: Sex = 'male'): number {
+  if (!Number.isFinite(bodyweightKg) || bodyweightKg <= 0 || !Number.isFinite(set.weight) || set.weight < 0 || !Number.isInteger(set.reps) || set.reps < 1) return 0
   if (standard.kind === 'load') return cappedE1rm(toKg(set.weight, unit), set.reps) / bodyweightKg
-  if (set.reps < 1) return 0
-  const moved = (standard as RepsStandard).share * bodyweightKg
-  return ((moved + toKg(Math.max(0, set.weight), unit)) * repsRatio(Math.min(set.reps, MAX_BODYWEIGHT_REPS))) / moved
+  if (set.weight === 0) return repsRatio(set.reps) // Count observed endurance directly; no 1RM extrapolation or 60-rep ceiling.
+  const weightedRows = sex === 'male' ? standard.reference.weightedMale : standard.reference.weightedFemale
+  if (!weightedRows || standard.share !== 1) return 0 // No defensible added-load conversion for other bodyweight exercises.
+  if (bodyweightKg < weightedRows[0][0] || bodyweightKg > weightedRows.at(-1)![0]) return 0
+  const addedLoads = referenceAnchors(weightedRows, bodyweightKg, 'reps')
+  const weightedAnchors = addedLoads.map((v) => (bodyweightKg + v) / bodyweightKg)
+  const ratio = cappedE1rm(bodyweightKg + toKg(set.weight, unit), set.reps) / bodyweightKg
+  const percentile = percentileOf(ratio, weightedAnchors, ANCHOR_PERCENTILES)
+  // Map the weighted result to the same percentile on the displayed bodyweight-rep scale.
+  return valueAtPercentile(percentile, anchorRatios(standard, sex, bodyweightKg), ANCHOR_PERCENTILES)
 }
 
 /** A ratio as the number people think in: a one-rep max in `unit`, or reps at bodyweight. */
-export function ratioToValue(standard: StrengthStandard, ratio: number, bodyweightKg: number, unit: WeightUnit): number {
-  if (standard.kind === 'reps') return Math.max(0, Math.round(30 * (ratio - 1)))
-  return roundLoad(fromKg(ratio * bodyweightKg, unit), unit)
+export function ratioToValue(standard: StrengthStandard, ratio: number, bodyweightKg: number, unit: WeightUnit, roundUp = false): number {
+  if (standard.kind === 'reps') return Math.max(0, roundUp ? Math.ceil(ratio - 1 - 1e-9) : Math.round(ratio - 1))
+  const weight = fromKg(ratio * bodyweightKg, unit)
+  const step = unit === 'kg' ? (weight < 20 ? 0.5 : 2.5) : weight < 40 ? 1 : 5
+  return roundUp ? Math.ceil(weight / step - 1e-9) * step : roundLoad(weight, unit)
 }
 
 export interface Comparison {
@@ -83,19 +110,33 @@ export const compareWith = (standard: StrengthStandard, sex: Sex, bodyweightKg: 
   anchors: anchorRatios(standard, sex, bodyweightKg),
 })
 
-export const percentileForRatio = (c: Comparison, ratio: number): number => percentileOf(ratio, c.anchors, ANCHOR_PERCENTILES)
+/** Remove rounded zero loads and keep the upper percentile of tied performances. */
+function comparisonCurve(c: Comparison) {
+  const points = c.anchors.flatMap((v, i) => v > 0 && v !== c.anchors[i + 1] ? [{ value: v, percentile: ANCHOR_PERCENTILES[i] }] : [])
+  return { anchors: points.map((p) => p.value), percentiles: points.map((p) => p.percentile) }
+}
+
+export function percentileForRatio(c: Comparison, ratio: number): number {
+  if (c.anchors.length !== 5 || !Number.isFinite(ratio) || (c.standard.kind === 'reps' && ratio <= 1)) return MIN_PERCENTILE
+  const curve = comparisonCurve(c)
+  return curve.anchors.length < 2 ? MIN_PERCENTILE : percentileOf(ratio, curve.anchors, curve.percentiles)
+}
 
 /** The value (1RM or reps) that reaches each rank, at this bodyweight. Rank 1 needs nothing. */
 export function rankLadder(c: Comparison, unit: WeightUnit): { rank: RankNumber; value: number }[] {
+  const curve = comparisonCurve(c)
+  if (curve.anchors.length < 2) return []
   return RANKS.map((r) => ({
     rank: r.rank,
-    value: r.fromPercentile === 0 ? 0 : ratioToValue(c.standard, valueAtPercentile(r.fromPercentile, c.anchors, ANCHOR_PERCENTILES), c.bodyweightKg, unit),
+    value: r.fromPercentile === 0 ? 0 : Math.max(c.standard.kind === 'reps' ? 1 : 0, ratioToValue(c.standard, valueAtPercentile(r.fromPercentile, curve.anchors, curve.percentiles), c.bodyweightKg, unit, true)),
   }))
 }
 
 /** What the average (50th percentile) lifter of this sex and bodyweight does. */
-export const averageValue = (c: Comparison, unit: WeightUnit): number =>
-  ratioToValue(c.standard, valueAtPercentile(50, c.anchors, ANCHOR_PERCENTILES), c.bodyweightKg, unit)
+export function averageValue(c: Comparison, unit: WeightUnit): number {
+  const curve = comparisonCurve(c)
+  return curve.anchors.length < 2 ? 0 : ratioToValue(c.standard, valueAtPercentile(50, curve.anchors, curve.percentiles), c.bodyweightKg, unit)
+}
 
 export interface LiftBadge {
   exercise: Exercise
@@ -125,6 +166,7 @@ export interface StrengthInput {
 
 /** A badge for every lift that has a standard and at least one logged set, best rank first. */
 export function rankLifts(input: StrengthInput): LiftBadge[] {
+  if (!Number.isFinite(input.bodyweightKg) || input.bodyweightKg <= 0) return []
   const startedAt = new Map(input.sessions.map((s) => [s.id, s.started_at]))
   const setsByExercise = new Map<string, SetRow[]>()
   for (const set of input.sets) {
@@ -141,7 +183,7 @@ export function rankLifts(input: StrengthInput): LiftBadge[] {
     let best: SetRow | null = null
     let bestRatio = 0
     for (const set of sets) {
-      const ratio = setRatio(standard, set, input.unit, input.bodyweightKg)
+      const ratio = setRatio(standard, set, input.unit, input.bodyweightKg, input.sex)
       if (ratio > bestRatio || (ratio === bestRatio && best && set.created_at < best.created_at)) {
         best = set
         bestRatio = ratio
@@ -150,15 +192,16 @@ export function rankLifts(input: StrengthInput): LiftBadge[] {
     if (!best || bestRatio <= 0) continue
     const percentile = percentileForRatio(comparison, bestRatio)
     const { rank, progress } = rankForPercentile(percentile)
-    const primary = [...new Set([...standard.muscles, ...exercise.primary_muscles])]
-    const secondary = exercise.secondary_muscles.filter((m) => !primary.includes(m))
+    // A custom primary-muscle tag cannot turn a bench press into a measured calf-strength test.
+    const primary = [...standard.muscles]
+    const secondary = [...new Set([...exercise.primary_muscles, ...exercise.secondary_muscles])].filter((m) => !primary.includes(m))
     badges.push({
       exercise,
       standard,
       comparison,
       best,
       bestAt: startedAt.get(best.session_id) ?? best.created_at,
-      value: standard.kind === 'load' ? Math.round(fromKg(bestRatio * input.bodyweightKg, input.unit) * 10) / 10 : Math.round(30 * (bestRatio - 1)),
+      value: standard.kind === 'load' ? Math.round(fromKg(bestRatio * input.bodyweightKg, input.unit) * 10) / 10 : Math.round(bestRatio - 1),
       percentile,
       rank,
       progress,

@@ -27,7 +27,7 @@ describe('one-rep max and ratios', () => {
   it('caps the reps counted in the estimate', () => {
     expect(cappedE1rm(100, 1)).toBe(100)
     expect(cappedE1rm(100, 10)).toBeCloseTo(133.33, 2)
-    expect(cappedE1rm(100, 30)).toBe(cappedE1rm(100, 15))
+    expect(cappedE1rm(100, 30)).toBe(cappedE1rm(100, 10))
     expect(cappedE1rm(0, 5)).toBe(0)
   })
 
@@ -37,7 +37,7 @@ describe('one-rep max and ratios', () => {
   })
 
   it('turns bodyweight reps (plus any added weight) into the same scale', () => {
-    expect(setRatio(pullStd, { weight: 0, reps: 9 }, 'kg', 80)).toBeCloseTo(1.3, 6)
+    expect(setRatio(pullStd, { weight: 0, reps: 9 }, 'kg', 80)).toBe(10)
     expect(setRatio(pullStd, { weight: 20, reps: 5 }, 'kg', 80)).toBeGreaterThan(setRatio(pullStd, { weight: 0, reps: 5 }, 'kg', 80))
     expect(setRatio(pullStd, { weight: 0, reps: 0 }, 'kg', 80)).toBe(0)
   })
@@ -53,15 +53,16 @@ describe('comparisons', () => {
   it('puts a 1x bodyweight bench near the middle for an 80 kg man', () => {
     const c = compareWith(benchStd, 'male', 80)
     const p = percentileForRatio(c, 1)
-    expect(p).toBeGreaterThan(40)
-    expect(p).toBeLessThan(50)
-    expect(averageValue(c, 'kg')).toBe(85) // 1.05 x 80 = 84, rounded to a plate
+    expect(p).toBeGreaterThan(20)
+    expect(p).toBeLessThan(40)
+    expect(percentileForRatio(c, 98 / 80)).toBeCloseTo(50)
+    expect(averageValue(c, 'kg')).toBe(97.5)
   })
 
-  it('expects more per kilo from lighter lifters and less from heavier ones', () => {
+  it('uses the published bodyweight curves instead of assuming a universal relative-strength rule', () => {
     const light = compareWith(benchStd, 'male', 60)
     const heavy = compareWith(benchStd, 'male', 110)
-    expect(percentileForRatio(light, 1)).toBeLessThan(percentileForRatio(heavy, 1))
+    expect(percentileForRatio(light, 1)).toBeGreaterThan(percentileForRatio(heavy, 1))
     // ...but heavier lifters still lift more in total at the same percentile.
     expect(averageValue(heavy, 'kg')).toBeGreaterThan(averageValue(light, 'kg'))
   })
@@ -75,8 +76,8 @@ describe('comparisons', () => {
     expect(ladder[0]).toEqual({ rank: 1, value: 0 })
     for (let i = 2; i < ladder.length; i += 1) expect(ladder[i].value).toBeGreaterThan(ladder[i - 1].value)
     const reps = rankLadder(compareWith(pullStd, 'male', 80), 'lb')
-    expect(reps[4].value).toBeGreaterThanOrEqual(5)
-    expect(reps[4].value).toBeLessThanOrEqual(9)
+    expect(reps[4].value).toBeGreaterThanOrEqual(10)
+    expect(reps[4].value).toBeLessThanOrEqual(13)
   })
 })
 
@@ -96,7 +97,7 @@ describe('rankLifts', () => {
     expect(lifts.map((l) => l.exercise.id).sort()).toEqual(['bench', 'pull', 'squat'])
     const b = lifts.find((l) => l.exercise.id === 'bench')!
     expect(b.best.weight).toBe(80)
-    expect(b.value).toBe(88)
+    expect(b.value).toBe(84.7)
     expect(lifts[0].percentile).toBeGreaterThanOrEqual(lifts[1].percentile)
     expect(lifts.find((l) => l.exercise.id === 'pull')!.value).toBe(12)
   })

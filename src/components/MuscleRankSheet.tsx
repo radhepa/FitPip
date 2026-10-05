@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { rankInfo } from '../config/ranks'
 import { muscleLabel } from '../lib/format'
-import { beatsText, liftValueText, liftsThatRank, rankName } from '../lib/rankFormat'
+import { liftValueText, liftsThatRank, rankName } from '../lib/rankFormat'
 import { SECONDARY_SHARE, type MuscleRank } from '../lib/strengthRank'
 import type { Muscle, WeightUnit } from '../types/db'
 import { RankBar } from './RankBar'
@@ -37,7 +37,7 @@ export function MuscleRankSheet({ open, title, muscles, ranks, unit, onClose }: 
                   <p className="font-display text-lg leading-tight font-extrabold">{rank ? rankName(rank.rank, true) : 'Not ranked yet'}</p>
                   {rank && (
                     <p className="text-sm text-muted">
-                      {rank.sources[0].role === 'primary' ? `${beatsText(rank.percentile)} at your bodyweight` : 'From lifts where it’s a helper muscle'}
+                      {rank.sources[0].role === 'primary' ? 'Estimated from your best lift comparison at your bodyweight' : 'From lifts where it’s a helper muscle'}
                     </p>
                   )}
                 </div>

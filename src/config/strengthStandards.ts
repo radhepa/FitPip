@@ -1,261 +1,169 @@
-// Strength standards: how strong people who lift are, lift by lift, so a best set can be turned
-// into a percentile ("stronger than 64% of lifters your size") and a rank.
-//
-// These are approximations compiled from commonly published bodyweight-multiple tables for
-// people who train, not a scientific dataset. Tune any number here; nothing else needs to change.
-//
-// - Load standards: one-rep max divided by bodyweight at the 5th, 20th, 50th, 80th and 95th
-//   percentile, for a man of REFERENCE_KG.male. Lighter lifters are expected to lift a bit more
-//   per kilo and heavier ones a bit less (see BODYWEIGHT_EXPONENT in lib/strengthRank.ts).
-//   Dumbbell standards are per dumbbell (the weight people type); goblet squats and kettlebell
-//   swings are one weight.
-// - Reps standards (pull-ups, push-ups, crunches...): reps at bodyweight at the same five
-//   percentiles. Added weight counts through `share`, the part of your bodyweight the move lifts.
-// - Women's numbers default to the men's times WOMEN_FACTOR for the lift's family, at
-//   REFERENCE_KG.female. Reps standards list women's reps explicitly.
-//
-// The first standard whose `match` fits an exercise's name (and equipment, when given) is used,
-// so specific entries come before general ones. Only strength exercises logged as weight x reps
-// are ranked this way.
+// Exercise-specific comparison standards for adult recreational lifters.
+// Published men/women tables and sources live in strengthReferenceData.ts.
+// No invented family multipliers or fractional copies of two-arm standards.
+// The matching order matters: exact variants must precede general movements.
 import type { Equipment, Muscle, Sex } from '../types/db'
-
+import { STRENGTH_REFERENCES, type StrengthReference } from './strengthReferenceData'
 export type { Sex }
-
-/** Values at the 5th, 20th, 50th, 80th and 95th percentile. */
 export type Anchors = readonly [number, number, number, number, number]
 export const ANCHOR_PERCENTILES: Anchors = [5, 20, 50, 80, 95]
-
-export const REFERENCE_KG: Record<Sex, number> = { male: 80, female: 64 }
-
 export type Family = 'press' | 'pull' | 'arms' | 'raise' | 'legs' | 'hinge' | 'glutes' | 'calves' | 'traps' | 'grip' | 'core' | 'olympic'
-
-export const WOMEN_FACTOR: Record<Family, number> = {
-  press: 0.6,
-  pull: 0.64,
-  arms: 0.6,
-  raise: 0.62,
-  legs: 0.76,
-  hinge: 0.76,
-  glutes: 0.85,
-  calves: 0.8,
-  traps: 0.66,
-  grip: 0.62,
-  core: 0.8,
-  olympic: 0.72,
-}
 
 interface Base {
   key: string
-  /** What the lift is compared with, shown to the user ("Bench press"). */
   label: string
   family: Family
-  /** Muscles this lift ranks, on top of the exercise's own primary muscles. */
   muscles: Muscle[]
   match: RegExp
   not?: RegExp
   equipment?: readonly Equipment[]
-  /**
-   * Made for one arm or one leg at a time (a split squat, a cable lateral raise, a single-arm cable
-   * row). Names with 'single-arm' or 'single-leg' in them only compare with standards like this.
-   */
   oneSided?: boolean
+  reference: StrengthReference
 }
-
 export interface LoadStandard extends Base {
   kind: 'load'
-  men: Anchors
-  women?: Anchors
-  /** The typed weight is one dumbbell of a pair. */
   perHand?: boolean
-  /** The typed weight is what one arm moves (a single-arm cable lift). */
   perArm?: boolean
 }
-
 export interface RepsStandard extends Base {
   kind: 'reps'
-  /** Share of bodyweight the move lifts (pull-up about 1, push-up about 0.64). */
+  /** Only used for full-body weighted pull-ups/chin-ups/dips with published added-load tables. */
   share: number
-  men: Anchors
-  women: Anchors
 }
-
 export type StrengthStandard = LoadStandard | RepsStandard
-
-const BAR: readonly Equipment[] = ['barbell', 'smith_machine', 'other']
-const DB: readonly Equipment[] = ['dumbbell', 'kettlebell']
+const BAR: readonly Equipment[] = ['barbell', 'other']
+const DB: readonly Equipment[] = ['dumbbell']
 const MACHINE: readonly Equipment[] = ['machine']
 const CABLE: readonly Equipment[] = ['cable']
 const BW: readonly Equipment[] = ['bodyweight']
+type Opts = Partial<Pick<LoadStandard, 'not' | 'equipment' | 'perHand' | 'perArm' | 'oneSided'>>
 
-type Opts = Partial<Pick<LoadStandard, 'not' | 'equipment' | 'perHand' | 'perArm' | 'oneSided' | 'women'>>
-
-const load = (key: string, label: string, family: Family, muscles: Muscle[], match: RegExp, men: Anchors, opts: Opts = {}): LoadStandard => ({
-  kind: 'load',
-  key,
-  label,
-  family,
-  muscles,
-  match,
-  men,
-  ...opts,
+const load = (key: string, label: string, family: Family, muscles: Muscle[], match: RegExp, opts: Opts = {}): LoadStandard => ({
+  kind: 'load', key, label, family, muscles, match, equipment: BAR, ...opts, reference: STRENGTH_REFERENCES[key],
+})
+const perHand = (key: string, label: string, family: Family, muscles: Muscle[], match: RegExp, opts: Opts = {}): LoadStandard =>
+  load(key, label, family, muscles, match, { equipment: DB, perHand: true, ...opts })
+const reps = (key: string, label: string, family: Family, muscles: Muscle[], match: RegExp, share: number, opts: Pick<Base, 'not' | 'equipment' | 'oneSided'> = {}): RepsStandard => ({
+  kind: 'reps', key, label, family, muscles, match, share, equipment: BW, ...opts, reference: STRENGTH_REFERENCES[key],
 })
 
-const perHand = (key: string, label: string, family: Family, muscles: Muscle[], match: RegExp, men: Anchors, opts: Opts = {}): LoadStandard =>
-  load(key, label, family, muscles, match, men, { equipment: DB, perHand: true, ...opts })
-
-const scaled = (n: number, factor: number) => Math.round(n * factor * 1000) / 1000
-
-/**
- * A single-arm cable lift. Nobody publishes tables for these, so the anchors are the two-handed
- * lift's, scaled by `share`: what one arm moves compared with two arms on the same stack (a bit
- * over half for rows, pulldowns and presses; lifts that already load each arm separately keep
- * their numbers). The weight is the stack weight you select, so machines with different pulley
- * ratios will read a little differently; treat the rank as a guide.
- */
-const singleArm = (key: string, label: string, family: Family, muscles: Muscle[], match: RegExp, [a, b, c, d, e]: Anchors, share: number, opts: Opts = {}): LoadStandard =>
-  load(key, label, family, muscles, match, [scaled(a, share), scaled(b, share), scaled(c, share), scaled(d, share), scaled(e, share)], {
-    equipment: CABLE,
-    perArm: true,
-    oneSided: true,
-    ...opts,
-  })
-
-const reps = (
-  key: string,
-  label: string,
-  family: Family,
-  muscles: Muscle[],
-  match: RegExp,
-  share: number,
-  men: Anchors,
-  women: Anchors,
-  opts: Pick<Base, 'not' | 'equipment' | 'oneSided'> = {},
-): RepsStandard => ({ kind: 'reps', key, label, family, muscles, match, share, men, women, ...opts })
-
 export const STRENGTH_STANDARDS: readonly StrengthStandard[] = [
-  // Single-arm cable lifts (first, so they are found before the two-handed ones) --------------
-  singleArm('sa_cable_shoulder_press', 'Single-arm cable shoulder press', 'press', ['front_delts', 'side_delts'], /(single|one) arm.*shoulder press/, [0.35, 0.5, 0.68, 0.9, 1.12], 0.4),
-  singleArm('sa_cable_press', 'Single-arm cable press', 'press', ['chest'], /(single|one) arm.*press/, [0.55, 0.8, 1.05, 1.4, 1.75], 0.27),
-  singleArm('sa_cable_rear_fly', 'Single-arm cable rear delt fly', 'raise', ['rear_delts'], /(single|one) arm.*(rear delt|reverse) fly/, [0.05, 0.08, 0.13, 0.19, 0.26], 1),
-  singleArm('sa_cable_fly', 'Single-arm cable fly', 'press', ['chest'], /(single|one) arm.*(fly|crossover)/, [0.08, 0.13, 0.2, 0.28, 0.36], 0.9, { not: /rear|reverse/ }),
-  singleArm('sa_cable_face_pull', 'Single-arm cable face pull', 'raise', ['rear_delts'], /(single|one) arm.*face pull/, [0.15, 0.25, 0.38, 0.52, 0.66], 0.55),
-  singleArm('sa_cable_row', 'Single-arm cable row', 'pull', ['upper_back', 'lats'], /(single|one) arm.*\brow\b/, [0.45, 0.65, 0.88, 1.15, 1.45], 0.55, { not: /upright/ }),
-  singleArm('sa_cable_straight_arm', 'Single-arm straight-arm pulldown', 'pull', ['lats'], /(single|one) arm.*straight arm/, [0.15, 0.25, 0.38, 0.52, 0.67], 0.6),
-  singleArm('sa_cable_pulldown', 'Single-arm cable pulldown', 'pull', ['lats'], /(single|one) arm.*(pull ?down|lat pull)/, [0.45, 0.63, 0.85, 1.1, 1.38], 0.55, { not: /straight arm/ }),
-  singleArm('sa_cable_curl', 'Single-arm cable curl', 'arms', ['biceps'], /(single|one) arm.*curl/, [0.18, 0.3, 0.45, 0.62, 0.8], 0.6, { not: /reverse|wrist/ }),
-  singleArm('sa_cable_pushdown', 'Single-arm triceps pushdown', 'arms', ['triceps'], /(single|one) arm.*(push ?down|press ?down)/, [0.22, 0.36, 0.53, 0.72, 0.92], 0.6),
-  singleArm('sa_cable_triceps_extension', 'Single-arm overhead triceps extension', 'arms', ['triceps'], /(single|one) arm.*(tricep.*extension|overhead.*extension)/, [0.15, 0.26, 0.4, 0.56, 0.72], 0.6),
-
+  // Exact movement/equipment variants precede their general matches.
+  load('smith_bench', 'Smith machine bench press', 'press', ['chest'], /bench press|chest press/, { equipment: ['smith_machine'], not: /incline|decline|close grip|floor/ }),
+  load('smith_squat', 'Smith machine squat', 'legs', ['quads', 'glutes'], /squat/, { equipment: ['smith_machine'], not: /front|split|bulgarian|pistol|box|partial|half/ }),
+  load('push_press', 'Push press', 'press', ['front_delts', 'side_delts'], /push press/, { equipment: BAR }),
+  load('horizontal_leg_press', 'Horizontal leg press', 'legs', ['quads', 'glutes'], /horizontal.*leg press|leg press.*horizontal/, { equipment: MACHINE }),
+  perHand('db_floor_press', 'Dumbbell floor press', 'press', ['chest', 'triceps'], /floor press/),
+  load('floor_press', 'Floor press', 'press', ['chest', 'triceps'], /floor press/, { equipment: BAR }),
+  load('sumo_deadlift', 'Sumo deadlift', 'hinge', ['glutes', 'quads', 'adductors'], /sumo.*deadlift/, { equipment: BAR }),
+  load('sa_cable_fly', 'Single-arm cable fly', 'press', ['chest'], /(single|one) arm.*(fly|crossover)/, { equipment: CABLE, perArm: true, oneSided: true, not: /rear|reverse/ }),
+  load('sa_cable_rear_fly', 'Single-arm cable rear delt fly', 'raise', ['rear_delts'], /(single|one) arm.*(rear delt|reverse).*fly/, { equipment: CABLE, perArm: true, oneSided: true }),
+  load('cable_rear_fly', 'Cable rear delt fly', 'raise', ['rear_delts'], /(rear|reverse).*fly/, { equipment: CABLE, perArm: true }),
+  load('machine_calf_raise', 'Machine calf raise', 'calves', ['calves'], /calf raise/, { equipment: MACHINE, not: /seated/ }),
   // Chest ------------------------------------------------------------------------------------
-  load('close_grip_bench', 'Close-grip bench press', 'press', ['triceps', 'chest'], /close grip (bench|press)/, [0.45, 0.68, 0.92, 1.22, 1.52], { equipment: BAR }),
-  perHand('db_incline_bench', 'Dumbbell incline press', 'press', ['chest', 'front_delts'], /incline.*(bench|press)/, [0.18, 0.27, 0.38, 0.5, 0.63]),
-  perHand('db_bench', 'Dumbbell bench press', 'press', ['chest'], /(bench|chest|floor) press/, [0.2, 0.3, 0.42, 0.56, 0.7]),
-  load('machine_chest_press', 'Machine chest press', 'press', ['chest'], /(chest press|bench press)/, [0.4, 0.62, 0.88, 1.18, 1.5], { equipment: MACHINE }),
-  load('incline_bench', 'Incline bench press', 'press', ['chest', 'front_delts'], /incline.*(bench|press)/, [0.45, 0.68, 0.9, 1.2, 1.5], { equipment: BAR }),
-  load('decline_bench', 'Decline bench press', 'press', ['chest'], /decline.*(bench|press)/, [0.58, 0.85, 1.1, 1.45, 1.8], { equipment: BAR }),
-  load('bench', 'Bench press', 'press', ['chest'], /bench press|floor press|chest press/, [0.55, 0.8, 1.05, 1.4, 1.75], { equipment: BAR }),
-  load('face_pull', 'Face pull', 'raise', ['rear_delts'], /face pull/, [0.15, 0.25, 0.38, 0.52, 0.66]),
-  load('machine_rear_fly', 'Machine reverse fly', 'raise', ['rear_delts'], /(reverse|rear).*fly|rear delt/, [0.15, 0.27, 0.42, 0.6, 0.78], { equipment: MACHINE }),
-  load('rear_fly', 'Rear delt fly', 'raise', ['rear_delts'], /(reverse|rear).*fly|rear delt/, [0.05, 0.08, 0.13, 0.19, 0.26], { perHand: true }),
-  load('machine_fly', 'Machine chest fly', 'press', ['chest'], /fly|pec deck/, [0.25, 0.42, 0.63, 0.88, 1.13], { equipment: MACHINE }),
-  load('cable_fly', 'Cable fly', 'press', ['chest'], /fly|crossover/, [0.08, 0.13, 0.2, 0.28, 0.36], { equipment: CABLE }),
-  perHand('db_fly', 'Dumbbell fly', 'press', ['chest'], /fly/, [0.08, 0.13, 0.19, 0.26, 0.34]),
-  reps('bench_dip', 'Bench dip', 'press', ['triceps'], /bench dip/, 0.7, [5, 12, 20, 30, 40], [3, 8, 14, 22, 30]),
-  reps('dip', 'Dip', 'press', ['triceps', 'chest'], /\bdips?\b/, 1, [2, 6, 13, 21, 29], [0, 2, 5, 10, 16], { not: /assisted|machine|plate loaded|seated/ }),
-  reps('push_up', 'Push-up', 'press', ['chest', 'triceps'], /push ?ups?\b|press ?ups?\b/, 0.64, [3, 12, 25, 40, 55], [1, 5, 14, 26, 38], { not: /incline|pike|archer|knee|wall/ }),
+  load('close_grip_bench', 'Close-grip bench press', 'press', ['triceps', 'chest'], /close grip (bench|press)/, { equipment: BAR }),
+  perHand('db_incline_bench', 'Dumbbell incline press', 'press', ['chest', 'front_delts'], /incline.*(bench|press)/),
+  perHand('db_bench', 'Dumbbell bench press', 'press', ['chest'], /(bench|chest) press/, { not: /decline|close grip/ }),
+  load('machine_chest_press', 'Machine chest press', 'press', ['chest'], /(chest press|bench press)/, { equipment: MACHINE, not: /incline|decline/ }),
+  load('incline_bench', 'Incline bench press', 'press', ['chest', 'front_delts'], /incline.*(bench|press)/, { equipment: BAR }),
+  load('decline_bench', 'Decline bench press', 'press', ['chest'], /decline.*(bench|press)/, { equipment: BAR }),
+  load('bench', 'Bench press', 'press', ['chest'], /bench press|chest press/, { equipment: BAR }),
+  load('face_pull', 'Face pull', 'raise', ['rear_delts'], /face pull/, { equipment: CABLE }),
+  load('machine_rear_fly', 'Machine reverse fly', 'raise', ['rear_delts'], /(reverse|rear).*fly|rear delt/, { equipment: MACHINE }),
+  load('rear_fly', 'Rear delt fly', 'raise', ['rear_delts'], /(reverse|rear).*fly|rear delt/, { perHand: true, equipment: DB }),
+  load('machine_fly', 'Machine chest fly', 'press', ['chest'], /fly|pec deck/, { equipment: MACHINE }),
+  load('cable_fly', 'Cable fly', 'press', ['chest'], /fly|crossover/, { equipment: CABLE, perArm: true }),
+  perHand('db_fly', 'Dumbbell fly', 'press', ['chest'], /fly/, { not: /incline|decline/ }),
+  reps('bench_dip', 'Bench dip', 'press', ['triceps'], /bench dip/, 0.7, { equipment: BW }),
+  reps('dip', 'Dip', 'press', ['triceps', 'chest'], /\bdips?\b/, 1, { not: /assisted|machine|plate loaded|seated|bench/ }),
+  reps('push_up', 'Push-up', 'press', ['chest', 'triceps'], /push ?ups?\b|press ?ups?\b/, 0.72, { not: /incline|decline|pike|archer|knee|wall|diamond|clap|one arm|single arm|handstand/ }),
 
   // Hinges -----------------------------------------------------------------------------------
-  perHand('db_rdl', 'Dumbbell Romanian deadlift', 'hinge', ['hamstrings', 'glutes'], /romanian|rdl|stiff leg/, [0.25, 0.38, 0.52, 0.7, 0.88]),
-  load('rdl', 'Romanian deadlift', 'hinge', ['hamstrings', 'glutes'], /romanian|rdl|stiff leg/, [0.7, 1, 1.35, 1.75, 2.15]),
-  load('trap_bar_deadlift', 'Trap bar deadlift', 'hinge', ['glutes', 'quads', 'hamstrings'], /(trap|hex) bar/, [1, 1.4, 1.85, 2.35, 2.85], { not: /carry/ }),
-  perHand('db_deadlift', 'Dumbbell deadlift', 'hinge', ['glutes', 'hamstrings'], /deadlift/, [0.3, 0.45, 0.62, 0.82, 1.02]),
-  load('deadlift', 'Deadlift', 'hinge', ['glutes', 'hamstrings', 'lower_back'], /deadlift/, [0.95, 1.35, 1.8, 2.3, 2.8]),
-  load('good_morning', 'Good morning', 'hinge', ['hamstrings', 'lower_back'], /good morning/, [0.35, 0.55, 0.8, 1.05, 1.35]),
-  load('hip_thrust', 'Hip thrust', 'glutes', ['glutes'], /hip thrust|glute bridge/, [0.7, 1.1, 1.6, 2.2, 2.8], { not: /single leg/, equipment: [...BAR, ...MACHINE] }),
-  reps('back_extension_bw', 'Back extension', 'hinge', ['lower_back'], /back extension|hyperextension/, 0.5, [5, 12, 20, 30, 40], [4, 10, 17, 26, 35], { equipment: BW }),
-  load('back_extension', 'Back extension', 'hinge', ['lower_back'], /back extension|hyperextension/, [0.4, 0.65, 0.95, 1.3, 1.65]),
-  load('kettlebell_swing', 'Kettlebell swing', 'hinge', ['glutes', 'hamstrings'], /swing/, [0.15, 0.25, 0.38, 0.52, 0.67], { equipment: DB }),
-  load('clean_jerk', 'Clean and jerk', 'olympic', ['glutes', 'quads', 'front_delts'], /clean.*jerk/, [0.4, 0.6, 0.82, 1.08, 1.32], { equipment: BAR }),
-  load('power_clean', 'Power clean', 'olympic', ['glutes', 'quads', 'traps'], /\bclean\b/, [0.45, 0.65, 0.9, 1.2, 1.45], { equipment: BAR, not: /pull|jerk|deadlift/ }),
-  load('snatch', 'Snatch', 'olympic', ['glutes', 'quads', 'traps'], /snatch/, [0.35, 0.52, 0.72, 0.95, 1.18], { equipment: BAR, not: /pull|balance|grip|deadlift/ }),
+  perHand('db_rdl', 'Dumbbell Romanian deadlift', 'hinge', ['hamstrings', 'glutes'], /romanian|rdl/),
+  load('rdl', 'Romanian deadlift', 'hinge', ['hamstrings', 'glutes'], /romanian|rdl/),
+  load('trap_bar_deadlift', 'Trap bar deadlift', 'hinge', ['glutes', 'quads', 'hamstrings'], /(trap|hex) bar/, { not: /carry/ }),
+  perHand('db_deadlift', 'Dumbbell deadlift', 'hinge', ['glutes', 'hamstrings'], /deadlift/, { not: /stiff leg|deficit|rack|block/ }),
+  load('deadlift', 'Deadlift', 'hinge', ['glutes', 'hamstrings', 'lower_back'], /deadlift/, { not: /stiff leg|deficit|rack|block/ }),
+  load('good_morning', 'Good morning', 'hinge', ['hamstrings', 'lower_back'], /good morning/),
+  load('hip_thrust', 'Hip thrust', 'glutes', ['glutes'], /hip thrust/, { not: /single leg/, equipment: BAR }),
+  reps('back_extension_bw', 'Back extension', 'hinge', ['lower_back'], /back extension|hyperextension/, 0.5, { equipment: BW }),
+  load('clean_jerk', 'Clean and jerk', 'olympic', ['glutes', 'quads', 'front_delts'], /clean.*jerk/, { equipment: BAR }),
+  load('power_clean', 'Power clean', 'olympic', ['glutes', 'quads', 'traps'], /\bpower clean\b/, { equipment: BAR, not: /hang|pull|jerk|deadlift/ }),
+  load('snatch', 'Snatch', 'olympic', ['glutes', 'quads', 'traps'], /snatch/, { equipment: BAR, not: /power|hang|pull|balance|grip|deadlift/ }),
 
   // Legs -------------------------------------------------------------------------------------
-  load('front_squat', 'Front squat', 'legs', ['quads', 'glutes'], /front squat/, [0.6, 0.9, 1.2, 1.55, 1.95], { equipment: BAR }),
-  load('goblet_squat', 'Goblet squat', 'legs', ['quads', 'glutes'], /goblet/, [0.2, 0.33, 0.48, 0.65, 0.82]),
-  load('hack_squat', 'Hack squat', 'legs', ['quads', 'glutes'], /hack squat/, [0.8, 1.25, 1.75, 2.35, 3]),
-  load('leg_press', 'Leg press', 'legs', ['quads', 'glutes'], /leg press/, [1, 1.7, 2.5, 3.5, 4.6]),
-  reps('split_squat_bw', 'Split squat', 'legs', ['quads', 'glutes'], /split squat|bulgarian/, 0.8, [5, 10, 16, 24, 32], [4, 8, 13, 20, 27], { equipment: BW, oneSided: true }),
-  perHand('db_split_squat', 'Dumbbell split squat', 'legs', ['quads', 'glutes'], /split squat|bulgarian/, [0.1, 0.18, 0.28, 0.4, 0.52], { oneSided: true }),
-  load('split_squat', 'Split squat', 'legs', ['quads', 'glutes'], /split squat|bulgarian/, [0.35, 0.55, 0.78, 1.05, 1.32], { oneSided: true }),
-  reps('lunge_bw', 'Lunge', 'legs', ['quads', 'glutes'], /lunge/, 0.8, [8, 14, 22, 32, 42], [6, 12, 19, 28, 37], { equipment: BW }),
-  perHand('db_lunge', 'Dumbbell lunge', 'legs', ['quads', 'glutes'], /lunge/, [0.1, 0.18, 0.28, 0.4, 0.52]),
-  load('lunge', 'Lunge', 'legs', ['quads', 'glutes'], /lunge/, [0.35, 0.55, 0.78, 1.05, 1.32]),
-  reps('step_up_bw', 'Step-up', 'legs', ['quads', 'glutes'], /step ?up/, 0.8, [8, 14, 22, 32, 42], [6, 12, 19, 28, 37], { equipment: BW }),
-  perHand('db_step_up', 'Dumbbell step-up', 'legs', ['quads', 'glutes'], /step ?up/, [0.08, 0.15, 0.24, 0.34, 0.45]),
-  load('step_up', 'Step-up', 'legs', ['quads', 'glutes'], /step ?up/, [0.3, 0.48, 0.68, 0.92, 1.15]),
-  reps('bw_squat', 'Bodyweight squat', 'legs', ['quads', 'glutes'], /squat/, 0.7, [15, 25, 40, 55, 70], [12, 22, 35, 48, 62], { equipment: BW, not: /pistol|jump|skater/ }),
-  perHand('db_squat', 'Dumbbell squat', 'legs', ['quads', 'glutes'], /squat/, [0.15, 0.25, 0.37, 0.5, 0.64]),
-  load('squat', 'Back squat', 'legs', ['quads', 'glutes'], /squat/, [0.75, 1.1, 1.45, 1.9, 2.35], { not: /pistol|jump|sissy|zercher|overhead|landmine|skater/ }),
-  load('leg_extension', 'Leg extension', 'legs', ['quads'], /leg extension/, [0.35, 0.58, 0.85, 1.15, 1.48]),
-  load('seated_leg_curl', 'Seated leg curl', 'legs', ['hamstrings'], /seated.*leg curl/, [0.3, 0.48, 0.7, 0.95, 1.22], { equipment: MACHINE }),
-  load('leg_curl', 'Leg curl', 'legs', ['hamstrings'], /leg curl|hamstring curl/, [0.25, 0.42, 0.62, 0.85, 1.1], { equipment: MACHINE }),
-  load('hip_adduction', 'Hip adduction', 'glutes', ['adductors'], /adduction|adductor/, [0.35, 0.6, 0.9, 1.25, 1.6], { equipment: MACHINE }),
-  load('hip_abduction', 'Hip abduction', 'glutes', ['abductors'], /abduction|abductor/, [0.35, 0.6, 0.9, 1.25, 1.6], { equipment: MACHINE }),
-  load('seated_calf_raise', 'Seated calf raise', 'calves', ['calves'], /seated.*calf/, [0.3, 0.55, 0.85, 1.2, 1.55]),
-  reps('calf_raise_bw', 'Calf raise', 'calves', ['calves'], /calf raise/, 1, [10, 20, 30, 45, 60], [8, 17, 26, 39, 52], { equipment: BW }),
-  perHand('db_calf_raise', 'Dumbbell calf raise', 'calves', ['calves'], /calf raise/, [0.15, 0.28, 0.42, 0.58, 0.75]),
-  load('calf_raise', 'Standing calf raise', 'calves', ['calves'], /calf raise/, [0.55, 0.9, 1.3, 1.8, 2.3]),
+  load('front_squat', 'Front squat', 'legs', ['quads', 'glutes'], /front squat/, { equipment: BAR }),
+  load('goblet_squat', 'Goblet squat', 'legs', ['quads', 'glutes'], /goblet/, { equipment: ['dumbbell', 'kettlebell'] }),
+  load('hack_squat', 'Hack squat', 'legs', ['quads', 'glutes'], /hack squat/, { equipment: MACHINE }),
+  load('leg_press', 'Leg press', 'legs', ['quads', 'glutes'], /leg press/, { equipment: MACHINE }),
+  perHand('db_split_squat', 'Dumbbell split squat', 'legs', ['quads', 'glutes'], /split squat|bulgarian/, { oneSided: true }),
+  load('split_squat', 'Split squat', 'legs', ['quads', 'glutes'], /split squat|bulgarian/, { oneSided: true }),
+  reps('lunge_bw', 'Lunge', 'legs', ['quads', 'glutes'], /lunge/, 0.8, { equipment: BW }),
+  perHand('db_lunge', 'Dumbbell lunge', 'legs', ['quads', 'glutes'], /lunge/),
+  load('lunge', 'Lunge', 'legs', ['quads', 'glutes'], /lunge/),
+  reps('bw_squat', 'Bodyweight squat', 'legs', ['quads', 'glutes'], /squat/, 0.7, { equipment: BW, not: /pistol|jump|skater|split|bulgarian|sissy|box|partial|half/ }),
+  perHand('db_squat', 'Dumbbell squat', 'legs', ['quads', 'glutes'], /squat/, { not: /front|overhead|pistol|jump|sissy|box|partial|half/ }),
+  load('squat', 'Back squat', 'legs', ['quads', 'glutes'], /squat/, { not: /clean|snatch|pistol|jump|sissy|zercher|overhead|landmine|skater|box|partial|half/ }),
+  load('leg_extension', 'Leg extension', 'legs', ['quads'], /leg extension/, { equipment: MACHINE }),
+  load('seated_leg_curl', 'Seated leg curl', 'legs', ['hamstrings'], /seated.*leg curl/, { equipment: MACHINE }),
+  load('leg_curl', 'Leg curl', 'legs', ['hamstrings'], /leg curl|hamstring curl/, { equipment: MACHINE }),
+  load('hip_adduction', 'Hip adduction', 'glutes', ['adductors'], /adduction|adductor/, { equipment: MACHINE }),
+  load('hip_abduction', 'Hip abduction', 'glutes', ['abductors'], /abduction|abductor/, { equipment: MACHINE }),
+  load('seated_calf_raise', 'Seated calf raise', 'calves', ['calves'], /seated.*calf/, { equipment: MACHINE }),
+  reps('calf_raise_bw', 'Calf raise', 'calves', ['calves'], /calf raise/, 1, { equipment: BW }),
+  perHand('db_calf_raise', 'Dumbbell calf raise', 'calves', ['calves'], /calf raise/),
+  load('calf_raise', 'Standing calf raise', 'calves', ['calves'], /calf raise/),
 
   // Shoulders --------------------------------------------------------------------------------
-  perHand('db_arnold', 'Arnold press', 'press', ['front_delts', 'side_delts'], /arnold/, [0.11, 0.18, 0.26, 0.35, 0.45]),
-  perHand('db_shoulder_press', 'Dumbbell shoulder press', 'press', ['front_delts', 'side_delts'], /(shoulder|overhead|military) press/, [0.13, 0.2, 0.29, 0.39, 0.5]),
-  load('machine_shoulder_press', 'Machine shoulder press', 'press', ['front_delts', 'side_delts'], /(shoulder|overhead) press/, [0.28, 0.45, 0.65, 0.88, 1.12], { equipment: MACHINE }),
-  load('overhead_press', 'Overhead press', 'press', ['front_delts', 'side_delts'], /(shoulder|overhead|military|push) press/, [0.35, 0.5, 0.68, 0.9, 1.12], { equipment: BAR }),
-  load('cable_lateral_raise', 'Cable lateral raise', 'raise', ['side_delts'], /lateral raise/, [0.03, 0.06, 0.09, 0.13, 0.17], { equipment: CABLE, oneSided: true }),
-  load('machine_lateral_raise', 'Machine lateral raise', 'raise', ['side_delts'], /lateral raise/, [0.1, 0.18, 0.27, 0.38, 0.49], { equipment: MACHINE }),
-  perHand('lateral_raise', 'Lateral raise', 'raise', ['side_delts'], /lateral raise|side raise/, [0.06, 0.1, 0.15, 0.22, 0.3]),
-  perHand('db_front_raise', 'Front raise', 'raise', ['front_delts'], /front raise/, [0.06, 0.1, 0.15, 0.21, 0.28]),
-  load('front_raise', 'Front raise', 'raise', ['front_delts'], /front raise/, [0.12, 0.18, 0.26, 0.35, 0.44]),
-  load('upright_row', 'Upright row', 'raise', ['side_delts', 'traps'], /upright row/, [0.25, 0.4, 0.57, 0.77, 0.97], { equipment: [...BAR, ...CABLE] }),
-  perHand('db_shrug', 'Dumbbell shrug', 'traps', ['traps'], /shrug/, [0.2, 0.32, 0.47, 0.65, 0.83]),
-  load('shrug', 'Shrug', 'traps', ['traps'], /shrug/, [0.7, 1, 1.4, 1.85, 2.3]),
+  perHand('db_arnold', 'Arnold press', 'press', ['front_delts', 'side_delts'], /arnold/),
+  perHand('db_shoulder_press', 'Dumbbell shoulder press', 'press', ['front_delts', 'side_delts'], /(shoulder|overhead|military) press/),
+  load('machine_shoulder_press', 'Machine shoulder press', 'press', ['front_delts', 'side_delts'], /(shoulder|overhead) press/, { equipment: MACHINE }),
+  load('overhead_press', 'Overhead press', 'press', ['front_delts', 'side_delts'], /(shoulder|overhead|military) press/, { equipment: BAR }),
+  load('cable_lateral_raise', 'Cable lateral raise', 'raise', ['side_delts'], /lateral raise/, { equipment: CABLE, oneSided: true }),
+  load('machine_lateral_raise', 'Machine lateral raise', 'raise', ['side_delts'], /lateral raise/, { equipment: MACHINE }),
+  perHand('lateral_raise', 'Lateral raise', 'raise', ['side_delts'], /lateral raise|side raise/),
+  perHand('db_front_raise', 'Front raise', 'raise', ['front_delts'], /front raise/),
+  load('front_raise', 'Front raise', 'raise', ['front_delts'], /front raise/),
+  load('upright_row', 'Upright row', 'raise', ['side_delts', 'traps'], /upright row/, { equipment: BAR }),
+  perHand('db_shrug', 'Dumbbell shrug', 'traps', ['traps'], /shrug/),
+  load('shrug', 'Shrug', 'traps', ['traps'], /shrug/),
 
   // Back -------------------------------------------------------------------------------------
-  load('straight_arm_pulldown', 'Straight-arm pulldown', 'pull', ['lats'], /straight arm|pullover/, [0.15, 0.25, 0.38, 0.52, 0.67], { equipment: [...CABLE, ...MACHINE] }),
-  load('lat_pulldown', 'Lat pulldown', 'pull', ['lats'], /pull ?down|lat pull/, [0.45, 0.63, 0.85, 1.1, 1.38]),
-  reps('chin_up', 'Chin-up', 'pull', ['lats', 'biceps'], /chin ?ups?\b/, 1, [1, 5, 10, 16, 22], [0, 1, 4, 8, 13], { not: /assisted/ }),
-  reps('pull_up', 'Pull-up', 'pull', ['lats'], /pull ?ups?\b/, 1, [1, 4, 9, 15, 21], [0, 1, 3, 7, 12], { not: /assisted/ }),
-  reps('inverted_row', 'Inverted row', 'pull', ['upper_back', 'lats'], /inverted row|body ?row/, 0.6, [4, 9, 15, 22, 30], [1, 5, 10, 16, 23]),
-  perHand('db_row', 'Dumbbell row', 'pull', ['upper_back', 'lats'], /\brow\b/, [0.18, 0.3, 0.44, 0.6, 0.77], { not: /renegade|upright/ }),
-  load('t_bar_row', 'T-bar row', 'pull', ['upper_back', 'lats'], /\bt ?bar\b/, [0.4, 0.62, 0.88, 1.18, 1.5]),
-  load('cable_row', 'Seated cable row', 'pull', ['upper_back', 'lats'], /\brow\b/, [0.45, 0.65, 0.88, 1.15, 1.45], { equipment: CABLE }),
-  load('machine_row', 'Machine row', 'pull', ['upper_back', 'lats'], /\brow\b/, [0.4, 0.62, 0.88, 1.18, 1.5], { equipment: MACHINE }),
-  load('barbell_row', 'Barbell row', 'pull', ['upper_back', 'lats'], /\brow\b/, [0.45, 0.65, 0.88, 1.15, 1.45], { equipment: BAR }),
+  load('straight_arm_pulldown', 'Straight-arm pulldown', 'pull', ['lats'], /straight arm|pullover/, { equipment: CABLE }),
+  load('lat_pulldown', 'Lat pulldown', 'pull', ['lats'], /pull ?down|lat pull/, { equipment: [...CABLE, ...MACHINE] }),
+  reps('chin_up', 'Chin-up', 'pull', ['lats', 'biceps'], /chin ?ups?\b/, 1, { not: /assisted/ }),
+  reps('pull_up', 'Pull-up', 'pull', ['lats'], /pull ?ups?\b/, 1, { not: /assisted/ }),
+  reps('inverted_row', 'Inverted row', 'pull', ['upper_back', 'lats'], /inverted row|body ?row/, 0.6, { equipment: BW }),
+  perHand('db_row', 'Dumbbell row', 'pull', ['upper_back', 'lats'], /\brow\b/, { not: /renegade|upright|chest supported|kroc|seal/ }),
+  load('t_bar_row', 'T-bar row', 'pull', ['upper_back', 'lats'], /\bt ?bar\b/, { equipment: [...BAR, ...MACHINE] }),
+  load('cable_row', 'Seated cable row', 'pull', ['upper_back', 'lats'], /\brow\b/, { equipment: CABLE }),
+  load('machine_row', 'Machine row', 'pull', ['upper_back', 'lats'], /\brow\b/, { equipment: MACHINE }),
+  load('barbell_row', 'Barbell row', 'pull', ['upper_back', 'lats'], /\brow\b/, { equipment: BAR, not: /pendlay|landmine|chest supported|seal/ }),
 
   // Arms -------------------------------------------------------------------------------------
-  perHand('db_wrist_curl', 'Dumbbell wrist curl', 'grip', ['forearms'], /wrist curl/, [0.06, 0.11, 0.17, 0.24, 0.31]),
-  load('wrist_curl', 'Wrist curl', 'grip', ['forearms'], /wrist curl/, [0.2, 0.35, 0.52, 0.72, 0.92]),
-  load('reverse_curl', 'Reverse curl', 'arms', ['biceps', 'forearms'], /reverse curl/, [0.18, 0.28, 0.4, 0.55, 0.7]),
-  load('machine_preacher_curl', 'Machine preacher curl', 'arms', ['biceps'], /preacher|curl/, [0.15, 0.25, 0.38, 0.52, 0.67], { equipment: MACHINE }),
-  perHand('hammer_curl', 'Hammer curl', 'arms', ['biceps', 'forearms'], /hammer/, [0.09, 0.16, 0.24, 0.33, 0.43]),
-  perHand('incline_curl', 'Incline dumbbell curl', 'arms', ['biceps'], /incline.*curl/, [0.07, 0.12, 0.19, 0.27, 0.35]),
-  perHand('db_curl', 'Dumbbell curl', 'arms', ['biceps'], /curl/, [0.08, 0.14, 0.22, 0.31, 0.4]),
-  load('cable_curl', 'Cable curl', 'arms', ['biceps'], /curl/, [0.18, 0.3, 0.45, 0.62, 0.8], { equipment: CABLE }),
-  load('barbell_curl', 'Barbell curl', 'arms', ['biceps'], /curl/, [0.22, 0.35, 0.5, 0.68, 0.85], { equipment: BAR }),
-  load('pushdown', 'Triceps pushdown', 'arms', ['triceps'], /push ?down|press ?down/, [0.22, 0.36, 0.53, 0.72, 0.92]),
-  load('skull_crusher', 'Skull crusher', 'arms', ['triceps'], /skull ?crusher|lying tricep/, [0.2, 0.32, 0.48, 0.65, 0.82], { equipment: [...BAR, ...CABLE] }),
-  perHand('triceps_kickback', 'Triceps kickback', 'arms', ['triceps'], /kickback/, [0.04, 0.07, 0.11, 0.15, 0.2]),
-  perHand('db_triceps_extension', 'Dumbbell triceps extension', 'arms', ['triceps'], /tricep.*extension|overhead extension/, [0.07, 0.12, 0.19, 0.27, 0.35]),
-  load('triceps_extension', 'Overhead triceps extension', 'arms', ['triceps'], /tricep.*extension|overhead extension/, [0.15, 0.26, 0.4, 0.56, 0.72]),
+  perHand('db_wrist_curl', 'Dumbbell wrist curl', 'grip', ['forearms'], /wrist curl/, { not: /reverse/ }),
+  load('wrist_curl', 'Wrist curl', 'grip', ['forearms'], /wrist curl/, { not: /reverse/ }),
+  load('reverse_curl', 'Reverse curl', 'arms', ['biceps', 'forearms'], /reverse curl/, { not: /wrist/ }),
+  load('machine_preacher_curl', 'Machine biceps curl', 'arms', ['biceps'], /preacher|biceps? curl/, { equipment: MACHINE }),
+  perHand('hammer_curl', 'Hammer curl', 'arms', ['biceps', 'forearms'], /hammer/),
+  perHand('incline_curl', 'Incline dumbbell curl', 'arms', ['biceps'], /incline.*curl/),
+  perHand('db_curl', 'Dumbbell curl', 'arms', ['biceps'], /curl/, { not: /wrist|reverse|zottman|preacher|spider|concentration/ }),
+  load('cable_curl', 'Cable curl', 'arms', ['biceps'], /curl/, { equipment: CABLE, not: /wrist|reverse|hammer|preacher|spider|concentration/ }),
+  load('barbell_curl', 'Barbell curl', 'arms', ['biceps'], /curl/, { equipment: BAR, not: /wrist|preacher|spider|drag/ }),
+  load('pushdown', 'Triceps pushdown', 'arms', ['triceps'], /push ?down|press ?down/, { equipment: CABLE }),
+  load('skull_crusher', 'Skull crusher', 'arms', ['triceps'], /skull ?crusher|lying tricep/, { equipment: BAR }),
+  perHand('triceps_kickback', 'Triceps kickback', 'arms', ['triceps'], /kickback/),
+  perHand('db_triceps_extension', 'Single-arm dumbbell triceps extension', 'arms', ['triceps'], /(single|one) arm.*(tricep.*extension|overhead extension)/, { not: /lying/ }),
+  load('triceps_extension', 'Overhead triceps extension', 'arms', ['triceps'], /tricep.*extension|overhead extension/, { equipment: CABLE }),
 
   // Core -------------------------------------------------------------------------------------
-  load('cable_crunch', 'Cable crunch', 'core', ['abs'], /crunch/, [0.25, 0.42, 0.63, 0.88, 1.13], { equipment: [...CABLE, ...MACHINE] }),
-  reps('crunch', 'Crunch', 'core', ['abs'], /crunch/, 0.3, [10, 20, 35, 55, 75], [8, 16, 28, 45, 62]),
-  reps('sit_up', 'Sit-up', 'core', ['abs'], /sit ?up/, 0.35, [10, 20, 35, 50, 65], [8, 16, 28, 42, 55]),
-  reps('leg_raise', 'Hanging leg raise', 'core', ['abs'], /leg raise|knee raise|toes to bar/, 0.35, [2, 6, 12, 18, 25], [1, 4, 8, 14, 20]),
-  reps('ab_rollout', 'Ab wheel rollout', 'core', ['abs'], /roll ?out|rollerout|ab wheel/, 0.5, [1, 5, 10, 16, 22], [0, 2, 6, 11, 16]),
-  reps('russian_twist', 'Russian twist', 'core', ['abs', 'obliques'], /russian twist/, 0.3, [10, 20, 35, 50, 70], [8, 16, 28, 42, 60]),
-  load('cable_twist', 'Cable woodchop', 'core', ['obliques', 'abs'], /twist|wood ?chop/, [0.1, 0.18, 0.28, 0.4, 0.52], { equipment: CABLE }),
+  load('cable_crunch', 'Cable crunch', 'core', ['abs'], /crunch/, { equipment: CABLE }),
+  reps('crunch', 'Crunch', 'core', ['abs'], /crunch/, 0.3, { equipment: BW, not: /reverse|bicycle/ }),
+  reps('sit_up', 'Sit-up', 'core', ['abs'], /sit ?up/, 0.35, { equipment: BW, not: /decline|incline/ }),
+  reps('leg_raise', 'Hanging leg raise', 'core', ['abs'], /hanging.*leg raise|leg raise/, 0.35, { equipment: BW, not: /knee raise|toes to bar|lying|seated/ }),
+  reps('ab_rollout', 'Ab wheel rollout', 'core', ['abs'], /roll ?out|rollerout|ab wheel/, 0.5, { equipment: ['bodyweight', 'other'] }),
+  reps('russian_twist', 'Russian twist', 'core', ['abs', 'obliques'], /russian twist/, 0.3, { equipment: BW }),
+  load('cable_twist', 'Cable woodchop', 'core', ['obliques', 'abs'], /twist|wood ?chop/, { equipment: CABLE }),
 ]
 
 /** "Dumbbell Single-Leg Split Squat (Pro)" -> "dumbbell single leg split squat pro" */

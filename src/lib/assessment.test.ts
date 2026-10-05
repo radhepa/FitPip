@@ -9,7 +9,7 @@ const base = (): Assessment => ({ version: 1, age: 28, bodyweight: 80, unit: 'kg
 describe('fitness assessment', () => {
   it('excludes skipped exercises from the estimate, instead of treating them as zero', () => {
     const assessment = base()
-    assessment.answers.push_up = { weight: 0, reps: 25 }
+    assessment.answers.push_up = { weight: 0, reps: 38 }
     const result = assessStrength(assessment)
     expect(result.answered).toBe(1)
     expect(result.score).toBeCloseTo(50)
@@ -18,15 +18,15 @@ describe('fitness assessment', () => {
   it('averages answered lift scores and gives a Wood starting point when all are skipped', () => {
     const assessment = base()
     expect(assessStrength(assessment)).toMatchObject({ rank: 1, answered: 0, score: 0 })
-    assessment.answers.push_up = { weight: 0, reps: 25 }
-    assessment.answers.bench = { weight: 112, reps: 1 }
+    assessment.answers.push_up = { weight: 0, reps: 38 }
+    assessment.answers.bench = { weight: 124, reps: 1 }
     expect(assessStrength(assessment).score).toBeCloseTo(65)
   })
   it('uses the same known one-rep max and estimated set score', () => {
     const assessment = base()
-    assessment.answers.bench = { weight: 84, reps: 1 }
+    assessment.answers.bench = { weight: 98, reps: 1 }
     const max = assessStrength(assessment).score
-    assessment.answers.bench = { weight: 70, reps: 6 }
+    assessment.answers.bench = { weight: 98 * 31 / 36, reps: 6 }
     expect(assessStrength(assessment).score).toBeCloseTo(max)
     expect(max).toBeCloseTo(50)
   })
@@ -44,7 +44,7 @@ describe('fitness assessment', () => {
   })
   it('uses the explicitly selected comparison standards', () => {
     const assessment = base()
-    assessment.answers.push_up = { weight: 0, reps: 14 }
+    assessment.answers.push_up = { weight: 0, reps: 16 }
     expect(assessStrength({ ...assessment, sex: 'female' }).score).toBeCloseTo(50)
     expect(assessStrength(assessment).score).toBeLessThan(50)
   })
@@ -73,7 +73,7 @@ describe('fitness assessment', () => {
   })
   it('shows a starting rank without inventing workouts, XP or earned overall ranks', () => {
     const assessment = base()
-    assessment.answers.push_up = { weight: 0, reps: 25 }
+    assessment.answers.push_up = { weight: 0, reps: 38 }
     const profile = buildProfile({ assessment, exercises: [], sessions: [], sets: [], unit: 'kg', sex: 'male', bodyweightKg: 80 })
     expect(profile.startingRank?.rank).toBe(5)
     expect(profile.overall).toBeNull()

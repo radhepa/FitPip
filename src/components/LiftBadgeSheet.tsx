@@ -79,8 +79,16 @@ export function LiftBadgeSheet({ lift, unit, onClose }: Props) {
       </ol>
 
       <p className="mt-4 text-xs text-muted">
-        Compared with {standard.label.toLowerCase()} standards for {who} who lift, at your bodyweight. These are estimates from published
-        standards, not a lab test.{standard.kind === 'reps' ? ' Added weight counts towards your reps.' : ' One-rep maxes are estimated from your sets (up to 15 reps count).'}
+        Estimated comparison with {who} who lift, using published {standard.label.toLowerCase()} tables at your bodyweight.
+        {' '}Self-reported results vary with technique.
+        {standard.kind === 'reps'
+          ? standard.reference.weightedMale ? ' Added-weight sets use separate load standards; the reps shown are an equivalent comparison.' : ' Bodyweight reps are counted directly. Added-weight sets have no population comparison.'
+          : ' One-rep maxes use up to 10 reps; longer sets give a conservative estimate.'}
+        {(lift.exercise.equipment === 'machine' || lift.exercise.equipment === 'cable' || lift.exercise.equipment === 'smith_machine')
+          && ' Machine design and pulley ratios can change the comparison.'}
+        {(comparison.bodyweightKg < standard.reference[comparison.sex][0][0] || comparison.bodyweightKg > standard.reference[comparison.sex].at(-1)![0])
+          && ' Your bodyweight is outside the published range, so this comparison is less certain.'}
+        {' '}<a href={`https://strengthlevel.com/strength-standards/${standard.reference.slug}/kg`} target="_blank" rel="noreferrer" className="underline">Source tables</a>.
       </p>
       <Link to={`/exercises/${lift.exercise.id}`} className="app-button button-secondary mt-3 w-full">
         Open {lift.exercise.name}

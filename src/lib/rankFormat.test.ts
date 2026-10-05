@@ -20,7 +20,7 @@ describe('rank wording', () => {
   it('formats lift values by kind', () => {
     expect(liftValueText(standard('bench'), 224.96, 'lb')).toBe('225 lb')
     expect(liftValueText(standard('db_bench'), 40.2, 'kg')).toBe('40 kg per dumbbell')
-    expect(liftValueText(standard('sa_cable_row'), 84.6, 'lb')).toBe('85 lb per arm')
+    expect(liftValueText(standard('sa_cable_fly'), 84.6, 'lb')).toBe('85 lb per arm')
     expect(liftValueText(standard('bench'), 133.3, 'lb')).toBe('133 lb')
     expect(liftValueText(standard('pull_up'), 1, 'lb')).toBe('1 rep')
     expect(liftValueText(standard('pull_up'), 12.4, 'lb')).toBe('12 reps')

@@ -40,7 +40,7 @@ export function assessStrength(value: Assessment) {
     const answer = value.answers[exercise.key]
     if (!answer) return []
     const standard = STRENGTH_STANDARDS.find((s) => s.key === exercise.key)!
-    const ratio = setRatio(standard, answer, value.unit, bodyweightKg)
+    const ratio = setRatio(standard, answer, value.unit, bodyweightKg, value.sex)
     const score = percentileForRatio(compareWith(standard, value.sex, bodyweightKg), ratio)
     return [{ ...exercise, ...answer, score, ...rankForPercentile(score) }]
   })

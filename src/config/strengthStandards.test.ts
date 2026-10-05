@@ -6,7 +6,7 @@ const lift = (name: string, equipment: Equipment) => findStandard({ name, equipm
 
 describe('findStandard', () => {
   it('matches every starter lift to a sensible standard', () => {
-    const expected: [string, Equipment, string][] = [
+    const expected: [string, Equipment, string | null][] = [
       ['Barbell Bench Press', 'barbell', 'bench'],
       ['Barbell Incline Bench Press', 'barbell', 'incline_bench'],
       ['Dumbbell Bench Press', 'dumbbell', 'db_bench'],
@@ -29,7 +29,7 @@ describe('findStandard', () => {
       ['Cable Straight Arm Pulldown', 'cable', 'straight_arm_pulldown'],
       ['Barbell Shrug', 'barbell', 'shrug'],
       ['Dumbbell Shrug', 'dumbbell', 'db_shrug'],
-      ['Lever Back Extension', 'machine', 'back_extension'],
+      ['Lever Back Extension', 'machine', null],
       ['Barbell Seated Overhead Press', 'barbell', 'overhead_press'],
       ['Dumbbell Seated Shoulder Press', 'dumbbell', 'db_shoulder_press'],
       ['Lever Shoulder Press', 'machine', 'machine_shoulder_press'],
@@ -60,14 +60,14 @@ describe('findStandard', () => {
       ['Sled Hack Squat', 'machine', 'hack_squat'],
       ['Dumbbell Single Leg Split Squat', 'dumbbell', 'db_split_squat'],
       ['Walking Lunge', 'bodyweight', 'lunge_bw'],
-      ['Dumbbell Step-Up', 'dumbbell', 'db_step_up'],
+      ['Dumbbell Step-Up', 'dumbbell', null],
       ['Lever Leg Extension', 'machine', 'leg_extension'],
       ['Barbell Romanian Deadlift', 'barbell', 'rdl'],
       ['Barbell Good Morning', 'barbell', 'good_morning'],
       ['Lever Lying Leg Curl', 'machine', 'leg_curl'],
       ['Lever Seated Leg Curl', 'machine', 'seated_leg_curl'],
-      ['Barbell Glute Bridge', 'barbell', 'hip_thrust'],
-      ['Kettlebell Swing', 'kettlebell', 'kettlebell_swing'],
+      ['Barbell Glute Bridge', 'barbell', null],
+      ['Kettlebell Swing', 'kettlebell', null],
       ['Lever Seated Hip Adduction', 'machine', 'hip_adduction'],
       ['Lever Seated Hip Abduction', 'machine', 'hip_abduction'],
       ['Barbell Standing Calf Raise', 'barbell', 'calf_raise'],
@@ -85,16 +85,17 @@ describe('findStandard', () => {
   it('handles common custom names', () => {
     expect(lift('Bench Press', 'barbell')).toBe('bench')
     expect(lift('Back Squat', 'barbell')).toBe('squat')
-    expect(lift('Smith Machine Squat', 'smith_machine')).toBe('squat')
+    expect(lift('Smith Machine Squat', 'smith_machine')).toBe('smith_squat')
     expect(lift('Weighted Pull-ups', 'bodyweight')).toBe('pull_up')
-    expect(lift('Hip Thrust', 'machine')).toBe('hip_thrust')
+    expect(lift('Hip Thrust', 'machine')).toBeNull()
     expect(lift('Trap Bar Deadlift', 'barbell')).toBe('trap_bar_deadlift')
   })
 
   it('ranks single-arm cable lifts only against single-arm standards', () => {
-    expect(lift('Single-Arm Cable Row', 'cable')).toBe('sa_cable_row')
-    expect(lift('One Arm Cable Lat Pulldown', 'cable')).toBe('sa_cable_pulldown')
-    expect(lift('Single Arm Cable Chest Press', 'cable')).toBe('sa_cable_press')
+    expect(lift('Single-Arm Cable Row', 'cable')).toBeNull()
+    expect(lift('One Arm Cable Lat Pulldown', 'cable')).toBeNull()
+    expect(lift('Single Arm Cable Chest Press', 'cable')).toBeNull()
+    expect(lift('Single Arm Cable Fly', 'cable')).toBe('sa_cable_fly')
     expect(lift('Single-Arm Cable Lateral Raise', 'cable')).toBe('cable_lateral_raise')
     // No fair standard for these, so no rank (never the two-handed one).
     expect(lift('Single-Arm Cable Upright Row', 'cable')).toBeNull()
@@ -118,12 +119,37 @@ describe('findStandard', () => {
     expect(lift('Trap Bar Carry', 'barbell')).toBeNull()
   })
 
-  it('derives the single-arm anchors from the two-handed ones', () => {
-    const row = STRENGTH_STANDARDS.find((s) => s.key === 'sa_cable_row')!
-    const twoHanded = STRENGTH_STANDARDS.find((s) => s.key === 'cable_row')!
-    expect(row.kind).toBe('load')
-    if (row.kind === 'load') expect(row.perArm).toBe(true)
-    for (let i = 0; i < 5; i += 1) expect(row.men[i]).toBeCloseTo(twoHanded.men[i] * 0.55, 2)
+  it('uses cable-fly loads per stack, without invented single-arm multipliers', () => {
+    const oneArm = STRENGTH_STANDARDS.find((s) => s.key === 'sa_cable_fly')!
+    const fly = STRENGTH_STANDARDS.find((s) => s.key === 'cable_fly')!
+    expect(oneArm.reference).toEqual(fly.reference)
+    if (oneArm.kind === 'load') expect(oneArm.perArm).toBe(true)
+    expect(lift('Single Arm Cable Curl', 'cable')).toBeNull()
+  })
+
+  it('does not silently give materially different movement variants a generic rank', () => {
+    const unsupported: [string, Equipment][] = [
+      ['Dumbbell Decline Bench Press', 'dumbbell'],
+      ['Plate-Loaded Incline Chest Press', 'machine'],
+      ['Barbell Stiff-Leg Deadlift', 'barbell'],
+      ['EZ-Bar Preacher Curl', 'barbell'],
+      ['Dumbbell Concentration Curl', 'dumbbell'],
+      ['Dumbbell Reverse Wrist Curl', 'dumbbell'],
+      ['Barbell Reverse Wrist Curl', 'barbell'],
+      ['Chest-Supported Dumbbell Row', 'dumbbell'],
+      ['Barbell Pendlay Row', 'barbell'],
+      ['Hang Power Clean', 'barbell'],
+      ['Squat Clean', 'barbell'],
+      ['Power Snatch', 'barbell'],
+      ['Decline Sit-Up', 'bodyweight'],
+      // The source demonstrates one arm; this catalog movement holds one dumbbell with two hands.
+      ['Dumbbell Overhead Triceps Extension', 'dumbbell'],
+      ['Dumbbell Lying Triceps Extension', 'dumbbell'],
+    ]
+    for (const [name, equipment] of unsupported) expect(lift(name, equipment), name).toBeNull()
+    expect(lift('Single-Arm Dumbbell Overhead Triceps Extension', 'dumbbell')).toBe('db_triceps_extension')
+    expect(lift('Squat Snatch', 'barbell')).toBe('snatch')
+    expect(lift('Barbell Hip Thrust', 'barbell')).toBe('hip_thrust')
   })
 
   it('leaves out what it cannot compare fairly', () => {
@@ -139,8 +165,16 @@ describe('findStandard', () => {
     for (const s of STRENGTH_STANDARDS) {
       expect(keys.has(s.key), s.key).toBe(false)
       keys.add(s.key)
-      const rows = s.kind === 'reps' ? [s.men, s.women] : [s.men, ...(s.women ? [s.women] : [])]
-      for (const row of rows) for (let i = 1; i < row.length; i += 1) expect(row[i], s.key).toBeGreaterThan(row[i - 1])
+      expect(s.reference, s.key).toBeDefined()
+      expect(s.reference.kind, s.key).toBe(s.kind)
+      for (const sex of ['male', 'female'] as const) {
+        expect(s.reference[sex].length, s.key).toBeGreaterThan(1)
+        for (const [j, row] of s.reference[sex].entries()) {
+          expect(row.every(Number.isFinite), s.key).toBe(true)
+          if (j > 0) expect(row[0], s.key).toBeGreaterThan(s.reference[sex][j - 1][0])
+          for (let i = 2; i < row.length; i += 1) expect(row[i], s.key).toBeGreaterThanOrEqual(row[i - 1])
+        }
+      }
     }
   })
 })

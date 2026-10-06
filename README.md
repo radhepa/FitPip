@@ -170,12 +170,19 @@ For password-reset emails, set your deployed address as Supabase's **Site URL** 
 
 FitPip is a Progressive Web App: you install it from your browser. Open your deployed **HTTPS** address on your phone.
 
+The live app is at **[fit-pip.vercel.app](https://fit-pip.vercel.app)**. Use this production address when installing; Vercel preview deployment addresses can require a Vercel sign-in.
+
 | Device | Installation |
 | --- | --- |
 | **iPhone or iPad** | In Safari, open the Share menu and choose **Add to Home Screen**, then **Add**. |
 | **Android** | In Chrome, open the menu and choose **Install app** or **Add to Home screen**, then confirm. |
 
 Open FitPip from its new icon and sign in there. The installed app may need its own sign-in even if you've already signed in through the browser. Updates are fetched when you open the app online.
+
+**Still seeing the old icon?** Home-screen artwork can stay saved separately from app updates. The icon URLs change with the artwork so fresh installations fetch the new images.
+
+- **iPhone or iPad:** Open the production address in Safari, reload it, and use **Share → Add to Home Screen** again. Check that the preview shows Pip's close-up on dark blue before adding it, then remove the old shortcut.
+- **Android:** [Chrome can take a day or two to update an installed app's icon](https://web.dev/articles/manifest-updates). Open FitPip online, close it, and leave the phone on Wi-Fi and charging. If it stays old, reinstall from the production address after any offline workouts have synced.
 
 *Pip would help carry your gym bag, but the bag is bigger than he is.*
 

@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
+import { appIcons } from './src/config/appIcons.js'
 import { brand } from './src/config/brand.js'
 
 // https://vite.dev/config/
@@ -23,14 +24,17 @@ export default defineConfig({
           .replaceAll('%APP_NAME%', brand.name)
           .replaceAll('%APP_SHORT_NAME%', brand.shortName)
           .replaceAll('%APP_DESCRIPTION%', brand.description)
+          .replaceAll('%APP_FAVICON%', appIcons.favicon)
+          .replaceAll('%APP_APPLE_ICON%', appIcons.appleTouch)
       },
     },
     react(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'apple-touch-icon.png'],
+      includeAssets: [appIcons.favicon.slice(1), appIcons.appleTouch.slice(1)],
       manifest: {
+        id: '/',
         name: brand.name,
         short_name: brand.shortName,
         description: brand.description,
@@ -41,9 +45,9 @@ export default defineConfig({
         background_color: '#070b14',
         theme_color: '#070b14',
         icons: [
-          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: appIcons.standard192, sizes: '192x192', type: 'image/png' },
+          { src: appIcons.standard512, sizes: '512x512', type: 'image/png' },
+          { src: appIcons.maskable512, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {

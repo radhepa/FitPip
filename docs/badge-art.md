@@ -43,15 +43,19 @@ contrasts with his blue fur. The source image is
 
 Replace the source PNG to revise the icon, then run `npm run icons`. It writes:
 
-- `public/favicon.png` — 64px browser icon.
-- `public/icons/icon-192.png` and `icon-512.png` — standard PWA icons.
-- `public/icons/icon-maskable-512.png` — close-up with a slight inset protecting the smile inside Android's safe area.
-- `public/apple-touch-icon.png` — 180px iOS home-screen icon.
+- `public/favicon-<hash>.png` — 64px browser icon.
+- `public/icons/icon-192-<hash>.png` and `icon-512-<hash>.png` — standard PWA icons.
+- `public/icons/icon-maskable-512-<hash>.png` — close-up with a slight inset protecting the smile inside Android's safe area.
+- `public/apple-touch-icon-<hash>.png` — 180px iOS home-screen icon.
 - `docs/images/fitpip-mobile-icon.png` — the same 192px icon shown in the main README.
+- `src/config/appIcons.ts` — generated paths used by the HTML, manifest and review board.
 
 The icon canvas is opaque and square; the operating system supplies corner or circle masks.
-The existing manifest and HTML references consume these paths without additional changes.
-Existing installed home-screen icons may require removing and re-adding the shortcut to refresh.
+Each hash comes from the final PNG bytes, so changing the artwork also changes its URL.
+Unversioned PNG aliases remain available for older app shells and Safari's root fallback.
+Keep the manifest at `/manifest.webmanifest` and the app identity at `/`; version the icons,
+not the manifest or launch address. Existing installed home-screen icons may need a fresh
+installation; see the phone setup instructions in the main README.
 
 ## Review and reproduce
 

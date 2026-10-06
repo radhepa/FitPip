@@ -1,5 +1,6 @@
 import { mkdir, readFile } from 'node:fs/promises'
 import sharp from 'sharp'
+import { appIcons } from '../src/config/appIcons.ts'
 import { RANKS } from '../src/config/ranks.ts'
 
 // Review the actual shipped assets at badge and small UI sizes in both themes.
@@ -15,9 +16,9 @@ text(262, 169, 'TEN RANKS  /  ONE COMPANION', 15, '#83BCFF')
 text(48, 258, 'NIGHT', 14, '#A9BBD5')
 text(48, 678, 'LIGHT', 14, '#53657A')
 await mkdir('docs', { recursive: true })
-const app = await sharp('public/icons/icon-512.png').resize(176, 176).toBuffer()
+const app = await sharp(`public${appIcons.standard512}`).resize(176, 176).toBuffer()
 layers.push({ input: app, left: 48, top: 32 })
-const maskable = await sharp('public/icons/icon-maskable-512.png').resize(104, 104).composite([
+const maskable = await sharp(`public${appIcons.maskable512}`).resize(104, 104).composite([
   { input: Buffer.from('<svg width="104" height="104"><circle cx="52" cy="52" r="52" fill="white"/></svg>'), blend: 'dest-in' },
 ]).toBuffer()
 layers.push({ input: maskable, left: 1020, top: 60 })

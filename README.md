@@ -165,7 +165,7 @@ For password-reset emails, set your deployed address as Supabase's **Site URL** 
 ## Put FitPip on your phone
 
 <p align="center">
-  <img src="public/icons/icon-192.png" alt="Pip's blue FitPip home-screen icon" width="76" />
+  <img src="docs/images/fitpip-mobile-icon.png" alt="FitPip's focused, close-up Pip icon on a dark navy background" width="112" />
 </p>
 
 FitPip is a Progressive Web App: you install it from your browser. Open your deployed **HTTPS** address on your phone.

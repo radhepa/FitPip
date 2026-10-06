@@ -35,17 +35,19 @@ a second rank palette. `src/config/badgeArt.ts` maps the files and still support
 
 ## App icon
 
-The close-up portrait follows the current Pip rig in `src/components/pip/`: blue coat,
-dark ears, cream markings, cheek tufts, blush and a pale headband with a diamond. Large eyes,
-a smile and a full-bleed blue background give it a friendly home-screen presence. This is
-original Pip artwork with the bold, simple character framing requested for the app icon.
+The app uses the selected **Focused** close-up (version 4): Pip's big eyes, confident
+eyebrows, cream muzzle and diamond headband fill the tile. A dark navy background
+contrasts with his blue fur. The source image is
+`scripts/art/pip-focused-dark.png`; the original five concepts are in
+`docs/icon-concepts/face-closeups/`.
 
-Edit `scripts/art/pip-icon.mjs`, then run `npm run icons`. It writes:
+Replace the source PNG to revise the icon, then run `npm run icons`. It writes:
 
-- `public/favicon.svg` — scalable browser icon.
+- `public/favicon.png` — 64px browser icon.
 - `public/icons/icon-192.png` and `icon-512.png` — standard PWA icons.
-- `public/icons/icon-maskable-512.png` — smaller portrait inside Android's circular safe area.
+- `public/icons/icon-maskable-512.png` — close-up with a slight inset protecting the smile inside Android's safe area.
 - `public/apple-touch-icon.png` — 180px iOS home-screen icon.
+- `docs/images/fitpip-mobile-icon.png` — the same 192px icon shown in the main README.
 
 The icon canvas is opaque and square; the operating system supplies corner or circle masks.
 The existing manifest and HTML references consume these paths without additional changes.
@@ -57,5 +59,5 @@ Run `node scripts/preview-art.mjs` after regenerating assets to refresh `docs/ar
 The board uses the actual shipped assets at 110px and 32px, plus a circular maskable icon.
 The preview stays in docs and is not added to the app's offline cache.
 
-All art is editable SVG source built with the repository's existing Sharp dependency;
-no image-generation API or external runtime assets are required.
+Rank crests use editable SVG source, and the app icon uses the selected PNG artwork.
+Regeneration runs locally with the repository's existing Sharp dependency.

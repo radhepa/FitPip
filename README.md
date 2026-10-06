@@ -1,282 +1,218 @@
-# FitPip
+<p align="center">
+  <img src="docs/images/fitpip-banner.png" alt="FitPip: Small steps. Stronger you. Pip waves beside real screenshots of Today, Profile, and a workout." width="100%" />
+</p>
 
-A personal, single-user workout log for lifts, runs, rides, swims, yoga and stretching, with Pip the
-blue panda keeping count. Mobile-first, installs on your phone's home screen like an app (iPhone and
-Android), synced between devices through Supabase. Free to run.
+<h1 align="center">FitPip</h1>
 
-Stack: Vite, React, TypeScript, Tailwind, vite-plugin-pwa, Supabase (Auth + Postgres).
+<p align="center">
+  <strong>Your workout log, progress tracker, and very small cheerleader.</strong><br />
+  Lift, run, swim, stretch. Pip keeps count.
+</p>
 
-## Setup
+<p align="center">
+  Works offline · Installs on your phone · Syncs across devices · Light &amp; dark themes
+</p>
 
-1. **Create a Supabase project** (free tier) at supabase.com.
-2. **Run the migrations.** In the dashboard open *SQL Editor*, and paste + run each file from
-   `supabase/migrations/` in this order (each is safe to re-run):
-   1. `20260921000100_types_and_helpers.sql`
-   2. `20260921000200_exercises.sql`
-   3. `20260921000210_starter_exercise_catalog.sql`
-   4. `20260921000300_sessions_and_sets.sql`
-   5. `20260921000400_user_settings.sql`
-   6. `20260921000500_templates_and_schedule.sql` (Phase 2: templates, weekly plan)
-   7. `20260921000600_workout_setup_and_rpe.sql` (set a workout up before beginning it; RPE on sets)
-   8. `20260925000100_activities.sql` (cardio, swimming, yoga, stretching, boxing and sports: ~80
-      starter activities, time and distance on sets, distance unit)
-   9. `20260925000200_week_plan.sql` (any number of routines and activities per day; your old
-      one-routine-per-day schedule is copied over)
-   10. `20260925000300_body_weight.sql` (weigh-ins and a goal weight)
-   11. `20260926000100_more_activities.sql` (33 more everyday cardio moves, yoga poses and stretches;
-       existing accounts get them straight away)
-   12. `20260926000200_week_plan_categories.sql` (plan a day by kind of workout: Weightlifting,
-       Cardio, Yoga, Stretching...)
-   13. `20260927000100_offline_sync.sql` (lets your devices sync: a server-side change clock and a
-       record of deleted rows)
-   14. `20260927000200_rest_seconds.sql` (the rest timer length setting)
-   15. `20260928000100_profile.sql` (your name on the profile, and whether your lifts are ranked
-       against men's or women's standards)
-   16. `20260928000200_expanded_catalog.sql` (373 more exercises: single-arm cable work, plate-loaded
-       and pin-loaded machines, barbell and Olympic lifts, dumbbells and kettlebells, bodyweight and
-       TRX, carries and sleds, cardio, conditioning, track running, swimming, boxing, sports and
-       classes; existing accounts get them straight away)
-3. **Create your user.** *Authentication → Users → Add user → Create new user*: enter your email
-   and a password and tick *Auto Confirm User*. Creating the user also fills your exercise bank.
-4. **Lock sign-ups** (it's a one-person app): *Authentication → Sign In / Providers* → turn off
-   *Allow new users to sign up*.
-5. **Add your keys.** *Project Settings → API*: copy the Project URL and the `anon` public key
-   into a new `.env` (copy `.env.example`).
-   For *Forgot password?* emails: *Authentication → URL Configuration*, set the Site URL to where the
-   app lives (e.g. `https://your-app.vercel.app`) and add `https://your-app.vercel.app/reset-password`
-   to the Redirect URLs.
-6. `npm install`, then `npm run dev`.
+<p align="center">
+  <a href="#meet-pip">Meet Pip</a> ·
+  <a href="#a-look-around">Screenshots</a> ·
+  <a href="#installation">Installation</a> ·
+  <a href="#put-fitpip-on-your-phone">Phone setup</a> ·
+  <a href="docs/development.md">Development guide</a>
+</p>
 
-## What's where
+---
 
-- **Today**: Pip, who knows your training. He opens with what fits your day and acts out everything he
-  says: over 400 everyday lines that match his pose (a flex is about strength, a yawn about rest) and
-  personal ones from your own history ("two weeks ago you lifted 135 on Bench, now 155", new records,
-  your streak, how far you are from your goal weight). Tap him for another line, or use the chips:
-  *How am I doing?*, *Throwback*, *Pep talk*. Now and then he asks how your energy is, with quick
-  replies. Below him: your week streak (weeks in a row with 2+ workouts; tap it for what this week still
-  needs), this week against your plan, your latest weight, and today's lineup. Each planned
-  routine or activity has its own start button, or do them all as one workout. Nothing planned?
-  Tap Lift, Cardio, Swim, Yoga, Stretch or Boxing to start straight away.
-- **Plan**: the week as seven cards. Say what KIND of workout each day is (Weightlifting, Cardio,
-  Yoga, Stretching, Swimming, Boxing, Sports), or put routines ("Push day") and single activities
-  ("Freestyle Swim", "Heavy Bag", "Pigeon Pose") on it. Any mix, as many as you like. Tap one to
-  reorder, remove or start it, and copy a whole day to other days. A kind of workout starts empty with
-  the exercise picker open on that kind.
-- **Weigh-in**: the scale. Drag the ruler, tap ±1/±0.1 or type, pick the day, and step on. One
-  weigh-in a day (saving again replaces it); trend chart with your goal line, 7/30 day change,
-  7-day average and streak.
-- **Profile**: your ranks, badges and XP (see below).
-- **Workouts** are split into Strength, Cardio, and Yoga & stretching sections. Lifts log weight ×
-  reps (with steppers, RPE chips and a rest timer), holds and rounds have a countdown timer that
-  logs itself, and runs/rides/swims log time and distance (or use the stopwatch) with live pace.
+FitPip is a personal fitness app that brings your training into one place: the sets you lifted, the miles you covered, the week you planned, and the progress you made along the way.
 
-## Logging a workout
+It combines practical workout tools with a little game-like motivation. Log a session, notice a new personal record, earn XP, and watch your Pip badges grow from Wood to Legend. Whether today's plan is a heavy lift or a gentle stretch, it belongs here.
 
-Tap **Workout** on Home. The workout opens in its *set up* state, with no clock running: add the
-exercises you plan to do (or arrive with today's template or a suggestion already loaded), change their
-target sets and reps, reorder or remove them. Tap **Begin workout** when you're ready and the clock starts,
-counting in seconds. Log each set with its weight, reps and an optional **RPE** (1 to 10, in halves).
-A workout you set up but haven't begun stays on Home as "Continue setting up" and is not counted in
-History, Progress or suggestions until you begin it.
+## Meet Pip
 
-- **Undo.** Deleting a set shows an *Undo* bar for a few seconds.
-- **Notes.** Add a note to the whole workout, or to any exercise in it ("seat at 4", "left shoulder
-  tight"). They save by themselves and show on the workout summary.
-- **Rest timer.** After a lifting set a countdown runs. Set its length (or turn it off) under
-  *Settings → Rest timer*; it follows you between devices. You can still add or trim 15 s on a single
-  rest without changing the setting.
-- **Editing a finished workout.** *Edit workout* on the summary changes sets, notes and the name in
-  place, and the workout doesn't come back as "open" on Home. Its time only changes when you change it.
-- **Personal records.** A set that beats every earlier workout gets a *PR* pill (and a little confetti).
-- **Timers keep going.** A running rest, stopwatch or countdown survives switching tabs or the phone
-  closing the app, and the screen stays on while one runs.
-- **Forgot to finish?** A workout with nothing logged for 3 hours offers to finish at the time of its
-  last set, so its time isn't counted up to the next day. If it was already finished hours late, its
-  summary offers to end it at the last set instead.
-- **Changing a workout's time.** Tap *Duration* on a workout's summary (or *Change time* under the
-  clock while editing it) to set when it started and finished. While a workout is running, *Change*
-  under the clock moves its start.
+<p align="center">
+  <img src="docs/images/pip-wave.png" alt="Pip, a blue panda in a pale blue headband, waving hello" width="150" />
+  <img src="docs/images/pip-flex.png" alt="Pip showing off a tiny flex" width="150" />
+  <img src="docs/images/pip-sleep.png" alt="Pip curled up for a well-earned rest" width="150" />
+</p>
 
-## Your data
+Pip is your blue panda training companion. He celebrates your records, remembers how your lifts have changed, offers a pep talk when you need one, and makes room for rest days too.
 
-*Settings → Your data* saves every set and every weigh-in as spreadsheet files (CSV), or a full copy
-of everything as JSON. *Settings → Account → Change password*, or *Forgot password?* on the sign-in
-screen (see setup step 5).
+Tap him for another thought, ask **How am I doing?**, revisit a **Throwback**, or choose a **Pep talk**. His expressions and poses match what he says. Finish a workout and he has a little celebration waiting for you.
 
-## Ranks, badges and XP
+*Big effort. Tiny cheerleader.*
 
-### Starting assessment
+## A look around
 
-After sign-in and the first sync, new and existing accounts see a one-time fitness assessment.
-It asks age, bodyweight, comparison standards, and five familiar exercises: push-ups, bench press,
-back squat, deadlift and pull-ups. Weighted lifts accept a known one-rep max or a best set of
-1–15 reps. Every exercise has a **Haven’t done this** option.
+Real app screens, captured with FitPip's built-in guest data. The first row shows the dark theme; the second shows the light theme. Select an image to see it at full size.
 
-The starting rank averages the answered exercises' scores using the existing strength standards;
-skipped exercises are excluded. With all five skipped, Wood is an unscored starting point. Age is
-recorded but does not adjust this version's standards. Answers create no workout sets or XP and
-do not replace an existing logged-history overall rank. With no logged rank, the Profile hero
-shows the starting rank. Assessment bodyweight is a fallback until a weigh-in is available.
+<table>
+  <tr>
+    <th width="33%">Today</th>
+    <th width="33%">Workout</th>
+    <th width="33%">Profile</th>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/images/today.png"><img src="docs/images/today.png" alt="Today: Pip's encouragement, weekly streak, training plan, and quick-start activities" width="260" /></a></td>
+    <td align="center"><a href="docs/images/workout.png"><img src="docs/images/workout.png" alt="An active workout with bench press weight, reps, optional RPE, and large set-logging controls" width="260" /></a></td>
+    <td align="center"><a href="docs/images/profile.png"><img src="docs/images/profile.png" alt="Profile: a Pip rank crest, XP level, training totals, and a strength map" width="260" /></a></td>
+  </tr>
+  <tr>
+    <td align="center">Your day, with a little encouragement.</td>
+    <td align="center">Everything you need between sets.</td>
+    <td align="center">Progress you can see and celebrate.</td>
+  </tr>
+  <tr>
+    <th>Plan</th>
+    <th>Weigh-in</th>
+    <th>Progress</th>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/images/plan.png"><img src="docs/images/plan.png" alt="Weekly plan with weightlifting, cardio, yoga, and rest days" width="260" /></a></td>
+    <td align="center"><a href="docs/images/weigh-in.png"><img src="docs/images/weigh-in.png" alt="Weigh-in: an interactive scale, weight trend, and recent changes" width="260" /></a></td>
+    <td align="center"><a href="docs/images/progress.png"><img src="docs/images/progress.png" alt="Progress: a muscle map colored by weekly training volume and an exercise list" width="260" /></a></td>
+  </tr>
+  <tr>
+    <td align="center">A week that fits your routine.</td>
+    <td align="center">Watch the trend, not the wiggle.</td>
+    <td align="center">See where your effort is going.</td>
+  </tr>
+</table>
 
-Drafts, completion and assessment answers are saved per account **on this device** in IndexedDB;
-they do not sync to other devices. The selected comparison standards sync through existing settings.
-No database migration is needed. Reloading preserves answers; **Do this later** dismisses the
-flow without replacing a saved result. Retake it from Settings or the assessment card on Profile.
+## Built for the way you train
 
-The flow lives at `/welcome`; questions are in `src/config/assessment.ts`, scoring and validation
-in `src/lib/assessment.ts`, and persistence in `src/data/onboarding.ts`. The device-local completion
-key is versioned so a future onboarding revision can be rolled out deliberately.
+<p align="center">
+  <img src="docs/images/pip-flex.png" alt="Pip flexing, ready for the next set" width="110" />
+</p>
 
-### Workout ranks
+| Bring your… | FitPip keeps track of… |
+| --- | --- |
+| **Strength sessions** | Weight, reps, optional RPE, personal records, notes, and a configurable rest timer. |
+| **Runs, rides, and swims** | Time, distance, and pace, with a stopwatch when you need one. |
+| **Yoga, stretching, boxing, and sports** | Timed holds, rounds, and practice alongside your lifts and cardio. |
+| **Weekly routine** | Workout categories, saved routines, and individual activities, with multiple items per day. |
+| **Bodyweight goals** | Daily weigh-ins, a goal line, trend charts, and recent changes. |
+| **Training history** | Past sessions you can edit, favorite, and repeat, plus exercise progress and muscle maps. |
 
-The **Profile** tab turns your history into a game. Nothing extra is stored: it's all worked out from
-your sets, workouts and weigh-ins, so editing a set or a weigh-in updates it straight away.
+Set up your exercises before the workout clock starts. When you're ready, tap **Begin workout** and log as you go. Your previous sets help you pick up where you left off.
 
-- **10 ranks**: Wood, Bronze, Silver, Gold, Platinum, Emerald, Diamond, Master, Elite, Legend.
-- **Lift badges.** The best set of each lift becomes an estimated one-rep max (or reps, for pull-ups,
-  push-ups and other bodyweight moves) and is compared with strength standards for people who lift,
-  at your bodyweight (the average of your last week of weigh-ins). You get a percentile ("stronger
-  than 64% of lifters"), a rank, what the average lifter your size does, and what each rank takes.
-  Pick men's or women's standards the first time you open the tab.
-- **Strength map.** The body map coloured by rank: each muscle takes the rank of its best lift (lifts
-  where it only helps count at 80%). The overall rank averages chest, back, shoulders, arms, legs and
-  core.
-- **Cardio and practice badges.** Running, rowing, ski erg, outdoor cycling and freestyle swimming
-  are ranked on your best pace (any distance, converted with Riegel's formula). Walking, indoor
-  cycling, HIIT, other swims, boxing, yoga, stretching and sports rank up with hours put in.
-- **XP and levels.** 10 XP per lifting set, 3 XP per minute of cardio or practice, 25 for finishing a
-  workout, 50 per personal record and 20 for trying something new. The workout summary shows what
-  each workout earned, any records, and every badge it ranked up.
+### A little more legendary
 
-Standards, rank thresholds, XP amounts and badge kinds live in `src/config/` (`strengthStandards.ts`,
-`ranks.ts`, `xp.ts`, `activityBadges.ts`). All ten ranks use matching Pip enamel crests, growing from
-a wooden medallion to Legend's flame crown. See [docs/badge-art.md](docs/badge-art.md) for the artwork
-and regeneration commands, or [preview the full set](docs/art-preview.png).
+<p align="center">
+  <img src="docs/images/pip-ranks.png" alt="All ten Pip rank crests: Wood, Bronze, Silver, Gold, Platinum, Emerald, Diamond, Master, Elite, and Legend" width="100%" />
+</p>
 
-## Deploy (auto-deploys on every push to `main`)
+Earn XP for sets, time spent training, finished workouts, new activities, and personal records. Strength badges reflect your best lifts against the selected bodyweight-based standards; cardio badges use pace where supported, and practice badges grow with time invested.
 
-**Vercel:** import the GitHub repo. Framework preset *Vite*; add `VITE_SUPABASE_URL` and
-`VITE_SUPABASE_ANON_KEY` as environment variables. `vercel.json` already handles SPA routing.
+A starting assessment helps you find your first rank. You can skip unfamiliar exercises, do it later, or retake it from Settings. Your logged training continues to shape your progress.
 
-**Cloudflare Pages:** connect the repo, build command `npm run build`, output directory `dist`,
-same two environment variables.
+## Installation
 
-The anon key is safe to ship to the browser: row level security on every table is what
-protects the data.
+<p align="center">
+  <img src="docs/images/pip-think.png" alt="Pip thinking through the setup with you" width="110" />
+</p>
 
-## Put it on your phone
+### 1. Try FitPip locally
 
-The app is a PWA, so it installs from the browser with no app store. It has to be opened from its
-deployed `https://` address (see Deploy above), not from your computer's `localhost`.
+You'll need **Git** and **Node.js 22.18 or newer**, with npm.
 
-**iPhone (use Safari, not Chrome):** open the address, tap the Share button, choose *Add to Home
-Screen*, then *Add*. Open FitPip from the new icon.
-
-**Android (Chrome):** open the address, tap the ⋮ menu, choose *Install app* (or *Add to Home
-screen*), then *Install*.
-
-Then sign in with the email and password you made in Supabase. The installed app keeps its own
-sign-in, so you sign in once inside it even if you already did in the browser. Updates arrive by
-themselves: the next time you open FitPip online it fetches the newest version.
-
-## Works offline
-
-FitPip keeps a full copy of your data on the device (in the browser's IndexedDB) and works from
-that copy, so everything runs without a connection: logging sets, finishing workouts, browsing
-history, the plan, weigh-ins. Changes are saved on the device first and sent to Supabase in the
-background whenever there is a connection.
-
-- **Sync** runs when you open the app, when the connection returns, a moment after every change and
-  every minute while it is open. There is a status icon next to Settings on Today, a banner while
-  you are offline, and a Sync card in Settings (Sync now, and what to do if the server ever refuses a
-  change). iPhones do not sync in the background: it happens when you open the app.
-- **Two devices** stay in step. If the same thing is edited on both while apart, the later edit
-  wins. Deleting something on one device removes it on the others.
-- **First time on a device** it downloads your data once (this needs a connection). After that it
-  opens instantly, even with no signal and an expired sign-in.
-- Your data on the server is the backup. Signing out keeps changes that have not synced on the device
-  (you are asked first) and they send the next time you sign in.
-- The one thing that still needs a connection is *Load starter exercises* (and Suggest, below).
-
-## Exercise data
-
-Exercises come from [ExerciseDB](https://github.com/ExerciseDB/exercisedb-api) (free instance at
-`oss.exercisedb.dev`: names, target muscles, equipment, demo GIFs, steps). They are copied into
-your own database, so the app keeps working if that service is down.
-
-- The starter bank is generated from `scripts/starter-picks.json`:
-  `node scripts/build-starter-seed.ts` (add `--refresh` to re-download the records).
-- The 373-exercise expansion is hand-written data in `src/config/catalog/` (one file per family:
-  single-arm cable, machines, barbell, dumbbell, bodyweight, cardio...). Edit or add exercises there,
-  then run `node scripts/build-catalog-migration.ts` and commit both; a test fails if the migration
-  is out of date or a name repeats an earlier one. It leans on the Purdue CoRec floor (plate-loaded
-  stations, cable stacks everywhere, Olympic platforms, slam wall, battle ropes, TRX, atrium track,
-  spin studio) and on cutting weight without losing strength.
-- Single-arm cable lifts have their own strength standards (`sa_cable_*` in
-  `src/config/strengthStandards.ts`). No one publishes tables for them, so they are the two-handed
-  standards scaled to one arm; a single-arm or single-leg lift is never ranked against a two-handed one.
-- In the app, *Add exercise → Find in ExerciseDB* searches the API and saves what you pick.
-- ExerciseDB's muscle and equipment names are translated to this app's normalized names in one
-  file: `src/config/exerciseDbMap.ts`.
-- The free instance rate-limits bursts and its data terms are not spelled out; that is fine for
-  personal use, so check before redistributing anything.
-
-## Workout suggestions
-
-**Off by default.** The public build hides *Suggest a workout* until the function below is deployed and
-the key is set. To show it again, set `VITE_ENABLE_SUGGEST=true` (in `.env`, and in Vercel's
-environment variables) and rebuild.
-
-The **Suggest a workout** screen (a card on Today) asks an Edge Function for a workout based
-on your recent training, weekly muscle volume, today's planned template and your exercise bank. You can
-start the suggestion as a workout or save it as a template. There is no SQL for this: the only setup is
-deploying one function and adding one secret.
-
-**1. Deploy the function (once).** Pick one:
-
-- *CLI.* Find your project ref in your project URL (`https://<ref>.supabase.co`), then:
-
-  ```
-  npx supabase login
-  npx supabase link --project-ref <ref>
-  npx supabase functions deploy suggest-workout
-  ```
-
-  If it asks for Docker, add `--use-api` to the last command. `supabase/config.toml` already turns off
-  the platform JWT check: the function verifies the caller's token itself.
-- *Dashboard.* Edge Functions → Deploy a new function → Via Editor. Name it `suggest-workout`, paste in
-  `supabase/functions/suggest-workout/index.ts` (it is a single self-contained file), switch **Verify JWT
-  off** (the function checks the token itself), and deploy.
-
-**2. Add your OpenRouter key.** Create one at [openrouter.ai/keys](https://openrouter.ai/keys), then either
-open Edge Functions → Secrets and add `OPENROUTER_API_KEY`, or run:
-
-```
-npx supabase secrets set OPENROUTER_API_KEY=<your key>
+```bash
+git clone https://github.com/radhepa/FitPip.git
+cd FitPip
+npm ci
+npm run dev
 ```
 
-That is everything. Until the key exists the Suggest screen says so instead of failing.
+Open the local address printed by Vite, usually **http://localhost:5173**. Select **Continue as guest** to explore sample workouts, the weekly plan, weigh-ins, and Pip without configuring a backend. You can complete the starting assessment or select **Do this later**.
 
-**Model.** It defaults to `openai/gpt-4o-mini` (a suggestion costs a fraction of a cent). To use another,
-add a secret `OPENROUTER_MODEL` with any [OpenRouter model id](https://openrouter.ai/models), for example
-`google/gemini-2.5-flash`. No redeploy is needed. Set a spend limit on the OpenRouter key if you like.
+**Guest data stays in this browser on this device.** Guest mode does not sync with an account; export anything you want to keep from **Settings → Your data**.
 
-**How it stays safe.** The key lives only in the function's secrets and is never sent to the browser. The
-function verifies the caller's Supabase session on every request, reads your exercise bank with your own
-row level security (the model can only pick exercises you own, by short refs rather than ids), validates the
-model's reply with zod before anything reaches the app, and stores nothing.
+### 2. Connect your own account and sync
 
-**If something goes wrong,** the screen tells you which step is missing: *function not deployed*, *no
-OpenRouter key*, *key rejected* or *out of credits*. Tap "Try again" for busy or unusable replies.
+For account sign-in and syncing between devices, connect FitPip to a Supabase project.
 
-## Scripts
+1. **Create a project** in Supabase.
+2. **Apply every SQL migration** from [`supabase/migrations`](supabase/migrations), in ascending filename order. Open the project's **SQL Editor**, paste each file, and run it before moving to the next. Include the final `20260929000100_favorite_workouts.sql` migration.
+3. **Create a `.env` file** in the repository root using [`.env.example`](.env.example) as the template. Fill in your project's URL and **anon public key**:
 
+   ```dotenv
+   VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-public-key
+   ```
+
+4. **Restart the development server.** Create an account from FitPip's sign-in screen. If email confirmation is enabled, confirm your email before signing in. For a personal instance, you can instead create the user in **Authentication → Users** with auto-confirm enabled, then disable new sign-ups.
+5. **Sign in with your account.** The first sync on a new device needs an internet connection.
+
+Only the public key belongs in these browser environment variables. Keep service-role and OpenRouter keys out of the frontend. FitPip's migrations enable row-level security to scope database access to the signed-in user.
+
+### 3. Deploy your instance
+
+Build FitPip with:
+
+```bash
+npm run build
 ```
-npm run dev      local dev server
-npm run build    typecheck + production build
-npm test         unit tests
-npm run lint     oxlint
-npm run icons    regenerate the PWA icons
-npm run badges   regenerate the ten rank crests and locked badge (Node 22.18+)
+
+The production app is generated in `dist/`.
+
+| Host | Configuration |
+| --- | --- |
+| **Vercel** | Import the repository, select the **Vite** preset, and add the two `VITE_SUPABASE_*` environment variables. The included [`vercel.json`](vercel.json) handles app routes. |
+| **Cloudflare Pages** | Use `npm run build` as the build command and `dist` as the output directory. Add the same environment variables. |
+| **Another static host** | Serve `dist/` over HTTPS and route app navigation, such as `/profile`, back to `index.html`. |
+
+For password-reset emails, set your deployed address as Supabase's **Site URL** and add `https://your-domain/reset-password` to the allowed **Redirect URLs** under Authentication's URL configuration.
+
+## Put FitPip on your phone
+
+<p align="center">
+  <img src="public/icons/icon-192.png" alt="Pip's blue FitPip home-screen icon" width="76" />
+</p>
+
+FitPip is a Progressive Web App: you install it from your browser. Open your deployed **HTTPS** address on your phone.
+
+| Device | Installation |
+| --- | --- |
+| **iPhone or iPad** | In Safari, open the Share menu and choose **Add to Home Screen**, then **Add**. |
+| **Android** | In Chrome, open the menu and choose **Install app** or **Add to Home screen**, then confirm. |
+
+Open FitPip from its new icon and sign in there. The installed app may need its own sign-in even if you've already signed in through the browser. Updates are fetched when you open the app online.
+
+*Pip would help carry your gym bag, but the bag is bigger than he is.*
+
+## No signal? Keep going.
+
+<p align="center">
+  <img src="docs/images/pip-sleep.png" alt="Pip resting peacefully while your workout is saved on your device" width="110" />
+</p>
+
+Once the app has loaded and an account's first sync is complete, FitPip keeps a local copy of your training in IndexedDB. Log sets, finish workouts, browse history, adjust your plan, and record weigh-ins without a connection. Changes sync to Supabase when you're online again and the app is open.
+
+The Today screen and Settings show your sync status. If the same record changes on two devices while offline, the later edit wins. Account sign-in, ExerciseDB searches, loading starter exercises from the server, and optional workout suggestions need a connection.
+
+Your records are yours to take with you: **Settings → Your data** exports workouts and weigh-ins as CSV, or a full copy as JSON. Starting-assessment answers are stored on the current device and do not sync.
+
+## Development
+
+<p align="center">
+  <img src="docs/images/pip-cheer.png" alt="Pip raising both paws to celebrate" width="110" />
+</p>
+
+FitPip uses **React, TypeScript, Vite, and Tailwind CSS**, with **Dexie / IndexedDB** for local storage and **Supabase Auth + Postgres** for accounts and sync. `vite-plugin-pwa` provides the installable app shell.
+
+```bash
+npm run dev       # Start the development server
+npm run build     # Typecheck and create a production build
+npm run preview   # Preview the production build locally
+npm test          # Run unit tests
+npm run lint      # Run oxlint
 ```
+
+The [development guide](docs/development.md) covers workout behavior, scoring, the exercise catalog, database setup, and optional workout suggestions. For the visual side, see the [design system](docs/design-system.md) and [Pip's icons and rank crests](docs/badge-art.md).
+
+---
+
+<p align="center">
+  <img src="docs/images/pip-love.png" alt="Pip sharing a little panda hug" width="120" /><br />
+  <strong>One set. One step. One small reason to come back.</strong><br />
+  See you at the next workout. — Pip
+</p>

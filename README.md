@@ -10,15 +10,13 @@
 </p>
 
 <p align="center">
-  Works offline · Installs on your phone · Syncs across devices · Light &amp; dark themes
+  Works offline · Syncs across devices · Light &amp; dark themes
 </p>
 
 <p align="center">
+  <a href="https://fit-pip.vercel.app"><strong>Try FitPip</strong></a> ·
   <a href="#meet-pip">Meet Pip</a> ·
-  <a href="#a-look-around">Screenshots</a> ·
-  <a href="#installation">Installation</a> ·
-  <a href="#put-fitpip-on-your-phone">Phone setup</a> ·
-  <a href="docs/development.md">Development guide</a>
+  <a href="#a-look-around">Screenshots</a>
 </p>
 
 ---
@@ -26,6 +24,14 @@
 FitPip is a personal fitness app that brings your training into one place: the sets you lifted, the miles you covered, the week you planned, and the progress you made along the way.
 
 It combines practical workout tools with a little game-like motivation. Log a session, notice a new personal record, earn XP, and watch your Pip badges grow from Wood to Legend. Whether today's plan is a heavy lift or a gentle stretch, it belongs here.
+
+## Try FitPip
+
+Open **[fit-pip.vercel.app](https://fit-pip.vercel.app)** in your browser and check it out. Select **Continue as guest** to explore sample workouts, the weekly plan, weigh-ins, and Pip, or sign in to sync your training across devices.
+
+Guest data stays in this browser on this device. Export anything you want to keep from **Settings → Your data**.
+
+An App Store release is planned. For now, you can use the web app at the link above.
 
 ## Meet Pip
 
@@ -105,116 +111,17 @@ Earn XP for sets, time spent training, finished workouts, new activities, and pe
 
 A starting assessment helps you find your first rank. You can skip unfamiliar exercises, do it later, or retake it from Settings. Your logged training continues to shape your progress.
 
-## Installation
-
-<p align="center">
-  <img src="docs/images/pip-think.png" alt="Pip thinking through the setup with you" width="110" />
-</p>
-
-### 1. Try FitPip locally
-
-You'll need **Git** and **Node.js 22.18 or newer**, with npm.
-
-```bash
-git clone https://github.com/radhepa/FitPip.git
-cd FitPip
-npm ci
-npm run dev
-```
-
-Open the local address printed by Vite, usually **http://localhost:5173**. Select **Continue as guest** to explore sample workouts, the weekly plan, weigh-ins, and Pip without configuring a backend. You can complete the starting assessment or select **Do this later**.
-
-**Guest data stays in this browser on this device.** Guest mode does not sync with an account; export anything you want to keep from **Settings → Your data**.
-
-### 2. Connect your own account and sync
-
-For account sign-in and syncing between devices, connect FitPip to a Supabase project.
-
-1. **Create a project** in Supabase.
-2. **Apply every SQL migration** from [`supabase/migrations`](supabase/migrations), in ascending filename order. Open the project's **SQL Editor**, paste each file, and run it before moving to the next. Include the final `20260929000100_favorite_workouts.sql` migration.
-3. **Create a `.env` file** in the repository root using [`.env.example`](.env.example) as the template. Fill in your project's URL and **anon public key**:
-
-   ```dotenv
-   VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-anon-public-key
-   ```
-
-4. **Restart the development server.** Create an account from FitPip's sign-in screen. If email confirmation is enabled, confirm your email before signing in. For a personal instance, you can instead create the user in **Authentication → Users** with auto-confirm enabled, then disable new sign-ups.
-5. **Sign in with your account.** The first sync on a new device needs an internet connection.
-
-Only the public key belongs in these browser environment variables. Keep service-role and OpenRouter keys out of the frontend. FitPip's migrations enable row-level security to scope database access to the signed-in user.
-
-### 3. Deploy your instance
-
-Build FitPip with:
-
-```bash
-npm run build
-```
-
-The production app is generated in `dist/`.
-
-| Host | Configuration |
-| --- | --- |
-| **Vercel** | Import the repository, select the **Vite** preset, and add the two `VITE_SUPABASE_*` environment variables. The included [`vercel.json`](vercel.json) handles app routes. |
-| **Cloudflare Pages** | Use `npm run build` as the build command and `dist` as the output directory. Add the same environment variables. |
-| **Another static host** | Serve `dist/` over HTTPS and route app navigation, such as `/profile`, back to `index.html`. |
-
-For password-reset emails, set your deployed address as Supabase's **Site URL** and add `https://your-domain/reset-password` to the allowed **Redirect URLs** under Authentication's URL configuration.
-
-## Put FitPip on your phone
-
-<p align="center">
-  <img src="docs/images/fitpip-mobile-icon.png" alt="FitPip's focused, close-up Pip icon on a dark navy background" width="112" />
-</p>
-
-FitPip is a Progressive Web App: you install it from your browser. Open your deployed **HTTPS** address on your phone.
-
-The live app is at **[fit-pip.vercel.app](https://fit-pip.vercel.app)**. Use this production address when installing; Vercel preview deployment addresses can require a Vercel sign-in.
-
-| Device | Installation |
-| --- | --- |
-| **iPhone or iPad** | In Safari, open the Share menu and choose **Add to Home Screen**, then **Add**. |
-| **Android** | In Chrome, open the menu and choose **Install app** or **Add to Home screen**, then confirm. |
-
-Open FitPip from its new icon and sign in there. The installed app may need its own sign-in even if you've already signed in through the browser. Updates are fetched when you open the app online.
-
-**Still seeing the old icon?** Home-screen artwork can stay saved separately from app updates. The icon URLs change with the artwork so fresh installations fetch the new images.
-
-- **iPhone or iPad:** Open the production address in Safari, reload it, and use **Share → Add to Home Screen** again. Check that the preview shows Pip's close-up on dark blue before adding it, then remove the old shortcut.
-- **Android:** [Chrome can take a day or two to update an installed app's icon](https://web.dev/articles/manifest-updates). Open FitPip online, close it, and leave the phone on Wi-Fi and charging. If it stays old, reinstall from the production address after any offline workouts have synced.
-
-*Pip would help carry your gym bag, but the bag is bigger than he is.*
-
 ## No signal? Keep going.
 
 <p align="center">
   <img src="docs/images/pip-sleep.png" alt="Pip resting peacefully while your workout is saved on your device" width="110" />
 </p>
 
-Once the app has loaded and an account's first sync is complete, FitPip keeps a local copy of your training in IndexedDB. Log sets, finish workouts, browse history, adjust your plan, and record weigh-ins without a connection. Changes sync to Supabase when you're online again and the app is open.
+Once the app has loaded and an account's first sync is complete, FitPip keeps a local copy of your training on your device. Log sets, finish workouts, browse history, adjust your plan, and record weigh-ins without a connection. Changes sync to your account when you're online again and the app is open.
 
-The Today screen and Settings show your sync status. If the same record changes on two devices while offline, the later edit wins. Account sign-in, ExerciseDB searches, loading starter exercises from the server, and optional workout suggestions need a connection.
+The Today screen and Settings show your sync status. If the same record changes on two devices while offline, the later edit wins. Account sign-in, online exercise searches, loading starter exercises, and optional workout suggestions need a connection.
 
 Your records are yours to take with you: **Settings → Your data** exports workouts and weigh-ins as CSV, or a full copy as JSON. Starting-assessment answers are stored on the current device and do not sync.
-
-## Development
-
-<p align="center">
-  <img src="docs/images/pip-cheer.png" alt="Pip raising both paws to celebrate" width="110" />
-</p>
-
-FitPip uses **React, TypeScript, Vite, and Tailwind CSS**, with **Dexie / IndexedDB** for local storage and **Supabase Auth + Postgres** for accounts and sync. `vite-plugin-pwa` provides the installable app shell.
-
-```bash
-npm run dev       # Start the development server
-npm run build     # Typecheck and create a production build
-npm run preview   # Preview the production build locally
-npm test          # Run unit tests
-npm run lint      # Run oxlint
-```
-
-The [development guide](docs/development.md) covers workout behavior, scoring, the exercise catalog, database setup, and optional workout suggestions. For the visual side, see the [design system](docs/design-system.md) and [Pip's icons and rank crests](docs/badge-art.md).
 
 ---
 

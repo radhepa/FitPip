@@ -16,8 +16,11 @@ const orElse = async <T,>(load: Promise<T>, fallback: T): Promise<T> => {
   }
 }
 
-/** Everything the Today screen shows, loaded in parallel. Parts that fail just show less. */
-export function useTodayData() {
+/**
+ * Everything the Today screen shows, loaded in parallel. Parts that fail just show less. `day` (today's
+ * date) reloads what depends on the date when it changes.
+ */
+export function useTodayData(day: string) {
   const open = useAsync(getOpenSession, [], { cacheKey: 'today:open' })
   const recent = useAsync(() => listSessionSummaries(4), [], { cacheKey: 'today:recent' })
   const plan = useAsync(async () => {
@@ -36,7 +39,7 @@ export function useTodayData() {
     const todays = sessions.filter((s) => new Date(s.started_at) >= today)
     const sets = await listSetsForSessions(todays.map((s) => s.id))
     return { sessions, todays: todays.map((session) => ({ session, sets: sets.filter((set) => set.session_id === session.id) })) }
-  }, [], { cacheKey: 'today:history' })
+  }, [day], { cacheKey: 'today:history' })
   const weights = useAsync(() => orElse<BodyWeight[]>(listBodyWeights(), []), [], { cacheKey: 'today:weights' })
   return { open, recent, plan, history, weights }
 }

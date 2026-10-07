@@ -77,6 +77,13 @@ export function PlannedExerciseRow({ item, exercise, isFirst, isLast, index = 0,
   useLayoutEffect(() => {
     latest.current = { item, tracking, onChange, edits }
   })
+  // Removing a row drops what was typed in it: saving that on the way out would put the exercise back
+  // (or fail, for a routine row that is already gone).
+  const remove = () => {
+    latest.current = { ...latest.current, edits: {} }
+    setEdits({})
+    onRemove()
+  }
   const saveTyped = () => {
     const { item: current, tracking: kind, onChange: save, edits: typed } = latest.current
     const patch = changedTargets(current, kind, typed)
@@ -133,7 +140,7 @@ export function PlannedExerciseRow({ item, exercise, isFirst, isLast, index = 0,
           <button type="button" className="icon-button" disabled={isLast} onClick={() => onMove(1)} aria-label={`Move ${name} down`}>
             <ArrowDownIcon />
           </button>
-          <button type="button" className="icon-button !text-danger" onClick={onRemove} aria-label={`Remove ${name}`}>
+          <button type="button" className="icon-button !text-danger" onClick={remove} aria-label={`Remove ${name}`}>
             <TrashIcon />
           </button>
         </div>

@@ -31,6 +31,13 @@ describe('changeOver', () => {
     expect(changeOver(list, 1)).toBe(-0.6)
   })
 
+  it('only compares with a weigh-in from about that long ago', () => {
+    const gap = [w('2026-01-01', 190), w('2026-04-01', 182)]
+    expect(changeOver(gap, 7)).toBeNull()
+    expect(changeOver(gap, 30)).toBeNull()
+    expect(changeOver(gap, 90)).toBe(-8)
+  })
+
   it('needs two weigh-ins', () => {
     expect(changeOver([w('2026-09-01', 180)], 7)).toBeNull()
     expect(changeOver([], 7)).toBeNull()

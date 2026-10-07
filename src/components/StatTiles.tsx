@@ -11,7 +11,8 @@ import { StreakSheet, type StreakInfo } from './StreakSheet'
 interface Props {
   streak: StreakInfo
   totals: WeekTotals
-  weight: { latest: number; change: number | null; unit: WeightUnit } | null
+  /** `count` = weigh-ins so far: with only one, the change is still "new". */
+  weight: { latest: number; change: number | null; count: number; unit: WeightUnit } | null
 }
 
 /** Three headline numbers: the week streak, this week (against the plan, if there is one) and body weight. */
@@ -72,7 +73,7 @@ export function StatTiles({ streak, totals, weight }: Props) {
             >
               {weight.change !== null && weight.change < 0 && <ArrowDownIcon size="size-3.5" />}
               {weight.change !== null && weight.change > 0 && <ArrowUpIcon size="size-3.5" />}
-              {weight.change === null ? 'new' : Math.abs(weight.change)}
+              {weight.change === null ? (weight.count < 2 ? 'new' : '–') : Math.abs(weight.change)}
             </span>
             <div>
               <p className="font-display text-[1.5rem] leading-none font-extrabold">

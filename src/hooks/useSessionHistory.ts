@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigationType } from 'react-router-dom'
-import { listSessionSummaries, type SessionWithSets } from '../data/sessions'
-import { errorMessage } from '../data/unwrap'
+import { listSessionSummaries } from '../data/sessions'
 import { useAsync } from './useAsync'
 
 const PAGE_SIZE = 15
@@ -12,44 +11,37 @@ const PAGE_SIZE = 15
  */
 let loadedCount = PAGE_SIZE
 
-/** Finished workouts, newest first: the first page loads on mount, more on demand. */
+/**
+ * Finished workouts, newest first: one page on mount, more on demand. The whole list is one read of
+ * however many are shown, so when a sync adds or removes a workout the list is read again in one piece
+ * (reading only the first page again would drop or repeat workouts at the page edges).
+ */
 export function useSessionHistory() {
   const navigation = useNavigationType()
   // Opened afresh (not Back), it starts again from one page.
-  const [count] = useState(() => (navigation === 'POP' ? loadedCount : (loadedCount = PAGE_SIZE)))
-  const first = useAsync(() => listSessionSummaries(count), [count], { cacheKey: `history:first:${count}` })
-  const [more, setMore] = useState<SessionWithSets[]>([])
-  const [exhausted, setExhausted] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [moreError, setMoreError] = useState<string | null>(null)
+  const [limit, setLimit] = useState(() => (navigation === 'POP' ? loadedCount : (loadedCount = PAGE_SIZE)))
+  const list = useAsync(async () => ({ limit, items: await listSessionSummaries(limit) }), [limit], { cacheKey: `history:${limit}` })
 
-  const items = first.data ? [...first.data, ...more] : null
-  const hasMore = items !== null && !exhausted && (first.data?.length ?? 0) >= count
+  const loaded = list.data
+  const items = loaded?.items ?? null
+  // While more are being read, the list so far stays on screen.
+  const loadingMore = loaded !== null && loaded.limit !== limit && !list.error
+  const hasMore = loaded !== null && loaded.items.length >= loaded.limit
 
-  async function loadMore() {
-    const last = items?.at(-1)
-    if (!last) return
-    setBusy(true)
-    setMoreError(null)
-    try {
-      const page = await listSessionSummaries(PAGE_SIZE, last.session.started_at)
-      setMore((prev) => [...prev, ...page])
-      loadedCount = (items?.length ?? 0) + page.length
-      setExhausted(page.length < PAGE_SIZE)
-    } catch (e) {
-      setMoreError(errorMessage(e))
-    } finally {
-      setBusy(false)
-    }
+  function loadMore() {
+    if (!loaded || loadingMore) return
+    const next = loaded.items.length + PAGE_SIZE
+    loadedCount = next
+    setLimit(next)
   }
 
   return {
     items,
     hasMore,
-    loading: first.loading,
-    loadingMore: busy,
-    error: first.error ?? moreError,
+    loading: list.loading,
+    loadingMore,
+    error: list.error,
     loadMore,
-    retry: first.reload,
+    retry: list.reload,
   }
 }

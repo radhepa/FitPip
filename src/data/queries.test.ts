@@ -81,4 +81,16 @@ describe('workout queries', () => {
     const last = await lastSessionSetsForExercise('bench', 's19')
     expect(last.map((s) => s.id)).toEqual(['s18-a', 's18-b'])
   })
+
+  it('goes by when workouts began, not when their sets were typed', async () => {
+    const db = device()
+    await seed(db)
+    // A forgotten set added to an old workout afterwards.
+    await db.sets.put(set('s12-late', 's12', 'bench', 2, day(25)))
+    expect((await lastSessionSetsForExercise('bench', 'running')).map((s) => s.id)).toEqual(['s19-a', 's19-b'])
+    expect((await lastSessionSetsForExercise('bench', 'draft')).map((s) => s.id)).toEqual(['s19-a', 's19-b'])
+    // Editing an old workout shows the one before it, not a later one.
+    expect((await lastSessionSetsForExercise('bench', 's14')).map((s) => s.id)).toEqual(['s13-a', 's13-b'])
+    expect(await lastSessionSetsForExercise('bench', 's10')).toEqual([])
+  })
 })

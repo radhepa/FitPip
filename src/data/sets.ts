@@ -121,11 +121,24 @@ export async function listSetsForExercise(exerciseId: string): Promise<ExerciseS
 /**
  * The sets from the most recent earlier workout that included this exercise, in set order
  * (used to prefill weights and show "last time"). Empty when it has never been done.
+ *
+ * "Most recent" goes by when the workouts began, not when sets were typed: a set added later to an
+ * old workout doesn't make it the last time, and editing an old workout shows the one before it.
  */
 export async function lastSessionSetsForExercise(exerciseId: string, excludeSessionId: string): Promise<SetRow[]> {
-  const recent = (await rowsOf('sets').where('exercise_id').equals(exerciseId).toArray())
-    .filter((set) => set.session_id !== excludeSessionId)
-    .sort((a, b) => b.created_at.localeCompare(a.created_at))
-  if (recent.length === 0) return []
-  return recent.filter((set) => set.session_id === recent[0].session_id).sort(bySetOrder)
+  const sets = (await rowsOf('sets').where('exercise_id').equals(exerciseId).toArray()).filter((set) => set.session_id !== excludeSessionId)
+  if (sets.length === 0) return []
+  const ids = [...new Set(sets.map((set) => set.session_id))]
+  const [current, ...sessions] = await rowsOf('sessions').bulkGet([excludeSessionId, ...ids])
+  // A workout still being set up hasn't begun: anything already done is earlier.
+  const before = current?.started_at ? Date.parse(current.started_at) : Infinity
+  let last: { id: string; at: number } | null = null
+  for (const session of sessions) {
+    // Workouts still being set up (no start time) don't count.
+    const at = session?.started_at ? Date.parse(session.started_at) : NaN
+    if (!session || !(at < before)) continue
+    if (!last || at > last.at) last = { id: session.id, at }
+  }
+  const lastId = last?.id
+  return lastId ? sets.filter((set) => set.session_id === lastId).sort(bySetOrder) : []
 }

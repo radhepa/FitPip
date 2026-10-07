@@ -13,6 +13,7 @@ import { ChevronIcon, SettingsIcon, SparkIcon } from '../components/icons'
 import { SUGGEST_ENABLED } from '../config/features'
 import { useNewWorkout } from '../hooks/useNewWorkout'
 import { useSettings } from '../hooks/useSettings'
+import { useToday } from '../hooks/useToday'
 import { useTodayData } from '../hooks/useTodayData'
 import { changeOver, toWeighIns } from '../lib/bodyWeight'
 import { greeting, WEEK_MINIMUM, weekStatus, weekStreak, weekTotals } from '../lib/homeStats'
@@ -22,11 +23,13 @@ const UNPLANNED: TodayPlan = { kind: 'unplanned' }
 
 export function HomeScreen() {
   const { unit } = useSettings()
-  const { open, recent, plan, history, weights } = useTodayData()
+  // Everything "today" and "this week" is worked out again when the date changes (the app may be left open overnight).
+  const day = useToday()
+  const { open, recent, plan, history, weights } = useTodayData(day)
   const { create, creating, error: startError } = useNewWorkout()
 
   const now = new Date()
-  const today = useMemo(() => (plan.data ? planForDay(plan.data.items, now.getDay(), { routines: plan.data.routines, exercises: plan.data.exercises }) : UNPLANNED), [plan.data]) // eslint-disable-line react-hooks/exhaustive-deps
+  const today = useMemo(() => (plan.data ? planForDay(plan.data.items, now.getDay(), { routines: plan.data.routines, exercises: plan.data.exercises }) : UNPLANNED), [plan.data, day]) // eslint-disable-line react-hooks/exhaustive-deps
   const plannedWeekdays = useMemo(() => {
     const data = plan.data
     if (!data) return new Set<number>()
@@ -34,14 +37,14 @@ export function HomeScreen() {
     return new Set([0, 1, 2, 3, 4, 5, 6].filter((d) => entriesForDay(data.items, d, lookup).length > 0))
   }, [plan.data])
   const sessions = useMemo(() => history.data?.sessions ?? [], [history.data])
-  const days = useMemo(() => weekStatus(sessions, plannedWeekdays), [sessions, plannedWeekdays])
+  const days = useMemo(() => weekStatus(sessions, plannedWeekdays), [sessions, plannedWeekdays, day]) // eslint-disable-line react-hooks/exhaustive-deps
   const totals = useMemo(() => weekTotals(sessions, days), [sessions, days])
-  const streak = useMemo(() => ({ weeks: weekStreak(sessions), thisWeek: totals.workouts, minimum: WEEK_MINIMUM }), [sessions, totals.workouts])
+  const streak = useMemo(() => ({ weeks: weekStreak(sessions), thisWeek: totals.workouts, minimum: WEEK_MINIMUM }), [sessions, totals.workouts, day]) // eslint-disable-line react-hooks/exhaustive-deps
   const pipPlan = useMemo(() => ({ plan: today, week: { planned: totals.plannedDays, done: totals.plannedDaysDone } }), [today, totals])
   const weight = useMemo(() => {
     const list = toWeighIns(weights.data ?? [], unit)
     const latest = list.at(-1)
-    return latest ? { latest: latest.weight, change: changeOver(list, 7), unit } : null
+    return latest ? { latest: latest.weight, change: changeOver(list, 7), count: list.length, unit } : null
   }, [weights.data, unit])
   const exerciseById = useMemo(() => new Map((plan.data?.exercises ?? []).map((e) => [e.id, e])), [plan.data])
 

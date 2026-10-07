@@ -18,19 +18,22 @@ export function RestTimer({ endsAt, total, onChange, onDone }: Props) {
   const now = useTicker(true)
   useWakeLock(true)
   const left = Math.max(0, endsAt - now)
-  const finished = useRef(false)
+  /** The end time already buzzed for: +15 during "Go!" starts a new countdown that buzzes and closes again. */
+  const buzzedFor = useRef<number | null>(null)
   const done = useRef(onDone)
   useEffect(() => {
     done.current = onDone
   })
 
   useEffect(() => {
-    if (left > 0 || finished.current) return
-    finished.current = true
-    buzz([120, 80, 120])
+    if (left > 0) return
+    if (buzzedFor.current !== endsAt) {
+      buzzedFor.current = endsAt
+      buzz([120, 80, 120])
+    }
     const timer = setTimeout(() => done.current(), 1600)
     return () => clearTimeout(timer)
-  }, [left])
+  }, [left, endsAt])
 
   const shift = (seconds: number) => {
     const nextEnd = Math.max(Date.now() + 5000, endsAt + seconds * 1000)

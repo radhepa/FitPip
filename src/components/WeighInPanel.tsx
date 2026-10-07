@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { localDateIso } from '../lib/bodyWeight'
+import { useToday } from '../hooks/useToday'
 import type { WeightUnit } from '../types/db'
 import { BathroomScale } from './BathroomScale'
 import { Button } from './Button'
@@ -21,10 +21,12 @@ const round1 = (n: number) => Math.round(n * 10) / 10
 
 /** The scale: dial or type a weight, pick the day, and step on. */
 export function WeighInPanel({ unit, startWeight, takenDates, onSave }: Props) {
-  const today = localDateIso()
+  const today = useToday()
   const [weight, setWeight] = useState(round1(startWeight))
   const [text, setText] = useState<string | null>(null)
-  const [date, setDate] = useState(today)
+  // The day follows the calendar (the app may be left open overnight) unless an earlier day was picked.
+  const [picked, setPicked] = useState<string | null>(null)
+  const date = picked !== null && picked < today ? picked : today
   const [busy, setBusy] = useState(false)
   const [steps, setSteps] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -83,7 +85,7 @@ export function WeighInPanel({ unit, startWeight, takenDates, onSave }: Props) {
           type="date"
           value={date}
           max={today}
-          onChange={(e) => e.target.value && setDate(e.target.value)}
+          onChange={(e) => e.target.value && setPicked(e.target.value === today ? null : e.target.value)}
           aria-label="Day of the weigh-in"
           className="field !min-h-14 !w-auto shrink-0"
         />

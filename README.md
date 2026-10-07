@@ -27,6 +27,10 @@ It combines practical workout tools with a little game-like motivation. Log a se
 
 ## Try FitPip
 
+<p align="center">
+  <a href="https://fit-pip.vercel.app"><img src="docs/images/fitpip-mobile-icon.png" alt="FitPip app icon: Pip's focused, close-up face on a dark navy background" width="112" /></a>
+</p>
+
 Open **[fit-pip.vercel.app](https://fit-pip.vercel.app)** in your browser and check it out. Select **Continue as guest** to explore sample workouts, the weekly plan, weigh-ins, and Pip, or sign in to sync your training across devices.
 
 Guest data stays in this browser on this device. Export anything you want to keep from **Settings → Your data**.

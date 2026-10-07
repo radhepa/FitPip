@@ -1,4 +1,5 @@
 import type { Session, SetRow } from '../types/db'
+import { formatTime } from './format'
 
 /** A running workout with nothing logged for this long was most likely never finished. */
 export const STALE_AFTER_MS = 3 * 60 * 60 * 1000
@@ -13,15 +14,17 @@ export function forgottenSince(session: Pick<Session, 'started_at' | 'ended_at'>
   return now.getTime() - new Date(last).getTime() > STALE_AFTER_MS ? last : null
 }
 
+const weekdayFormat = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
+
 /** "5:42 PM" today, "yesterday 5:42 PM", or "Mon 5:42 PM" further back. */
 export function lastActivityLabel(iso: string, now: Date = new Date()): string {
   const at = new Date(iso)
-  const time = at.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+  const time = formatTime(at)
   const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
   const daysAgo = Math.round((day(now) - day(at)) / 86_400_000)
   if (daysAgo === 0) return time
   if (daysAgo === 1) return `yesterday ${time}`
-  return `${at.toLocaleDateString(undefined, { weekday: 'short' })} ${time}`
+  return `${weekdayFormat.format(at)} ${time}`
 }
 
 /**

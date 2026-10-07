@@ -47,9 +47,11 @@ export function liftHistories(input: { exercises: Exercise[]; sessions: BegunSes
   for (const set of input.sets) {
     const day = dayOfSession.get(set.session_id)
     if (!day || !lifts.has(set.exercise_id) || set.reps < 1) continue
-    const days = grouped.get(set.exercise_id) ?? new Map<string, SetRow[]>()
-    days.set(day, [...(days.get(day) ?? []), set])
-    grouped.set(set.exercise_id, days)
+    let days = grouped.get(set.exercise_id)
+    if (!days) grouped.set(set.exercise_id, (days = new Map()))
+    const list = days.get(day)
+    if (list) list.push(set)
+    else days.set(day, [set])
   }
 
   const histories: LiftHistory[] = []

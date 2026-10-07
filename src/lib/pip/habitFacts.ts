@@ -71,6 +71,21 @@ export function habitFacts(input: { exercises: Exercise[]; sessions: BegunSessio
   const finished = input.sessions.filter((s) => s.ended_at).sort((a, b) => a.started_at.localeCompare(b.started_at))
   const byId = new Map(finished.map((s) => [s.id, { session: s, day: dayOf(s.started_at), ms: new Date(s.started_at).getTime() }]))
   const exerciseById = new Map(input.exercises.map((e) => [e.id, e]))
+  // What each exercise counts toward, worked out once rather than for every set.
+  const kinds = new Map(
+    input.exercises.map((e) => {
+      const lift = e.category === 'strength' && e.tracking === 'reps'
+      const cardio = CARDIO_CATEGORIES.has(e.category)
+      return [e.id, {
+        exercise: e,
+        lift,
+        singleArm: lift && SINGLE_ARM.test(e.name),
+        groups: lift ? MUSCLE_GROUPS.filter((g) => e.primary_muscles.some((m) => g.muscles.includes(m))).map((g) => g.key) : [],
+        cardio,
+        running: cardio && activityBadgeKey(e) === 'running',
+      }]
+    }),
+  )
   const sets = input.sets.filter((s) => byId.has(s.session_id))
   const today = localDateIso(now)
   const weekStart = startOfWeek(now).getTime()
@@ -90,27 +105,28 @@ export function habitFacts(input: { exercises: Exercise[]; sessions: BegunSessio
 
   for (const set of sets) {
     const { session, day, ms: startedMs } = byId.get(set.session_id)!
-    const exercise = exerciseById.get(set.exercise_id)
-    if (!exercise) continue
+    const kind = kinds.get(set.exercise_id)
+    if (!kind) continue
+    const { exercise } = kind
     if (day === today) todaySets += 1
 
-    if (exercise.category === 'strength' && exercise.tracking === 'reps' && set.reps > 0) {
+    if (kind.lift && set.reps > 0) {
       totalVolume += set.weight * set.reps
       perLift.set(exercise.id, (perLift.get(exercise.id) ?? 0) + 1)
-      if (SINGLE_ARM.test(exercise.name)) singleArmSets += 1
-      for (const group of MUSCLE_GROUPS) {
-        if (exercise.primary_muscles.some((m) => group.muscles.includes(m)) && (lastByGroup.get(group.key) ?? '') < day) lastByGroup.set(group.key, day)
+      if (kind.singleArm) singleArmSets += 1
+      for (const group of kind.groups) {
+        if ((lastByGroup.get(group) ?? '') < day) lastByGroup.set(group, day)
       }
     }
 
-    if (CARDIO_CATEGORIES.has(exercise.category)) {
+    if (kind.cardio) {
       if (startedMs >= weekStart) cardio.minutesThisWeek += (set.duration_seconds ?? 0) / 60
       if (startedMs >= monthAgo) {
         cardioSessions.add(session.id)
         if (exercise.category === 'cardio') cardio.distanceMonthM += Number(set.distance_m ?? 0)
       }
       const metres = Number(set.distance_m ?? 0)
-      if (activityBadgeKey(exercise) === 'running' && metres >= 800 && (!cardio.longestRun || metres > cardio.longestRun.distanceM)) {
+      if (kind.running && metres >= 800 && (!cardio.longestRun || metres > cardio.longestRun.distanceM)) {
         cardio.longestRun = { exercise, distanceM: metres, ageDays: daysBetween(session.started_at, now) }
       }
     }

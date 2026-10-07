@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { rankInfo } from '../config/ranks'
 import { XP_RULES } from '../config/xp'
 import { useSettings } from '../hooks/useSettings'
-import { countOf, formatSeconds, formatWeight } from '../lib/format'
+import { countOf, formatSeconds, formatWeight, formatWhole } from '../lib/format'
 import type { WorkoutRewards as Rewards } from '../lib/profile'
 import { formatDistance, lengthUnitFor } from '../lib/units'
 import type { RecordEvent } from '../lib/xp'
@@ -44,7 +44,7 @@ export function WorkoutRewards({ rewards, exerciseById, missingProfile }: Props)
       <span className="section-label">Rewards</span>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 id="rewards-title" className="gradient-text m-0 font-display text-[2rem] leading-tight font-extrabold">
-          +{xp.total.toLocaleString()} XP
+          +{formatWhole(xp.total)} XP
         </h2>
         {rewards.levelAfter > rewards.levelBefore && <span className="pill">Level {rewards.levelAfter}!</span>}
       </div>

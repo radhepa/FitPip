@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { formatWhole } from '../lib/format'
 import type { Totals } from '../lib/profile'
 import type { WeightUnit } from '../types/db'
 import { CountUp } from './CountUp'
@@ -37,7 +38,7 @@ function shortHours(seconds: number): string {
 
 /** 1,240 / 48.2k / 1.3M */
 function compact(n: number): string {
-  if (n < 10_000) return Math.round(n).toLocaleString()
+  if (n < 10_000) return formatWhole(n)
   if (n < 1_000_000) return `${(n / 1000).toFixed(n < 100_000 ? 1 : 0)}k`
   return `${(n / 1_000_000).toFixed(1)}M`
 }

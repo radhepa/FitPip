@@ -189,16 +189,29 @@ function fitsSides(standard: StrengthStandard, name: string, equipment: Equipmen
   return arm && !leg && DB.includes(equipment) && standard.kind === 'load' && standard.perHand === true
 }
 
+// The answer only depends on the name and equipment, and ranks and Pip ask about the same few hundred
+// exercises over and over (each lookup runs up to a hundred patterns), so answers are kept.
+const standardFor = new Map<string, StrengthStandard | null>()
+
 /** The standard an exercise is compared with, or null when there is none (bands, odd machines...). */
 export function findStandard(exercise: { name: string; equipment: Equipment; category: string; tracking: string }): StrengthStandard | null {
   if (exercise.category !== 'strength' || exercise.tracking !== 'reps') return null
   if (exercise.equipment === 'band') return null
+  const key = `${exercise.equipment}|${exercise.name}`
+  const known = standardFor.get(key)
+  if (known !== undefined) return known
   const name = normalizeName(exercise.name)
+  let found: StrengthStandard | null = null
   for (const standard of STRENGTH_STANDARDS) {
     if (standard.equipment && !standard.equipment.includes(exercise.equipment)) continue
     if (standard.not?.test(name)) continue
     if (!fitsSides(standard, name, exercise.equipment)) continue
-    if (standard.match.test(name)) return standard
+    if (standard.match.test(name)) {
+      found = standard
+      break
+    }
   }
-  return null
+  if (standardFor.size >= 4000) standardFor.clear()
+  standardFor.set(key, found)
+  return found
 }

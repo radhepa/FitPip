@@ -11,6 +11,7 @@ import {
   VOLUME_LINES,
 } from '../../../config/pip/personalLines'
 import { findStandard } from '../../../config/strengthStandards'
+import { formatWhole } from '../../format'
 import { weightNear } from '../bodyFacts'
 import type { PipFacts } from '../facts'
 import { bestDay } from '../liftFacts'
@@ -90,7 +91,7 @@ export function volumeMoments(facts: PipFacts): PipMoment[] {
   if (!thing) return []
   const count = Math.round(pounds / thing.lb)
   const id = `lift:volume:${thing.lb}`
-  const text = say(facts, id, VOLUME_LINES, { total: Math.round(total).toLocaleString(), unit: facts.unit, thing: count <= 1 ? `about ${thing.one}` : `about ${count} ${thing.many}` })
+  const text = say(facts, id, VOLUME_LINES, { total: formatWhole(total), unit: facts.unit, thing: count <= 1 ? `about ${thing.one}` : `about ${count} ${thing.many}` })
   return [moment({ id, text, topic: 'lift', priority: 45, cooldownHours: 200, mood: 'flex', talk: 'throwback' })]
 }
 

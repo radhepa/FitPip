@@ -25,20 +25,33 @@ export function formatSetList(sets: SetLike[], unit?: WeightUnit, max = 4): stri
   return rest > 0 ? `${shown.join(' · ')} · +${rest} more` : shown.join(' · ')
 }
 
-export function formatVolume(volume: number, unit: WeightUnit): string {
-  return `${Math.round(volume).toLocaleString()} ${unit}`
+// Formatters are built once: toLocaleString() and friends build a new one on every call, which is
+// slow enough to show on long lists and in number animations on phones.
+const wholeNumbers = new Intl.NumberFormat()
+const dateFormat = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+const shortDateFormat = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' })
+const timeFormat = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' })
+
+/** "12,450": rounded, with the device's thousands separators. */
+export function formatWhole(n: number): string {
+  return wholeNumbers.format(Math.round(n))
 }
 
-export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+export function formatVolume(volume: number, unit: WeightUnit): string {
+  return `${formatWhole(volume)} ${unit}`
+}
+
+/** "Tue, Oct 7" */
+export function formatDate(iso: string | number | Date): string {
+  return dateFormat.format(new Date(iso))
 }
 
 export function formatShortDate(ms: number): string {
-  return new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  return shortDateFormat.format(new Date(ms))
 }
 
-export function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+export function formatTime(iso: string | Date): string {
+  return timeFormat.format(new Date(iso))
 }
 
 const pad2 = (n: number) => String(n).padStart(2, '0')

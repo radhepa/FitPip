@@ -16,10 +16,18 @@ export function localDateIso(now: Date = new Date()): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 }
 
+// Weight trends compare every weigh-in with others again and again, so each date is only worked out once.
+const dateMsCache = new Map<string, number>()
+
 /** Noon on a YYYY-MM-DD date, as ms (noon keeps daylight-saving shifts from changing the day). */
 export const dateMs = (iso: string): number => {
+  const known = dateMsCache.get(iso)
+  if (known !== undefined) return known
   const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d, 12).getTime()
+  const ms = new Date(y, m - 1, d, 12).getTime()
+  if (dateMsCache.size >= 5000) dateMsCache.clear()
+  dateMsCache.set(iso, ms)
+  return ms
 }
 
 /** Oldest first, converted into `unit`. */
@@ -33,14 +41,18 @@ const round1 = (n: number) => Math.round(n * 10) / 10
 
 /**
  * Change from the weigh-in closest to `days` before the latest one (only earlier weigh-ins count).
- * Null when there is nothing old enough to compare with.
+ * Only a weigh-in from half to one and a half times that long ago counts: "last 7 days" against one
+ * from three months back would really be a three-month change. Null when there is none.
  */
 export function changeOver(weighIns: WeighIn[], days: number): number | null {
   if (weighIns.length < 2) return null
   const latest = weighIns[weighIns.length - 1]
-  const target = dateMs(latest.date) - days * DAY_MS
+  const end = dateMs(latest.date)
+  const target = end - days * DAY_MS
   let best: WeighIn | null = null
   for (const w of weighIns.slice(0, -1)) {
+    const age = (end - dateMs(w.date)) / DAY_MS
+    if (age < days * 0.5 || age > days * 1.5) continue
     if (!best || Math.abs(dateMs(w.date) - target) < Math.abs(dateMs(best.date) - target)) best = w
   }
   return best ? round1(latest.weight - best.weight) : null

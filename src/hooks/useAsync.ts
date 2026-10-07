@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type DependencyList } from 'react'
 import { getDataGeneration } from '../data/local/events'
 import { peekRead, rememberRead } from '../data/local/readCache'
+import { sameData } from '../lib/sameData'
 import { useDataVersion } from './useSyncStatus'
 
 export interface AsyncState<T> {
@@ -31,7 +32,7 @@ const FRESH_MS = 30_000
 export function useAsync<T>(load: () => Promise<T>, deps: DependencyList, options: AsyncOptions = {}): AsyncState<T> {
   const { cacheKey } = options
   const [initial] = useState(() => (cacheKey ? peekRead<T>(cacheKey) : undefined))
-  const [data, setData] = useState<T | null>(initial ? initial.value : null)
+  const [data, setDataState] = useState<T | null>(initial ? initial.value : null)
   const [error, setError] = useState<Error | null>(null)
   const [loading, setLoading] = useState(!initial)
   const [tick, setTick] = useState(0)
@@ -39,6 +40,15 @@ export function useAsync<T>(load: () => Promise<T>, deps: DependencyList, option
   const loadRef = useRef(load)
   loadRef.current = load
   const lastTick = useRef(tick)
+  /** What is on screen, so a re-read that brings back the same data can keep it (and skip a redraw). */
+  const shown = useRef<T | null>(data)
+  const setData = useCallback((next: T | null | ((prev: T | null) => T | null)) => {
+    setDataState((prev) => {
+      const value = typeof next === 'function' ? (next as (prev: T | null) => T | null)(prev) : next
+      shown.current = value
+      return value
+    })
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -52,21 +62,29 @@ export function useAsync<T>(load: () => Promise<T>, deps: DependencyList, option
       setLoading(false)
       if (hit.age < FRESH_MS) return
     }
-    const generation = getDataGeneration()
-    loadRef
-      .current()
-      .then((result) => {
-        if (cacheKey) rememberRead(cacheKey, result, generation)
-        if (cancelled) return
-        setData(result)
-        setError(null)
-      })
-      .catch((e: unknown) => {
-        if (!cancelled) setError(e instanceof Error ? e : new Error(String(e)))
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+    // A change saved on this device while the read ran (the screen usually shows it already) would be
+    // undone by the older result, so that result is dropped and the data read again, once.
+    const read = (retries: number) => {
+      const generation = getDataGeneration()
+      loadRef
+        .current()
+        .then((result) => {
+          if (cancelled) return
+          if (retries > 0 && getDataGeneration() !== generation) return read(retries - 1)
+          // Same data as on screen: keep the old copy, so nothing worked out from it is built again.
+          const kept = sameData(shown.current, result) ? (shown.current as T) : result
+          if (cacheKey) rememberRead(cacheKey, kept, generation)
+          if (kept !== shown.current) setData(kept)
+          setError(null)
+          setLoading(false)
+        })
+        .catch((e: unknown) => {
+          if (cancelled) return
+          setError(e instanceof Error ? e : new Error(String(e)))
+          setLoading(false)
+        })
+    }
+    read(1)
     return () => {
       cancelled = true
     }

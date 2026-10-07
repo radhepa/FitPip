@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { formatWhole } from '../lib/format'
 import type { Profile } from '../lib/profile'
 import { rankName } from '../lib/rankFormat'
 import { CountUp } from './CountUp'
@@ -36,14 +37,14 @@ export function ProfileHero({ name, profile, onEdit }: Props) {
             Level <CountUp value={xp.level} />
           </p>
           <p className="text-xs font-bold text-muted tabular-nums">
-            {Math.round(xp.into).toLocaleString()} / {xp.span.toLocaleString()} XP
+            {formatWhole(xp.into)} / {formatWhole(xp.span)} XP
           </p>
         </div>
         <div className="xp-bar mt-2" role="progressbar" aria-valuemin={0} aria-valuemax={xp.span} aria-valuenow={Math.round(xp.into)} aria-label={`XP to level ${xp.level + 1}`}>
           <span style={{ '--fill': `${Math.round(xp.progress * 100)}%` } as CSSProperties} />
         </div>
         <p className="mt-2 text-xs font-semibold text-muted">
-          {xp.total.toLocaleString()} XP earned · +{xp.thisWeek.toLocaleString()} in the last 7 days
+          {formatWhole(xp.total)} XP earned · +{formatWhole(xp.thisWeek)} in the last 7 days
         </p>
       </div>
     </section>

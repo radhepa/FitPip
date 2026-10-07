@@ -23,10 +23,12 @@ export function distanceInput(metres: number, unit: LengthUnit): string {
   return unit === 'm' || unit === 'yd' ? String(Math.round(value)) : trim(value, 2)
 }
 
+const wholeNumbers = new Intl.NumberFormat()
+
 /** "5.02 km", "3.1 mi", "1,500 m", "800 yd". */
 export function formatDistance(metres: number, unit: LengthUnit): string {
   const value = fromMetres(metres, unit)
-  if (unit === 'm' || unit === 'yd') return `${Math.round(value).toLocaleString()} ${unit}`
+  if (unit === 'm' || unit === 'yd') return `${wholeNumbers.format(Math.round(value))} ${unit}`
   return `${trim(value, value >= 100 ? 0 : 2)} ${unit}`
 }
 

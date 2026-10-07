@@ -1,6 +1,14 @@
 /** Small bits of physical feedback: a buzz on phones that support it, and a confetti burst. */
 
-export const reduceMotion = () => (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) || false
+// One query object for the whole app: matchMedia() parses the query again on every call, and this is
+// asked on every render of an animated number and on every tab tap.
+let reducedMotionQuery: MediaQueryList | null | undefined
+
+/** True when the phone asks for less motion. Reads the live setting, so a change applies at once. */
+export function reduceMotion(): boolean {
+  if (reducedMotionQuery === undefined) reducedMotionQuery = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null
+  return reducedMotionQuery?.matches ?? false
+}
 
 /** A short vibration (Android; iOS Safari ignores it). */
 export function buzz(pattern: number | number[] = 12): void {

@@ -99,7 +99,7 @@ The [strength-ranking notes](strength-ranking.md) document the reference data, c
 
 ## Storage, sync, and exports
 
-The data layer writes to Dexie / IndexedDB first and queues account changes for Supabase. Guest mode uses a separate database with seeded demo data and no server sync.
+The data layer writes to Dexie / IndexedDB first and queues account changes for Supabase. Guest mode uses a separate database that starts blank (five starter exercises only) and never syncs.
 
 Sync runs on opening the app, reconnecting, shortly after changes, and periodically while the app is open. The server provides a change clock and deletion records so devices receive edits and removals. Concurrent edits to the same record resolve by the later edit. On iPhone, sync happens while the app is open rather than through a background task.
 

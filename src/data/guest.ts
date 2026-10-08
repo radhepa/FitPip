@@ -1,12 +1,11 @@
-import type { BegunSession, BodyWeight, Category, Exercise, SetRow, WeekPlanItem } from '../types/db'
-import { localDateIso } from '../lib/bodyWeight'
+import type { Exercise } from '../types/db'
 import { GUEST_USER_ID } from './local/context'
 import { getMeta, setMeta, type FitPipDB } from './local/db'
 
 export { GUEST_USER_ID }
 
-// Guest mode is a try-it-out mode: the app runs entirely on the device, with a few demo workouts,
-// and never syncs. It is the same code path as a signed-in account, just without a server.
+// Guest mode is a try-it-out mode: the app runs entirely on the device, with a few starter exercises
+// and nothing else, and never syncs. It is the same code path as a signed-in account, just without a server.
 
 const AUTH_KEY = 'fitpip.guest'
 
@@ -19,13 +18,6 @@ export function setGuestMode(active: boolean): void {
   if (active) localStorage.setItem(AUTH_KEY, 'true')
   else localStorage.removeItem(AUTH_KEY)
   window.dispatchEvent(new Event('fitpip-auth-change'))
-}
-
-const isoDaysAgo = (days: number, hour = 17) => {
-  const date = new Date()
-  date.setDate(date.getDate() - days)
-  date.setHours(hour, 0, 0, 0)
-  return date.toISOString()
 }
 
 function exercise(id: string, name: string, equipment: Exercise['equipment'], primary: Exercise['primary_muscles']): Exercise {
@@ -47,84 +39,38 @@ function exercise(id: string, name: string, equipment: Exercise['equipment'], pr
   }
 }
 
-function demoData() {
-  const exercises = [
-    exercise('guest-bench', 'Bench Press', 'barbell', ['chest', 'triceps']),
-    exercise('guest-squat', 'Back Squat', 'barbell', ['quads', 'glutes']),
-    exercise('guest-row', 'Seated Cable Row', 'cable', ['upper_back', 'lats']),
-    exercise('guest-rdl', 'Romanian Deadlift', 'barbell', ['hamstrings', 'glutes']),
-    exercise('guest-raise', 'Lateral Raise', 'dumbbell', ['side_delts']),
-  ]
-  const sessions: BegunSession[] = [7, 4, 1].map((days, index) => {
-    const started = isoDaysAgo(days)
-    const ended = new Date(new Date(started).getTime() + (48 + index * 5) * 60_000).toISOString()
-    return {
-      id: `guest-session-${index + 1}`,
-      user_id: GUEST_USER_ID,
-      name: ['Upper body', 'Lower strength', 'Full body'][index],
-      started_at: started,
-      ended_at: ended,
-      notes: null,
-      template_id: null,
-      plan: null,
-      created_at: started,
-      updated_at: ended,
-    }
-  })
-  const rows = [
-    ['guest-bench', 115, 8, 7], ['guest-bench', 120, 7, 8], ['guest-row', 100, 10, null],
-    ['guest-squat', 165, 6, 7.5], ['guest-squat', 175, 5, 8.5], ['guest-rdl', 155, 8, 8],
-    ['guest-bench', 125, 6, 9], ['guest-squat', 180, 5, 9], ['guest-raise', 20, 12, null],
-  ] as const
-  const sets: SetRow[] = rows.map(([exerciseId, weight, reps, rpe], index) => {
-    const session = sessions[Math.floor(index / 3)]
-    return {
-      id: `guest-set-${index + 1}`,
-      user_id: GUEST_USER_ID,
-      session_id: session.id,
-      exercise_id: exerciseId,
-      set_order: index % 3,
-      weight,
-      reps,
-      rpe,
-      duration_seconds: null,
-      distance_m: null,
-      created_at: session.started_at,
-      updated_at: session.started_at,
-    }
-  })
-  // Two weigh-ins so the profile can rank the demo lifts.
-  const weights: BodyWeight[] = [[6, 181.4], [1, 180.2]].map(([days, weight]) => {
-    const at = isoDaysAgo(days, 8)
-    return { id: `guest-weight-${days}`, user_id: GUEST_USER_ID, measured_on: localDateIso(new Date(at)), weight, unit: 'lb', note: null, created_at: at, updated_at: at }
-  })
-  // A sample week, so the Plan tab and Today's week strip show how planning works.
-  const planned: [number, Category][] = [[1, 'strength'], [3, 'cardio'], [5, 'strength'], [6, 'yoga']]
-  const now = new Date().toISOString()
-  const plan: WeekPlanItem[] = planned.map(([weekday, category]) => ({
-    id: `guest-plan-${weekday}`,
-    user_id: GUEST_USER_ID,
-    weekday,
-    position: 0,
-    template_id: null,
-    exercise_id: null,
-    category,
-    created_at: now,
-    updated_at: now,
-  }))
-  return { exercises, sessions, sets, weights, plan }
+/** A few exercises so the picker isn't empty. No workouts, weigh-ins or plan: a guest starts blank. */
+const starterExercises = () => [
+  exercise('guest-bench', 'Bench Press', 'barbell', ['chest', 'triceps']),
+  exercise('guest-squat', 'Back Squat', 'barbell', ['quads', 'glutes']),
+  exercise('guest-row', 'Seated Cable Row', 'cable', ['upper_back', 'lats']),
+  exercise('guest-rdl', 'Romanian Deadlift', 'barbell', ['hamstrings', 'glutes']),
+  exercise('guest-raise', 'Lateral Raise', 'dumbbell', ['side_delts']),
+]
+
+// Guest databases made before 2026-10-08 were filled with sample workouts, sets, weigh-ins and a
+// week plan, which looked like someone else's history. Those rows had fixed ids, so they can be
+// removed without touching anything the guest logged themselves.
+const OLD_DEMO_IDS = {
+  sessions: [1, 2, 3].map((n) => `guest-session-${n}`),
+  sets: Array.from({ length: 9 }, (_, i) => `guest-set-${i + 1}`),
+  body_weights: ['guest-weight-6', 'guest-weight-1'],
+  week_plan_items: [1, 3, 5, 6].map((d) => `guest-plan-${d}`),
 }
 
-/** Puts the demo data into a brand-new guest database. Never queued for the server. */
+/** Gives a brand-new guest database its starter exercises and clears the old sample history. Never queued for the server. */
 export async function seedGuestIfNew(db: FitPipDB): Promise<void> {
-  if (await getMeta<boolean>(db, 'guestSeeded')) return
-  const { exercises, sessions, sets, weights, plan } = demoData()
+  const seeded = await getMeta<boolean>(db, 'guestSeeded')
+  const cleared = await getMeta<boolean>(db, 'guestDemoCleared')
+  if (seeded && cleared) return
   await db.transaction('rw', db.tables, async () => {
-    await db.exercises.bulkPut(exercises)
-    await db.sessions.bulkPut(sessions)
-    await db.sets.bulkPut(sets)
-    await db.body_weights.bulkPut(weights)
-    await db.week_plan_items.bulkPut(plan)
+    if (!seeded) await db.exercises.bulkPut(starterExercises())
+    await db.sets.bulkDelete(OLD_DEMO_IDS.sets)
+    await db.sets.where('session_id').anyOf(OLD_DEMO_IDS.sessions).delete()
+    await db.sessions.bulkDelete(OLD_DEMO_IDS.sessions)
+    await db.body_weights.bulkDelete(OLD_DEMO_IDS.body_weights)
+    await db.week_plan_items.bulkDelete(OLD_DEMO_IDS.week_plan_items)
     await setMeta(db, 'guestSeeded', true)
+    await setMeta(db, 'guestDemoCleared', true)
   })
 }
